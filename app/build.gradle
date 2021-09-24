@@ -35,6 +35,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
 
     implementation 'com.github.one-piece-luffy:ImageLoader:2.1'
+
+//    implementation 'com.github.one-piece-luffy:videoplayer:1.0'
     implementation project(path: ':av')
 
 }
