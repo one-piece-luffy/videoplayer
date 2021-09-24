@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 apply from: "../common_library_config.gradle"
-
+apply plugin: 'com.github.dcendents.android-maven'
 dependencies {
     implementation project(':exolib:common')
     implementation 'net.butterflytv.utils:rtmp-client:3.1.0'
