@@ -56,7 +56,6 @@ dependencies {
 
     //弹幕
     api 'com.github.ctiao:DanmakuFlameMaster:0.9.25'
-    implementation 'com.github.xiaweizi:MarqueeTextView:1.0'
 
 
 

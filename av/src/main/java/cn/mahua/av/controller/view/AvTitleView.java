@@ -35,13 +35,13 @@ import android.widget.TextClock;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.xiaweizi.marquee.MarqueeTextView;
 import com.yc.video.bridge.ControlWrapper;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.tool.PlayerUtils;
 import com.yc.video.ui.view.InterControlView;
 
 import cn.mahua.av.R;
+import cn.mahua.av.widget.view.MarqueeTextView;
 
 
 /**

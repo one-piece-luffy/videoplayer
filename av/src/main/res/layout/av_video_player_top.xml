@@ -37,7 +37,7 @@
             android:textSize="@dimen/av_tv_size"
             android:visibility="gone" />
 
-        <com.xiaweizi.marquee.MarqueeTextView
+        <cn.mahua.av.widget.view.MarqueeTextView
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
