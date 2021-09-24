@@ -1,0 +1,72 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion '30.0.1'
+
+
+    defaultConfig {
+        minSdkVersion 22
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+
+    implementation 'com.blankj:utilcodex:1.26.0'
+
+    //播放器
+//    api 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.0'
+//    api 'xyz.doikki.android.dkplayer:dkplayer-ui:3.3.0'
+//    api 'xyz.doikki.android.dkplayer:player-exo:3.3.0'
+//    api 'xyz.doikki.android.dkplayer:player-ijk:3.3.0'
+//    api 'xyz.doikki.android.dkplayer:videocache:3.3.0'
+
+//    api project(':dkplayerLib:dkplayer-java')
+//    api project(':dkplayerLib:dkplayer-ui')
+//    api project(path: ':dkplayerLib:dkplayer-players:ijk')
+//    api project(path: ':dkplayerLib:dkplayer-players:exo')
+//    //缓存
+//    api project('::dkplayerLib:dkplayer-videocache')
+
+    //弹幕
+    api 'com.github.ctiao:DanmakuFlameMaster:0.9.25'
+    implementation 'com.github.xiaweizi:MarqueeTextView:1.0'
+    //Glide  图片加载
+    implementation 'com.github.bumptech.glide:glide:4.9.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
+
+
+
+    api project(':YCPlayerLib:VideoBarrage')
+    api project(':YCPlayerLib:VideoCache')
+    api project(':YCPlayerLib:VideoKernel')
+    api project(':YCPlayerLib:VideoM3u8')
+    api project(':YCPlayerLib:VideoPlayer')
+    api project(':YCPlayerLib:VideoRecorder')
+    api project(':YCPlayerLib:VideoSqlLite')
+    api project(':YCPlayerLib:VideoTool')
+    api project(':YCPlayerLib:VideoView')
+}

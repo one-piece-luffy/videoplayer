@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="player_theme_color">#1ddcb3</color>
+    <color name="player_theme_tr_color">#661ddcb3</color>
+    <!--播放器进度条-->
+    <color name="player_progress_background_color">#33ffffff</color>
+    <color name="player_progress_secondary_color">#7Fffffff</color>
+    <color name="player_progress_progress_color">#1ddcb3</color>
+    <color name="player_all_bg_color">#000000</color>
+
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
+    <color name="darkGray">#A9A9A9</color><!--暗灰色 -->
+    <color name="statusColor">#22000000</color><!--暗灰色 -->
+
+    <color name="color92EEF630">#4D92EEF6</color>
+    <color name="color92EEF6">#92EEF6</color>
+    <color name="color1D1C1E">#1D1C1E</color>
+    <color name="color414142">#414142</color>
+    <color name="color303031">#303031</color>
+    <color name="color3478F6">#3478F6</color>D
+    <color name="colorF6F7F9">#F6F7F9</color>
+    <color name="color7A7BEB">#7A7BEB</color>
+    <color name="colorWhite40">#66FFFFFF</color>
+    <color name="colorWhite50">#80FFFFFF</color>
+    <color name="colorWhite60">#99FFFFFF</color>
+    <color name="colorWhite70">#B3FFFFFF</color>
+    <color name="seekbar_progress">#E95868</color>
+
+    <color name="transparent">#00000000</color>
+    <color name="transparent_05_black">#F2000000</color>
+    <color name="transparent_10_black">#E5000000</color>
+    <color name="transparent_15_black">#D8000000</color>
+    <color name="transparent_20_black">#CC000000</color>
+    <color name="transparent_25_black">#BF000000</color>
+    <color name="transparent_30_black">#B2000000</color>
+    <color name="transparent_35_black">#A5000000</color>
+    <color name="transparent_40_black">#99000000</color>
+    <color name="transparent_45_black">#8C000000</color>
+    <color name="transparent_50_black">#7F000000</color>
+    <color name="transparent_55_black">#72000000</color>
+    <color name="transparent_60_black">#66000000</color>
+    <color name="transparent_65_black">#59000000</color>
+    <color name="transparent_70_black">#4C000000</color>
+    <color name="transparent_75_black">#3F000000</color>
+    <color name="transparent_80_black">#33000000</color>
+    <color name="transparent_85_black">#21000000</color>
+    <color name="transparent_90_black">#19000000</color>
+    <color name="transparent_95_black">#0C000000</color>
+
+</resources>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval"
+    android:useLevel="false">
+    <!--第一种样子-->
+    <!--<solid android:color="@color/player_theme_color" />
+    <size
+        android:width="50pt"
+        android:height="50pt" />-->
+    <!--第二种-->
+    <solid android:color="@color/color92EEF6" />
+    <padding
+        android:bottom="10dp"
+        android:left="10dp"
+        android:right="10dp"
+        android:top="10dp" />
+    <size
+        android:width="12dp"
+        android:height="12dp" />
+    <stroke
+        android:width="3dp"
+        android:color="@color/color92EEF630" />
+</shape>

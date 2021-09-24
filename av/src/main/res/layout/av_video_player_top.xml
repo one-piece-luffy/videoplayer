@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/player_mask"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:id="@+id/title_layout"
+        android:layout_width="match_parent"
+        android:layout_marginTop="25dp"
+        android:layout_height="wrap_content">
+
+
+        <ImageView
+            android:id="@+id/iv_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="12dp"
+            android:contentDescription="@string/iv"
+            android:padding="10dp"
+            android:src="@drawable/icon_play_back" />
+
+        <TextClock
+            android:id="@+id/tc_av_localtime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:format12Hour="HH:mm"
+            android:format24Hour="HH:mm"
+            android:gravity="center"
+            android:padding="@dimen/av_tv_padding"
+            android:textColor="@color/white"
+            android:textSize="@dimen/av_tv_size"
+            android:visibility="gone" />
+
+        <com.xiaweizi.marquee.MarqueeTextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@+id/tc_av_localtime"
+            android:layout_toRightOf="@+id/iv_back"
+            android:maxEms="10"
+            android:padding="10dp"
+            android:layout_centerVertical="true"
+            android:textColor="@color/white"
+            android:textSize="16dp"
+            android:visibility="gone"
+            app:scroll_first_delay="0"
+            app:scroll_interval="8000"
+            app:scroll_mode="mode_forever" />
+
+        <ImageView
+            android:id="@+id/iv_battery"
+            android:layout_width="26dp"
+            android:layout_height="20dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="16dp"
+            android:src="@drawable/battery_level2" />
+
+    </RelativeLayout>
+
+</FrameLayout>

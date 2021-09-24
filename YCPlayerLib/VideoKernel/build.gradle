@@ -1,0 +1,58 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.0"
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 36
+        versionName "3.0.6"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    //这两个是必须要加的，其它的可供选择
+    api 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
+    api 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.4'
+    //其他库文件
+    //implementation 'tv.danmaku.ijk.media:ijkplayer-armv5:0.8.8'
+    //implementation 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.8'
+    //implementation 'tv.danmaku.ijk.media:ijkplayer-x86:0.8.8'
+    //implementation 'tv.danmaku.ijk.media:ijkplayer-x86_64:0.8.8'
+
+
+    //谷歌播放器
+//    implementation  "com.google.android.exoplayer:exoplayer:2.11.3"
+//    //exoplayer-core：核心功能 (必要)
+//    implementation "com.google.android.exoplayer:exoplayer-core:2.11.3"
+//    //exoplayer-dash：支持DASH内容
+//    implementation "com.google.android.exoplayer:exoplayer-dash:2.11.3"
+//    //exoplayer-hls：支持HLS内容
+//    implementation "com.google.android.exoplayer:exoplayer-hls:2.11.3"
+//    //exoplayer-smoothstreaming：支持SmoothStreaming内容
+//    implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:2.11.3"
+//    implementation "com.google.android.exoplayer:extension-rtmp:2.11.3"
+
+    api project(':exolib:core')
+    api project(':exolib:dash')
+    api project(':exolib:hls')
+    api project(':exolib:rtmp')
+    api project(':exolib:smoothstreaming')
+    api project(':exolib:rtsp')
+    api project(':exolib:av1')
+    api project( ':exolib:ffmpeg')
+    api project( ':exolib:flac')
+    api project( ':exolib:opus')
+    api project( ':exolib:vp9')
+}
+
+

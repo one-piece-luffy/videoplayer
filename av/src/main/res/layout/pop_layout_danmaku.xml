@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="@color/color1D1C1E"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <EditText
+        android:id="@+id/et_pop_danmaku"
+        android:layout_width="0dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="67dp"
+        android:layout_weight="1"
+        android:autofillHints="@string/av_danmaku_et_hint"
+        android:background="@drawable/shape_av_danmaku_edittext_bg"
+        android:hint="@string/av_danmaku_et_hint"
+        android:imeOptions="flagNoExtractUi"
+        android:inputType="text"
+        android:maxLength="30"
+        android:paddingStart="20dp"
+        android:singleLine="true"
+        android:textColor="@color/white"
+        android:textColorHint="@color/colorWhite40"
+        android:textSize="@dimen/font_14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_pop_danmaku"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:targetApi="o" />
+
+    <Button
+        android:id="@+id/btn_pop_danmaku"
+        android:layout_width="56dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="66dp"
+        android:background="@drawable/shape_av_danmaku_btn_bg_selector"
+        android:enabled="false"
+        android:gravity="center"
+        android:text="@string/av_danmaku_btn"
+        android:textColor="@drawable/av_danmaku_textcolor_selector"
+        android:textSize="@dimen/font_14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</LinearLayout>

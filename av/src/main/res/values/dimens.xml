@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--上下部分高度-->
+    <dimen name="av_top_bg_margin">35dp</dimen>
+    <dimen name="av_bottom_bg_margin">35dp</dimen>
+    <!--上下部分的图标大小、间距-->
+    <dimen name="av_top_or_bottom_iv_size">25dp</dimen>
+    <dimen name="av_top_or_bottom_iv_margin_start">20dp</dimen>
+    <dimen name="av_top_or_bottom_iv_margin_end">20dp</dimen>
+    <!--标题的长度和字体大小-->
+    <dimen name="av_title_width">700pt</dimen>
+    <dimen name="av_title_size">60pt</dimen>
+    <!--其他文字的内边距-->
+    <dimen name="av_tv_padding">5dp</dimen>
+    <!--其他文字的大小-->
+    <dimen name="av_tv_size">16dp</dimen>
+    <!--中间部分的图标大小、间距-->
+    <dimen name="av_middle_iv_size">30dp</dimen>
+    <dimen name="av_middle_iv_margin_start">20dp</dimen>
+    <dimen name="av_middle_iv_margin_end">20dp</dimen>
+    <dimen name="av_middle_iv_margin_top">15dp</dimen>
+    <dimen name="av_middle_iv_margin_bottom">15dp</dimen>
+
+    <dimen name="font_9sp">9sp</dimen>
+    <dimen name="font_10sp">10sp</dimen>
+    <dimen name="font_12sp">12sp</dimen>
+    <dimen name="font_14sp">14sp</dimen>
+    <dimen name="font_15sp">15sp</dimen>
+    <dimen name="font_20sp">20sp</dimen>
+
+</resources>
