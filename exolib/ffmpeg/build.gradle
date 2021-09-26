@@ -13,6 +13,8 @@
 // limitations under the License.
 apply from: "../common_library_config.gradle"
 apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.one-piece-luffy'
+
 // Configure the native build only if ffmpeg is present to avoid gradle sync
 // failures if ffmpeg hasn't been built according to the README instructions.
 if (project.file('src/main/jni/ffmpeg').exists()) {

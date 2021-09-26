@@ -15,6 +15,8 @@ apply from: "../common_library_config.gradle"
 
 android.defaultConfig.minSdkVersion 17
 apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.one-piece-luffy'
+
 dependencies {
     implementation project(':exolib:common')
     implementation 'androidx.annotation:annotation:' + androidxAnnotationVersion

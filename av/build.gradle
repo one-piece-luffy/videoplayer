@@ -3,6 +3,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.one-piece-luffy'
 
+
 android {
     compileSdkVersion 30
     buildToolsVersion '30.0.1'
@@ -16,7 +17,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
-        
+
     }
 
     buildTypes {

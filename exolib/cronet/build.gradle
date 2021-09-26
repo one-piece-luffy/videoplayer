@@ -13,6 +13,8 @@
 // limitations under the License.
 apply from: "../common_library_config.gradle"
 apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.one-piece-luffy'
+
 android {
     defaultConfig {
         multiDexEnabled true

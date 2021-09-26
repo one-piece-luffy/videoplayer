@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 apply from: rootProject.projectDir.absolutePath + "/YCPlayerLib/VideoGradle/video.gradle"
 apply plugin: 'com.github.dcendents.android-maven'
+group='com.github.one-piece-luffy'
+
 
 android {
     compileSdkVersion project.ext.androidCompileSdkVersion
