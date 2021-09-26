@@ -2,16 +2,22 @@ package com.baofu.videoplayer;
 
 import android.app.Application;
 
+import com.baofu.base.BaseApplication;
+import com.baofu.base.utils.CrashHandler;
 import com.yc.kernel.utils.PlayerConstant;
 import com.yc.kernel.utils.PlayerFactoryUtils;
 import com.yc.video.config.VideoPlayerConfig;
 
 import cn.mahua.av.BuriedPointEventImpl;
 
-public class BaseApplication extends Application {
+public class MyApplication extends BaseApplication {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        CrashHandler crashHandler = CrashHandler.getInstance();
+        crashHandler.init(getApplicationContext());
+
         //yc播放器配置，注意：此为全局配置，按需开启
         com.yc.video.player.VideoViewManager.setConfig(VideoPlayerConfig.newBuilder()
                 //设置上下文
@@ -27,5 +33,7 @@ public class BaseApplication extends Application {
                 //创建SurfaceView
                 //.setRenderViewFactory(SurfaceViewFactory.create())
                 .build());
+
+
     }
 }
