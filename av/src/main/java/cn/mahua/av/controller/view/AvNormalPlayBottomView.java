@@ -45,6 +45,7 @@ import com.yc.video.ui.view.InterControlView;
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.play.ControllerClickListener;
+import cn.mahua.av.widget.view.SpeedDialog;
 
 import static com.yc.video.config.ConstantKeys.PlayerScreenScaleType.SCREEN_SCALE_16_9;
 import static com.yc.video.config.ConstantKeys.PlayerScreenScaleType.SCREEN_SCALE_4_3;
@@ -75,10 +76,8 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     private ProgressBar mPbBottomProgress;
     private boolean mIsDragging;
     private boolean mIsShowBottomProgress = true;
-    ViewGroup mBottomBtnLayout;
+    ViewGroup mBottomToolsLayout;
     TextView tv_speed;
-    TextView tv_av_selected;
-    public TextView tv_av_source;
     TextView tv_av_scale;
     ImageView iv_av_next;
     ImageView iv_fullscreen;
@@ -86,6 +85,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     int mCurrentScaleType = SCREEN_SCALE_DEFAULT;
     float mLastSpeed;
     float mCurrentSpeed;
+
     int mScaleTypeArray[] = new int[]{
             SCREEN_SCALE_DEFAULT,
             //16：9比例类型，最为常见
@@ -136,10 +136,8 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         mSeekBar = view.findViewById(R.id.seekBar);
         mTvTotalTime = view.findViewById(R.id.tv_total_time);
         mPbBottomProgress = view.findViewById(R.id.pb_bottom_progress);
-        mBottomBtnLayout = view.findViewById(R.id.bottom_btn_layout);
+        mBottomToolsLayout = view.findViewById(R.id.bottom_tools_layout);
         tv_speed = view.findViewById(R.id.tv_speed);
-        tv_av_selected = view.findViewById(R.id.tv_av_selected);
-        tv_av_source = view.findViewById(R.id.tv_av_source);
         tv_av_scale = view.findViewById(R.id.tv_av_scale);
         iv_av_next = view.findViewById(R.id.iv_av_next);
         iv_fullscreen = view.findViewById(R.id.iv_fullscreen);
@@ -150,8 +148,6 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         mIvPlay.setOnClickListener(this);
         tv_speed.setOnClickListener(this);
         tv_av_scale.setOnClickListener(this);
-        tv_av_selected.setOnClickListener(this);
-        tv_av_source.setOnClickListener(this);
         iv_av_next.setOnClickListener(this);
         iv_fullscreen.setOnClickListener(this);
     }
@@ -166,9 +162,10 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
        } else if(v==tv_av_scale){
            mCurrentScaleType = (mCurrentScaleType + 1) % mScaleTypeArray.length;
            mControlWrapper.setScreenScaleType(mScaleTypeArray[mCurrentScaleType]);
+
            switch (mScaleTypeArray[mCurrentScaleType]) {
                case SCREEN_SCALE_DEFAULT:
-                   tv_av_scale.setText("默认");
+                   tv_av_scale.setText(R.string.video_default);
                    break;
 
                case SCREEN_SCALE_16_9:
@@ -181,19 +178,27 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                    break;
                case SCREEN_SCALE_MATCH_PARENT:
                    //充满整个控件视图
-                   tv_av_scale.setText("充满");
+                   tv_av_scale.setText(R.string.fill);
                    break;
 
                case SCREEN_SCALE_ORIGINAL:
                    //原始类型，指视频的原始类型
-                   tv_av_scale.setText("原始大小");
+                   tv_av_scale.setText(R.string.original_size);
                    break;
 
                case SCREEN_SCALE_CENTER_CROP:
                    //剧中裁剪类型
-                   tv_av_scale.setText("居中");
+                   tv_av_scale.setText(R.string.center_cut);
                    break;
            }
+       }else if(v==tv_speed){
+           new SpeedDialog(mContext, mControlWrapper.getSpeed() + "", new SpeedDialog.OnSpeedItemClickListener() {
+               @Override
+               public void onSpeedItemClick(String speed) {
+                   setSpeed(speed);
+               }
+           }).show();
+
        }
         if(controllerClickListener!=null){
             controllerClickListener.onClick(v);
@@ -246,9 +251,9 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         if (getVisibility() == VISIBLE) {
             boolean isLand= ((Activity) getContext()).getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
             if (mControlWrapper.isFullScreen()||isLand) {
-                mBottomBtnLayout.setVisibility(VISIBLE);
+                mBottomToolsLayout.setVisibility(VISIBLE);
             } else {
-                mBottomBtnLayout.setVisibility(GONE);
+                mBottomToolsLayout.setVisibility(GONE);
             }
         }
     }
@@ -305,11 +310,11 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         switch (playerState) {
             case ConstantKeys.PlayMode.MODE_NORMAL:
                 iv_fullscreen.setSelected(false);
-                mBottomBtnLayout.setVisibility(GONE);
+                mBottomToolsLayout.setVisibility(GONE);
                 break;
             case ConstantKeys.PlayMode.MODE_FULL_SCREEN:
                 iv_fullscreen.setSelected(true);
-                mBottomBtnLayout.setVisibility(VISIBLE);
+                mBottomToolsLayout.setVisibility(VISIBLE);
                 break;
         }
         Activity activity = PlayerUtils.scanForActivity(mContext);
@@ -494,6 +499,12 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
 
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
+    }
+    
+    public void addTools(View view){
+        if(mBottomToolsLayout!=null&&view!=null){
+            mBottomToolsLayout.addView(view,0);
+        }
     }
 
 }

@@ -38,7 +38,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     //顶部title
     private AvTitleView titleView;
     //底部视图
-    private AvNormalPlayBottomView mAvNormalPlayBottomView;
+    private AvNormalPlayBottomView mAvBottomView;
     private CustomLiveControlView liveControlView;
     private CustomOncePlayView customOncePlayView;
     private TextView tvLiveWaitMessage;
@@ -151,19 +151,19 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             this.addControlComponent(customOncePlayView);
 
             //直播视频，移除回放视图
-            if (mAvNormalPlayBottomView!=null){
-                this.removeControlComponent(mAvNormalPlayBottomView);
+            if (mAvBottomView!=null){
+                this.removeControlComponent(mAvBottomView);
             }
         } else {
             //添加底部播放控制条
-            if (mAvNormalPlayBottomView==null){
-                mAvNormalPlayBottomView = new AvNormalPlayBottomView(mContext);
+            if (mAvBottomView==null){
+                mAvBottomView = new AvNormalPlayBottomView(mContext);
                 //是否显示底部进度条。默认显示
-                mAvNormalPlayBottomView.showBottomProgress(true);
+                mAvBottomView.showBottomProgress(true);
             }
 
-            this.removeControlComponent(mAvNormalPlayBottomView);
-            this.addControlComponent(mAvNormalPlayBottomView);
+            this.removeControlComponent(mAvBottomView);
+            this.addControlComponent(mAvBottomView);
 
             //正常视频，移除直播视图
             if (liveControlView!=null){
@@ -353,14 +353,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
 
 
     public void setSpeed(String speed) {
-        if (mAvNormalPlayBottomView != null) {
-            mAvNormalPlayBottomView.setSpeed(speed);
+        if (mAvBottomView != null) {
+            mAvBottomView.setSpeed(speed);
         }
-    }
-    public TextView getTvPlaySource(){
-        if(mAvNormalPlayBottomView==null)
-            return null;
-        return mAvNormalPlayBottomView.tv_av_source;
     }
 
     public void toggleFullScreen(){
@@ -372,14 +367,20 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
 
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
-        if(mAvNormalPlayBottomView!=null){
-            mAvNormalPlayBottomView.setControllerClickListener(controllerClickListener);
+        if(mAvBottomView!=null){
+            mAvBottomView.setControllerClickListener(controllerClickListener);
         }
         if(mAvCompleteView!=null){
             mAvCompleteView.setControllerClickListener(controllerClickListener);
         }
         if(mErrorView!=null){
             mErrorView.setControllerClickListener(controllerClickListener);
+        }
+    }
+
+    public void addTools(View view){
+        if(mAvBottomView!=null){
+            mAvBottomView.addTools(view);
         }
     }
 

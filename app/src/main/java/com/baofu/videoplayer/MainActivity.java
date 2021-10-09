@@ -3,10 +3,12 @@ package com.baofu.videoplayer;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.allfootball.news.imageloader.ImageOption;
+import com.baofu.base.utils.CommonUtils;
 import com.google.android.exoplayer2.util.Log;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
@@ -30,6 +32,14 @@ public class MainActivity extends AppCompatActivity {
         videoView = findViewById(R.id.videoView);
         controller = new AvNormalPlayController(this);
         controller.setTitle("海贼王");
+        View view= LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CommonUtils.showToast("view");
+            }
+        });
+        controller.addTools(view);
         //设置播放器缩略图
         ImageLoader.getInstance().placeholder(R.drawable.a)
                 .url("https://img0.baidu.com/it/u=1519898345,2471979106&fm=26&fmt=auto")
@@ -109,13 +119,9 @@ public class MainActivity extends AppCompatActivity {
                 switch (id) {
                     case R.id.tv_speed:
                         break;
-                    case R.id.tv_av_source:
-                        break;
                     case R.id.iv_av_next:
                         break;
                     case R.id.tv_error_change_source:
-                        break;
-                    case R.id.tv_av_selected:
                         break;
                     case R.id.ll_share:
                         break;

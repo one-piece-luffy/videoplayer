@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_progress.xml" value="0.14583333333333334" />
+        <entry key="..\:/project/videoplayer/app/src/main/res/layout/av_tools_item.xml" value="0.19074074074074074" />
+        <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_bottom_util_view.xml" value="0.19074074074074074" />
+        <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_dialog_speed_list.xml" value="0.1" />
+        <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_item_dialog_speed_list.xml" value="0.12552083333333333" />
+        <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_video_player_normal_bottom.xml" value="0.25364583333333335" />
+        <entry key="..\:/project/videoplayer/av/src/main/res/layout/layout_av_controller.xml" value="0.1296875" />
+        <entry key="..\:/project/videoplayer/av/src/main/res/layout/pop_layout_danmaku.xml" value="0.1296875" />
+      </map>
+    </option>
+  </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>

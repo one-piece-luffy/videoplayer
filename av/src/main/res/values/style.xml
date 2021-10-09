@@ -15,4 +15,14 @@
         <!--弹窗背景是否变暗-->
         <item name="android:backgroundDimEnabled">false</item>
     </style>
+
+    <style name="PlayListDialogStyle" parent="Theme.AppCompat.Light">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:background">#00000000</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>
