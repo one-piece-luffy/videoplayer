@@ -70,7 +70,7 @@ dependencies {
     api project(':YCPlayerLib:VideoSqlLite')
     api project(':YCPlayerLib:VideoTool')
     api project(':YCPlayerLib:VideoView')
-    implementation ("com.google.guava:guava:31.0-android"){
+    api ("com.google.guava:guava:31.0-android"){
         // Exclude dependencies that are only used by Guava at compile time
         // (but declared as runtime deps) [internal b/168188131].
 //        exclude group: 'com.google.code.findbugs', module: 'jsr305'
