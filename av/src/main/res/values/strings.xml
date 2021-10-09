@@ -6,7 +6,7 @@
     <string name="av_time">00:00</string>
     <string name="av_speed">Speed</string>
     <string name="av_hd">修复</string>
-    <string name="av_replay">replay</string>
+    <string name="av_replay">Replay</string>
 
     <string name="av_speed_1">0.50x</string>
     <string name="av_speed_2">0.75x</string>
@@ -16,8 +16,8 @@
     <string name="av_speed_6">2.00x</string>
     <string name="av_speed_7">3.00x</string>
 
-    <string name="av_danmaku_et_hint">想说点啥~</string>
-    <string name="av_danmaku_btn">发送</string>
+    <string name="av_danmaku_et_hint">Say something~</string>
+    <string name="av_danmaku_btn">Send</string>
 
     <string name="av_lock_tip">Please unlock the screen first！</string>
     <string name="av_locked">Locked</string>
@@ -32,4 +32,6 @@
     <string name="fill">Fill</string>
     <string name="original_size">Original</string>
     <string name="center_cut">Center</string>
+    <string name="av_share">Share</string>
+    <string name="av_buffering">Buffering...</string>
 </resources>

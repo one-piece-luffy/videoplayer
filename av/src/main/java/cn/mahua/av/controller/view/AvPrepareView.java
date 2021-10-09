@@ -264,4 +264,9 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
         }
     }
 
+    public void hideTcpSpeed(){
+        if(mTvTcpSpeed!=null){
+            mTvTcpSpeed.setVisibility(View.GONE);
+        }
+    }
 }

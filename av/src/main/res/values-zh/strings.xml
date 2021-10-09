@@ -32,4 +32,6 @@
     <string name="fill">充满</string>
     <string name="original_size">原始大小</string>
     <string name="center_cut">居中</string>
+    <string name="av_share">分享</string>
+    <string name="av_buffering">正在缓冲...</string>
 </resources>

@@ -50,7 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dp"
-            android:text="正在缓冲..."
+            android:text="@string/av_buffering"
             android:textColor="@color/white"
             android:textSize="14dp" />
 

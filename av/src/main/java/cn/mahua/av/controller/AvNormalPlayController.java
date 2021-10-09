@@ -378,6 +378,12 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
     }
 
+    public void hideTcpSpeed(){
+        if(mPrepareView!=null){
+            mPrepareView.hideTcpSpeed();
+        }
+    }
+
     public void addTools(View view){
         if(mAvBottomView!=null){
             mAvBottomView.addTools(view);
