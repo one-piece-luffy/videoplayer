@@ -68,6 +68,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     TextView mTvTcpSpeed;
     private Timer mUpdateNetSpeedTimer;
     private TimerTask mUpdateNetSpeedTask;
+    boolean mHideTcp;
 
     public AvPrepareView(@NonNull Context context) {
         super(context);
@@ -233,7 +234,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                         public void run() {
                             long tcpSpeed = mControlWrapper.getTcpSpeed();
                             VideoLogUtils.i("获取网络加载速度++++++++" + tcpSpeed);
-                            if (tcpSpeed > 0) {
+                            if (tcpSpeed > 0&&!mHideTcp) {
                                 //显示网速
                                 mTvTcpSpeed.setVisibility(View.VISIBLE);
                                 mTvTcpSpeed.setText(AvUtils.getSizeStr(tcpSpeed));
@@ -265,6 +266,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     }
 
     public void hideTcpSpeed(){
+        mHideTcp=true;
         if(mTvTcpSpeed!=null){
             mTvTcpSpeed.setVisibility(View.GONE);
         }
