@@ -4,6 +4,10 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_progress.xml" value="0.14583333333333334" />
+        <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_thumb.xml" value="0.26564102564102565" />
+        <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_thumb_normal.xml" value="0.26564102564102565" />
+        <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_thumb_pressed.xml" value="0.26564102564102565" />
+        <entry key="..\:/project/videoplayer/app/src/main/res/layout/activity_main.xml" value="0.25364583333333335" />
         <entry key="..\:/project/videoplayer/app/src/main/res/layout/av_tools_item.xml" value="0.19074074074074074" />
         <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_bottom_util_view.xml" value="0.19074074074074074" />
         <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_dialog_speed_list.xml" value="0.1" />
