@@ -22,29 +22,4 @@ android.libraryVariants.all { variant ->
     def allSourceDirs = variant.sourceSets.inject ([]) {
         acc, val -> acc << val.javaDirectories
     }
-    task("generateJavadoc", type: Javadoc) {
-        description = "Generates Javadoc for the ${javadocTitle}."
-        title = "ExoPlayer ${javadocTitle}"
-        source = allSourceDirs + "${buildDir}/generated/aidl_source_output_dir/"
-        options {
-            links "https://developer.android.com/reference",
-                  "https://guava.dev/releases/$project.ext.guavaVersion/api/docs"
-            encoding = "UTF-8"
-        }
-        exclude "**/BuildConfig.java"
-        exclude "**/R.java"
-        doFirst {
-            classpath =
-                files(
-                    variant.javaCompileProvider.get().classpath.files,
-                    project.android.getBootClasspath())
-        }
-        doLast {
-            copy {
-                from "src/main/javadoc"
-                into "$buildDir/docs/javadoc"
-            }
-            project.fixJavadoc()
-        }
-    }
 }
