@@ -68,7 +68,7 @@ public final class PlatformScheduler implements Scheduler {
    *     by this instance if {@link #schedule(Requirements, String, String)} or {@link #cancel()}
    *     are called.
    */
-  @RequiresPermission(android.Manifest.permission.RECEIVE_BOOT_COMPLETED)
+
   public PlatformScheduler(Context context, int jobId) {
     context = context.getApplicationContext();
     this.jobId = jobId;

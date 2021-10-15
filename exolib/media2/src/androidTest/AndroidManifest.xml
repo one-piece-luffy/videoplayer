@@ -17,7 +17,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.google.android.exoplayer2.ext.media2.test">
 
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+<!--  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>-->
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
   <uses-sdk/>
