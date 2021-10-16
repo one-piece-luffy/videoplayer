@@ -361,8 +361,8 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                 mSeekBar.setSecondaryProgress(mSeekBar.getMax());
                 mPbBottomProgress.setSecondaryProgress(mPbBottomProgress.getMax());
             } else {
-                mSeekBar.setSecondaryProgress(percent * 10);
-                mPbBottomProgress.setSecondaryProgress(percent * 10);
+                mSeekBar.setSecondaryProgress(percent );
+                mPbBottomProgress.setSecondaryProgress(percent );
             }
         }
 
