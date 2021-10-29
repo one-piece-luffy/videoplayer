@@ -106,7 +106,7 @@ public class AvCompleteView extends FrameLayout implements InterControlView, Vie
         } else if (v == mLlShare){
             //点击分享
             if(controllerClickListener!=null){
-                controllerClickListener.onClick(mLlShare);
+                controllerClickListener.share();
             }
         } else if (v == mIvStopFullscreen){
             //点击返回键

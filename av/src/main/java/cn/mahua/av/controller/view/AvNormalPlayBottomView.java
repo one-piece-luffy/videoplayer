@@ -191,7 +191,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                    tv_av_scale.setText(R.string.center_cut);
                    break;
            }
-       }else if(v==tv_speed){
+       } else if (v == tv_speed) {
            new SpeedDialog(mContext, mControlWrapper.getSpeed() + "", new SpeedDialog.OnSpeedItemClickListener() {
                @Override
                public void onSpeedItemClick(String speed) {
@@ -199,10 +199,11 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                }
            }).show();
 
+       } else if(v==iv_av_next){
+           if(controllerClickListener!=null){
+               controllerClickListener.next();
+           }
        }
-        if(controllerClickListener!=null){
-            controllerClickListener.onClick(v);
-        }
     }
 
     protected int getLayoutId() {

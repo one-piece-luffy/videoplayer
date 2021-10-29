@@ -109,7 +109,7 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
         } else  if (v == mTvErrorChangeSource){
             setVisibility(GONE);
             if(controllerClickListener!=null){
-                controllerClickListener.onClick(mTvErrorChangeSource);
+                controllerClickListener.tryFix();
             }
         } else if (v == mIvStopFullscreen){
             //点击返回键

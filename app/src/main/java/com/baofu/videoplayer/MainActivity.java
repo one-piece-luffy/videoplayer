@@ -40,6 +40,27 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         controller.addTools(view);
+        controller.setControllerClickListener(new ControllerClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+
+            @Override
+            public void share() {
+                CommonUtils.showToast("share");
+            }
+
+            @Override
+            public void next() {
+                CommonUtils.showToast("next");
+            }
+
+            @Override
+            public void changeSource() {
+                CommonUtils.showToast("changeSource");
+            }
+        });
         //设置播放器缩略图
         ImageLoader.getInstance().placeholder(R.drawable.a)
                 .url("https://img0.baidu.com/it/u=1519898345,2471979106&fm=26&fmt=auto")
@@ -108,22 +129,6 @@ public class MainActivity extends AppCompatActivity {
                     case ConstantKeys.CurrentState.STATE_BUFFERING_PAUSED:
                         break;
                     case ConstantKeys.CurrentState.STATE_COMPLETED:
-                        break;
-                }
-            }
-        });
-        controller.setControllerClickListener(new ControllerClickListener() {
-            @Override
-            public void onClick(View view) {
-                int id = view.getId();
-                switch (id) {
-                    case R.id.tv_speed:
-                        break;
-                    case R.id.iv_av_next:
-                        break;
-                    case R.id.tv_error_change_source:
-                        break;
-                    case R.id.ll_share:
                         break;
                 }
             }
