@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">YCVideoPlayerLib</string>
 
 
     <string name="lock_tip">请先解锁屏幕！</string>

@@ -57,9 +57,10 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void changeSource() {
-                CommonUtils.showToast("changeSource");
+            public void tryFix() {
+
             }
+
         });
         //设置播放器缩略图
         ImageLoader.getInstance().placeholder(R.drawable.a)
