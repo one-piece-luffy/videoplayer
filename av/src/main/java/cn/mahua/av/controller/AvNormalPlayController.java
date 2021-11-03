@@ -390,4 +390,13 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
     }
 
+    /**
+     * 是否显示底部进度条，默认显示
+     */
+    public void showBottomProgress(boolean isShow) {
+        if(mAvBottomView!=null){
+            mAvBottomView.showBottomProgress(isShow);
+        }
+    }
+
 }

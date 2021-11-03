@@ -85,6 +85,8 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     int mCurrentScaleType = SCREEN_SCALE_DEFAULT;
     float mLastSpeed;
     float mCurrentSpeed;
+    //隐藏底部进度条
+    boolean mHideBottomProgressBar;
 
     int mScaleTypeArray[] = new int[]{
             SCREEN_SCALE_DEFAULT,
@@ -501,11 +503,16 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
     }
-    
+
+    /**
+     * 添加自定义view
+     * @param view
+     */
     public void addTools(View view){
         if(mBottomToolsLayout!=null&&view!=null){
             mBottomToolsLayout.addView(view,0);
         }
     }
+
 
 }

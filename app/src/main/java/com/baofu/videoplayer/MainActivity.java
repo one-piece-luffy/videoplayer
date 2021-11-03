@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CommonUtils.showToast("view");
+                CommonUtils.showToast("工具1");
             }
         });
         controller.addTools(view);
@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
                 .url("https://img0.baidu.com/it/u=1519898345,2471979106&fm=26&fmt=auto")
                 .imageView(controller.getThumb())
                 .loadImage(this);
+        controller.showBottomProgress(false);
         //设置控制器
         videoView.setController(controller);
         setListener();
