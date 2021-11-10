@@ -149,14 +149,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     public void onPlayStateChanged(int playState) {
         switch (playState) {
             case ConstantKeys.CurrentState.STATE_PREPARING:
-
-                bringToFront();
-                setVisibility(VISIBLE);
-                mIvStartPlay.setVisibility(View.GONE);
-                mFlNetWarning.setVisibility(GONE);
-                mLoadingLayout.setVisibility(View.VISIBLE);
-                //开启缓冲时更新网络加载速度
-                startUpdateNetSpeedTimer();
+                showLoading();
                 break;
             case ConstantKeys.CurrentState.STATE_BUFFERING_PAUSED:
                 setVisibility(VISIBLE);
@@ -214,6 +207,15 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     }
 
 
+    public void showLoading(){
+        bringToFront();
+        setVisibility(VISIBLE);
+        mIvStartPlay.setVisibility(View.GONE);
+        mFlNetWarning.setVisibility(GONE);
+        mLoadingLayout.setVisibility(View.VISIBLE);
+        //开启缓冲时更新网络加载速度
+        startUpdateNetSpeedTimer();
+    }
 
     /**
      * 当正在缓冲或者播放准备中状态时，开启缓冲时更新网络加载速度
@@ -267,10 +269,14 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
         }
     }
 
-    public void hideTcpSpeed(){
+    public void showTcpSpeed(boolean show){
         mHideTcp=true;
         if(mTvTcpSpeed!=null){
-            mTvTcpSpeed.setVisibility(View.GONE);
+            if(show){
+                mTvTcpSpeed.setVisibility(View.VISIBLE);
+            }else{
+                mTvTcpSpeed.setVisibility(View.GONE);
+            }
         }
     }
     public void setLoadingMessage(String message){

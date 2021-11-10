@@ -378,9 +378,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
     }
 
-    public void hideTcpSpeed(){
+    public void showTcpSpeed(boolean show){
         if(mPrepareView!=null){
-            mPrepareView.hideTcpSpeed();
+            mPrepareView.showTcpSpeed(show);
         }
     }
 
@@ -402,6 +402,15 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     public void setLoadingMessage(String message){
         if(mPrepareView!=null){
             mPrepareView.setLoadingMessage(message);
+        }
+    }
+
+    /**
+     * 直接显示加载框
+     */
+    public void showPreviewLoading(){
+        if(mPrepareView!=null){
+            mPrepareView.showLoading();
         }
     }
 

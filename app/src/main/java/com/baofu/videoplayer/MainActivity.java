@@ -82,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
         videoView.setUrl("http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4", header);
         //开始播放
         videoView.start();
-
+        //直接显示加载框
+//        controller.showPreviewLoading();
 
     }
 
