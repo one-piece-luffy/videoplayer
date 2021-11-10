@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         videoView = findViewById(R.id.videoView);
         controller = new AvNormalPlayController(this);
         controller.setTitle("海贼王");
+        controller.setLoadingMessage("正在缓冲，哈哈");
         View view= LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
         view.setOnClickListener(new View.OnClickListener() {
             @Override

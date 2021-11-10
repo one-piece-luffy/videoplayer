@@ -69,6 +69,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     private Timer mUpdateNetSpeedTimer;
     private TimerTask mUpdateNetSpeedTask;
     boolean mHideTcp;
+    TextView mTvLoading;
 
     public AvPrepareView(@NonNull Context context) {
         super(context);
@@ -103,6 +104,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
         mTvStart = view.findViewById(R.id.tv_start);
         mLoadingLayout = view.findViewById(R.id.loading_layout);
         mTvTcpSpeed = view.findViewById(R.id.tcp_speed);
+        mTvLoading = view.findViewById(R.id.tv_loading);
     }
 
     private void initListener() {
@@ -269,6 +271,11 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
         mHideTcp=true;
         if(mTvTcpSpeed!=null){
             mTvTcpSpeed.setVisibility(View.GONE);
+        }
+    }
+    public void setLoadingMessage(String message){
+        if(mTvLoading!=null){
+            mTvLoading.setText(message);
         }
     }
 }
