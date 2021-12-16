@@ -5,8 +5,8 @@ group='com.github.one-piece-luffy'
 
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.1'
+    compileSdkVersion 31
+    buildToolsVersion '30.0.3'
 
 
     defaultConfig {
@@ -36,11 +36,10 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.appcompat:appcompat:1.4.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.2'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
 
-    implementation 'com.blankj:utilcodex:1.26.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     //播放器
 //    api 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.0'

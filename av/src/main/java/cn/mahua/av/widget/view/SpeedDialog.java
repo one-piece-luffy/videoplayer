@@ -15,9 +15,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.blankj.utilcode.util.ColorUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,9 +85,9 @@ public class SpeedDialog extends Dialog {
                 float itemSpeed = Float.parseFloat(item);
                 if (curSpeed == itemSpeed) {
 
-                    viewHolder.tv.setTextColor(ColorUtils.getColor(R.color.av_speed_color));
+                    viewHolder.tv.setTextColor(0xffFF7000);
                 } else {
-                    viewHolder.tv.setTextColor(ColorUtils.getColor(R.color.white));
+                    viewHolder.tv.setTextColor(0xffffffff);
                 }
                 viewHolder.tv.setText(item);
                 final int temp = position;

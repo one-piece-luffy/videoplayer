@@ -1,9 +1,9 @@
 package cn.mahua.av.ad;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 
-import com.blankj.utilcode.util.LogUtils;
 
 public class AdJavascriptInterface {
 
@@ -12,6 +12,6 @@ public class AdJavascriptInterface {
     @JavascriptInterface
     public void onClickImg(String imageUrl) {
         //根据URL查看大图逻辑
-        LogUtils.e(imageUrl);
+        Log.e(getClass().getName(),imageUrl);
     }
 }

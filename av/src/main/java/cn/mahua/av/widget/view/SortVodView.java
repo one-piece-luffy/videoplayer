@@ -9,8 +9,8 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.blankj.utilcode.util.ConvertUtils;
 
+import cn.mahua.av.DensityUtil;
 import cn.mahua.av.R;
 
 public class SortVodView extends HorizontalScrollView implements View.OnClickListener {
@@ -64,7 +64,7 @@ public class SortVodView extends HorizontalScrollView implements View.OnClickLis
         for (int i = 0; i < strings.length; i++) {
             TextView textView = new TextView(getContext());
             if (textSize != 0) {
-                textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, ConvertUtils.sp2px(textSize));
+                textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, DensityUtil.sp2px(textView.getContext(),textSize));
             }
             textView.setTag(R.id.sortVodData, strings[i]);
             textView.setOnClickListener(this);

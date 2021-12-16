@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.net.http.SslError;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
@@ -15,7 +16,6 @@ import android.webkit.WebViewClient;
 
 import androidx.appcompat.app.AlertDialog;
 
-import com.blankj.utilcode.util.LogUtils;
 public class AdWebView extends WebView {
 
     //替换img属性
@@ -75,7 +75,7 @@ public class AdWebView extends WebView {
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             try {
-                LogUtils.e(url);
+                Log.e(getClass().getName(),url);
                 Uri uri = Uri.parse(url);
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                 getContext().startActivity(intent);
