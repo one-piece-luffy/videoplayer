@@ -45,7 +45,6 @@ import com.yc.video.R;
 import com.yc.video.old.listener.OnPlayerStatesListener;
 import com.yc.video.old.listener.OnPlayerTypeListener;
 import com.yc.video.old.player.OldVideoPlayer;
-import com.yc.video.old.other.BatterReceiver;
 import com.yc.video.old.other.NetChangedReceiver;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.old.listener.OnClarityChangedListener;
@@ -200,10 +199,6 @@ public class VideoPlayerController extends AbsVideoPlayerController implements V
      * 网络变化监听广播，在网络变更时进行对应处理
      */
     private NetChangedReceiver netChangedReceiver;
-    /**
-     * 电池状态即电量变化广播接收器
-     */
-    private BroadcastReceiver mBatterReceiver;
 
     public VideoPlayerController(Context context) {
         super(context);
@@ -280,9 +275,6 @@ public class VideoPlayerController extends AbsVideoPlayerController implements V
      */
     private void registerBatterReceiver() {
         if (!hasRegisterBatteryReceiver) {
-            mBatterReceiver = new BatterReceiver();
-            mContext.registerReceiver(mBatterReceiver, new IntentFilter(
-                    Intent.ACTION_BATTERY_CHANGED));
             hasRegisterBatteryReceiver = true;
             VideoLogUtils.i("广播监听---------注册电池监听广播");
         }
@@ -294,7 +286,6 @@ public class VideoPlayerController extends AbsVideoPlayerController implements V
      */
     private void unRegisterBatterReceiver() {
         if (hasRegisterBatteryReceiver) {
-            mContext.unregisterReceiver(mBatterReceiver);
             hasRegisterBatteryReceiver = false;
             VideoLogUtils.i("广播监听---------解绑电池监听广播");
         }
