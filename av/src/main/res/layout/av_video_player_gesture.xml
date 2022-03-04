@@ -82,7 +82,7 @@
 
             android:textSize="16dp"
             android:textColor="#aaffffff"
-            android:text="快进中"
+            android:text="@string/speeding"
             />
 
     </LinearLayout>

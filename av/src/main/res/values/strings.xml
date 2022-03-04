@@ -34,4 +34,5 @@
     <string name="center_cut">Center</string>
     <string name="av_share">Share</string>
     <string name="av_buffering">Buffering...</string>
+    <string name="speeding">speed</string>
 </resources>
