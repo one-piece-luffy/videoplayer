@@ -20,6 +20,7 @@ import static com.google.android.exoplayer2.util.Assertions.checkNotNull;
 import static com.google.android.exoplayer2.util.Util.castNonNull;
 import static java.lang.Math.min;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -39,11 +40,19 @@ import java.net.HttpURLConnection;
 import java.net.NoRouteToHostException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * An {@link HttpDataSource} that uses Android's {@link HttpURLConnection}.
@@ -574,7 +583,9 @@ public class DefaultHttpDataSource extends BaseDataSource implements HttpDataSou
     HttpURLConnection connection = openConnection(url);
     connection.setConnectTimeout(connectTimeoutMillis);
     connection.setReadTimeout(readTimeoutMillis);
-
+    if ( connection instanceof HttpsURLConnection) {
+      trustAllCert((HttpsURLConnection) (connection));
+    }
     Map<String, String> requestHeaders = new HashMap<>();
     if (defaultRequestProperties != null) {
       requestHeaders.putAll(defaultRequestProperties.getSnapshot());
@@ -608,6 +619,42 @@ public class DefaultHttpDataSource extends BaseDataSource implements HttpDataSou
       connection.connect();
     }
     return connection;
+  }
+  public static void trustAllCert(HttpsURLConnection httpsURLConnection) {
+    SSLContext sslContext = null;
+    try {
+      sslContext = SSLContext.getInstance("TLS");
+      if (sslContext != null) {
+        sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+          @SuppressLint("TrustAllX509TrustManager")
+          @Override
+          public void checkClientTrusted(X509Certificate[] chain,
+                                         String authType) throws CertificateException {
+          }
+
+          @SuppressLint("TrustAllX509TrustManager")
+          @Override
+          public void checkServerTrusted(X509Certificate[] chain,
+                                         String authType) throws CertificateException {
+          }
+
+          @Override
+          public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+          }
+        }}, null);
+      }
+    } catch (Exception e) {
+      Log.w(TAG,"SSLContext init failed");
+    }
+    // Cannot do ssl checkl.
+    if (sslContext == null) {
+      return;
+    }
+    // Trust the cert.
+    HostnameVerifier hostnameVerifier = (hostname, session) -> true;
+    httpsURLConnection.setHostnameVerifier(hostnameVerifier);
+    httpsURLConnection.setSSLSocketFactory(sslContext.getSocketFactory());
   }
 
   /** Creates an {@link HttpURLConnection} that is connected with the {@code url}. */
