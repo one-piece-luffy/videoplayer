@@ -384,9 +384,22 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
     }
 
+    /**
+     * 添加自定义view
+     * @param view
+     */
     public void addTools(View view){
         if(mAvBottomView!=null){
             mAvBottomView.addTools(view);
+        }
+    }
+
+    /**
+     * 隐藏下一集
+     */
+    public void hideNextBtn(){
+        if(mAvBottomView!=null){
+            mAvBottomView.hideNextBtn();
         }
     }
 

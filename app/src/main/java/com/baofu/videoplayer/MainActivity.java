@@ -31,7 +31,9 @@ public class MainActivity extends AppCompatActivity {
 
         videoView = findViewById(R.id.videoView);
         controller = new AvNormalPlayController(this);
+        //设置标题
         controller.setTitle("海贼王");
+        //设置缓存提示信息
         controller.setLoadingMessage("正在缓冲，哈哈");
         View view= LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
         view.setOnClickListener(new View.OnClickListener() {
@@ -40,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
                 CommonUtils.showToast("工具1");
             }
         });
+        //隐藏下一集按钮
+        controller.hideNextBtn();
+        //添加自定义工具
         controller.addTools(view);
         controller.setControllerClickListener(new ControllerClickListener() {
             @Override
@@ -59,6 +64,11 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void tryFix() {
+
+            }
+
+            @Override
+            public void onSpeedClick() {
 
             }
 
