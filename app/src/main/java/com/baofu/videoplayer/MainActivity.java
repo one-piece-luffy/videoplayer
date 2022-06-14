@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSpeedClick() {
+            public void onSpeedClick(String speed) {
 
             }
 

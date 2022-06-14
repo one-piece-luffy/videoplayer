@@ -196,7 +196,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                 public void onSpeedItemClick(String speed) {
                     setSpeed(speed);
                     if(controllerClickListener!=null){
-                        controllerClickListener.onSpeedClick();
+                        controllerClickListener.onSpeedClick(speed);
 
                     }
                 }

@@ -7,5 +7,5 @@ public interface ControllerClickListener {
     void share();
     void next();
     void tryFix();
-    void onSpeedClick();
+    void onSpeedClick(String speed);
 }
