@@ -443,7 +443,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
 
     public void setSpeed(String speed) {
         // 转为小写处理
-        switch (speed.toLowerCase()) {
+        switch (speed) {
             case SpeedInterface.sp0_50:
                 mControlWrapper.setSpeed(0.50f);
                 setTvSpeed(getResources().getString(R.string.av_speed_1));
