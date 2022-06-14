@@ -3,7 +3,6 @@ package cn.mahua.av.controller;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -18,13 +17,13 @@ import com.yc.video.ui.view.CustomLiveControlView;
 import com.yc.video.ui.view.CustomOncePlayView;
 
 import cn.mahua.av.R;
-import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.controller.view.AvCompleteView;
 import cn.mahua.av.controller.view.AvErrorView;
 import cn.mahua.av.controller.view.AvGestureView;
 import cn.mahua.av.controller.view.AvNormalPlayBottomView;
 import cn.mahua.av.controller.view.AvPrepareView;
 import cn.mahua.av.controller.view.AvTitleView;
+import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.play.ControllerClickListener;
 
 public class AvNormalPlayController extends GestureVideoController implements View.OnClickListener{
@@ -49,6 +48,8 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     AvErrorView mErrorView;
     //准备视图
     AvPrepareView mPrepareView;
+    //滑动控制视图
+    AvGestureView gestureControlView;
     /**
      * 是否是直播，默认不是
      */
@@ -124,8 +125,14 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         //添加直播/回放视频底部控制视图
         changePlayType();
 
-        //添加滑动控制视图
-        AvGestureView gestureControlView = new AvGestureView(mContext);
+
+        gestureControlView = new AvGestureView(mContext);
+        gestureControlView.setOnSpeedChangeListener(new OnSpeedChangeListener() {
+            @Override
+            public void onChange(String speed) {
+                setSpeed(speed);
+            }
+        });
         this.addControlComponent(gestureControlView);
     }
 

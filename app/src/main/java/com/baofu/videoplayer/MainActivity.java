@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Toast;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.allfootball.news.imageloader.ImageOption;
@@ -17,6 +18,7 @@ import com.yc.video.player.VideoPlayer;
 import java.util.HashMap;
 import java.util.Map;
 
+import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.controller.AvNormalPlayController;
 import cn.mahua.av.play.ControllerClickListener;
 
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
                 CommonUtils.showToast("工具1");
             }
         });
+
         //隐藏下一集按钮
         controller.hideNextBtn();
         //添加自定义工具
@@ -82,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         controller.showBottomProgress(true);
         //设置控制器
         videoView.setController(controller);
+
         setListener();
 
         Map<String, String> header = new HashMap();
@@ -92,6 +96,14 @@ public class MainActivity extends AppCompatActivity {
         videoView.setUrl("http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4", header);
         //开始播放
         videoView.start();
+        videoView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity.this,"2.0倍速播放",Toast.LENGTH_SHORT).show();
+                controller.setSpeed(SpeedInterface.sp2_0);
+            }
+        },500);
+
         //直接显示加载框
 //        controller.showPreviewLoading();
 

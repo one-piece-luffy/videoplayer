@@ -398,11 +398,11 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
 
         //更新底部的倍速显示
         mCurrentSpeed = mControlWrapper.getSpeed();
-        if (mCurrentSpeed != mLastSpeed) {
-            setSpeed(mCurrentSpeed + "");
-            mLastSpeed = mCurrentSpeed;
-        }
-
+//        if (mCurrentSpeed != mLastSpeed) {
+//            setSpeed(mCurrentSpeed + "");
+//            mLastSpeed = mCurrentSpeed;
+//        }
+        Log.i("AvNormalPlayBottomView","speed:"+mCurrentSpeed);
 
     }
 

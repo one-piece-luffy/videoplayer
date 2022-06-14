@@ -40,6 +40,8 @@ import com.yc.video.controller.IGestureComponent;
 import com.yc.video.tool.PlayerUtils;
 
 import cn.mahua.av.R;
+import cn.mahua.av.SpeedInterface;
+import cn.mahua.av.listener.OnSpeedChangeListener;
 
 /**
  * 手势控制
@@ -68,7 +70,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
     ImageView mIvQuick;
     final  String TAG="AvGestureView";
     AnimationDrawable mAnimationDrawable;
-
+    OnSpeedChangeListener onSpeedChangeListener;
     public AvGestureView(@NonNull Context context) {
         super(context);
         init(context);
@@ -107,6 +109,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
 
     }
 
+    public void setOnSpeedChangeListener(OnSpeedChangeListener onSpeedChangeListener) {
+        this.onSpeedChangeListener = onSpeedChangeListener;
+    }
 
     @Override
     public void attach(@NonNull ControlWrapper controlWrapper) {
@@ -160,6 +165,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
         if (mLastSpeed != 0 && isLongPress) {
             isLongPress = false;
             mControlWrapper.setSpeed(mLastSpeed);
+            if (onSpeedChangeListener != null) {
+                onSpeedChangeListener.onChange(mLastSpeed+"");
+            }
             if(mAnimationDrawable!=null){
                 mAnimationDrawable.stop();
             }
@@ -219,7 +227,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
         mLongSpeed.setVisibility(View.VISIBLE);
         mAnimationDrawable = (AnimationDrawable) mIvQuick.getDrawable();
         mAnimationDrawable.start();
-
+        if (onSpeedChangeListener != null) {
+            onSpeedChangeListener.onChange(SpeedInterface.sp3_0);
+        }
     }
 
     @Override
