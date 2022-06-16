@@ -1,8 +1,6 @@
 <resources>
 
     <string name="iv">ImageView</string>
-    <string name="av_title">title</string>
-    <string name="av_change"></string>
     <string name="av_time">00:00</string>
     <string name="av_speed">Speed</string>
     <string name="av_hd">fix</string>
@@ -35,4 +33,10 @@
     <string name="av_share">Share</string>
     <string name="av_buffering">Buffering...</string>
     <string name="speeding">speed</string>
+    <string name="adjust_brightness">Adjust brightness</string>
+    <string name="av_guide_left_desc">Slide on the left</string>
+    <string name="quick_play">Quick play</string>
+    <string name="long_press">Long press</string>
+    <string name="adjust_voice">Adjust voice</string>
+    <string name="av_guide_right_desc">Slide on the right</string>
 </resources>

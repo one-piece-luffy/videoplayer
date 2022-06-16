@@ -20,6 +20,7 @@ import cn.mahua.av.R;
 import cn.mahua.av.controller.view.AvCompleteView;
 import cn.mahua.av.controller.view.AvErrorView;
 import cn.mahua.av.controller.view.AvGestureView;
+import cn.mahua.av.controller.view.AvGuideView;
 import cn.mahua.av.controller.view.AvNormalPlayBottomView;
 import cn.mahua.av.controller.view.AvPrepareView;
 import cn.mahua.av.controller.view.AvTitleView;
@@ -36,6 +37,8 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     private ImageView thumb;
     //顶部title
     private AvTitleView titleView;
+    //手势引导图
+    private AvGuideView mGuideView;
     //底部视图
     private AvNormalPlayBottomView mAvBottomView;
     private CustomLiveControlView liveControlView;
@@ -125,6 +128,10 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         //添加直播/回放视频底部控制视图
         changePlayType();
 
+        //添加引导图
+        mGuideView = new AvGuideView(mContext);
+        mGuideView.setVisibility(GONE);
+        this.addControlComponent(mGuideView);
 
         gestureControlView = new AvGestureView(mContext);
         gestureControlView.setOnSpeedChangeListener(new OnSpeedChangeListener() {

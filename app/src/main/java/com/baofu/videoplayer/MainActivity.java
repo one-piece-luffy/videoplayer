@@ -99,8 +99,8 @@ public class MainActivity extends AppCompatActivity {
         videoView.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(MainActivity.this,"2.0倍速播放",Toast.LENGTH_SHORT).show();
-                controller.setSpeed(SpeedInterface.sp2_0);
+                Toast.makeText(MainActivity.this,"0.5倍速播放",Toast.LENGTH_SHORT).show();
+                controller.setSpeed(SpeedInterface.sp0_50);
             }
         },500);
 
