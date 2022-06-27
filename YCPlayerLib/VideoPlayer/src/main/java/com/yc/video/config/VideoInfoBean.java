@@ -16,7 +16,11 @@ limitations under the License.
 package com.yc.video.config;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,7 +32,7 @@ import java.util.Map;
  *     revise:
  * </pre>
  */
-public class VideoInfoBean implements Serializable {
+public class VideoInfoBean implements Parcelable {
 
     /**
      * 视频的标题
@@ -127,4 +131,68 @@ public class VideoInfoBean implements Serializable {
     public void setP(String p) {
         this.p = p;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.title);
+        dest.writeString(this.videoUrl);
+        dest.writeInt(this.headers.size());
+        for (Map.Entry<String, String> entry : this.headers.entrySet()) {
+            dest.writeString(entry.getKey());
+            dest.writeString(entry.getValue());
+        }
+        dest.writeString(this.cover);
+        dest.writeLong(this.length);
+        dest.writeString(this.grade);
+        dest.writeString(this.p);
+    }
+
+    public void readFromParcel(Parcel source) {
+        this.title = source.readString();
+        this.videoUrl = source.readString();
+        int headersSize = source.readInt();
+        this.headers = new HashMap<String, String>(headersSize);
+        for (int i = 0; i < headersSize; i++) {
+            String key = source.readString();
+            String value = source.readString();
+            this.headers.put(key, value);
+        }
+        this.cover = source.readString();
+        this.length = source.readLong();
+        this.grade = source.readString();
+        this.p = source.readString();
+    }
+
+    protected VideoInfoBean(Parcel in) {
+        this.title = in.readString();
+        this.videoUrl = in.readString();
+        int headersSize = in.readInt();
+        this.headers = new HashMap<String, String>(headersSize);
+        for (int i = 0; i < headersSize; i++) {
+            String key = in.readString();
+            String value = in.readString();
+            this.headers.put(key, value);
+        }
+        this.cover = in.readString();
+        this.length = in.readLong();
+        this.grade = in.readString();
+        this.p = in.readString();
+    }
+
+    public static final Parcelable.Creator<VideoInfoBean> CREATOR = new Parcelable.Creator<VideoInfoBean>() {
+        @Override
+        public VideoInfoBean createFromParcel(Parcel source) {
+            return new VideoInfoBean(source);
+        }
+
+        @Override
+        public VideoInfoBean[] newArray(int size) {
+            return new VideoInfoBean[size];
+        }
+    };
 }
