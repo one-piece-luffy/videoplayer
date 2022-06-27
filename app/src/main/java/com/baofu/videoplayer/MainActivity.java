@@ -3,6 +3,7 @@ package com.baofu.videoplayer;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
@@ -10,7 +11,6 @@ import android.widget.Toast;
 import com.allfootball.news.imageloader.ImageLoader;
 import com.allfootball.news.imageloader.ImageOption;
 import com.baofu.base.utils.CommonUtils;
-import com.google.android.exoplayer2.util.Log;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
 import com.yc.video.player.VideoPlayer;

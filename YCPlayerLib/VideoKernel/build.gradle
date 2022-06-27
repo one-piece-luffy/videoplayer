@@ -44,17 +44,17 @@ dependencies {
 //    implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:2.11.3"
 //    implementation "com.google.android.exoplayer:extension-rtmp:2.11.3"
 
-    api project(':exolib:core')
-    api project(':exolib:dash')
-    api project(':exolib:hls')
-    api project(':exolib:rtmp')
-    api project(':exolib:smoothstreaming')
-    api project(':exolib:rtsp')
-    api project(':exolib:av1')
-    api project( ':exolib:ffmpeg')
-    api project( ':exolib:flac')
-    api project( ':exolib:opus')
-    api project( ':exolib:vp9')
+    implementation project(':exolib:core')
+    implementation project(':exolib:dash')
+    implementation project(':exolib:hls')
+    implementation project(':exolib:rtmp')
+    implementation project(':exolib:smoothstreaming')
+    implementation project(':exolib:rtsp')
+    implementation project(':exolib:av1')
+    implementation project( ':exolib:ffmpeg')
+    implementation project( ':exolib:flac')
+    implementation project( ':exolib:opus')
+    implementation project( ':exolib:vp9')
 }
 
 
