@@ -19,7 +19,6 @@ package com.yc.video.config;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 

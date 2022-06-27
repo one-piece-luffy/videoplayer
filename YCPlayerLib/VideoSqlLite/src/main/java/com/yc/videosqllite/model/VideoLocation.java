@@ -2,12 +2,12 @@ package com.yc.videosqllite.model;
 
 
 import android.os.Build;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -19,7 +19,7 @@ import java.util.Objects;
  *     revise: 必须
  * </pre>
  */
-public class VideoLocation implements Serializable , Cloneable{
+public class VideoLocation implements  Cloneable, Parcelable {
 
     /**
      * 视频链接
@@ -215,4 +215,43 @@ public class VideoLocation implements Serializable , Cloneable{
         }
         return result;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.url);
+        dest.writeString(this.urlMd5);
+        dest.writeLong(this.position);
+        dest.writeLong(this.totalTime);
+    }
+
+    public void readFromParcel(Parcel source) {
+        this.url = source.readString();
+        this.urlMd5 = source.readString();
+        this.position = source.readLong();
+        this.totalTime = source.readLong();
+    }
+
+    protected VideoLocation(Parcel in) {
+        this.url = in.readString();
+        this.urlMd5 = in.readString();
+        this.position = in.readLong();
+        this.totalTime = in.readLong();
+    }
+
+    public static final Parcelable.Creator<VideoLocation> CREATOR = new Parcelable.Creator<VideoLocation>() {
+        @Override
+        public VideoLocation createFromParcel(Parcel source) {
+            return new VideoLocation(source);
+        }
+
+        @Override
+        public VideoLocation[] newArray(int size) {
+            return new VideoLocation[size];
+        }
+    };
 }
