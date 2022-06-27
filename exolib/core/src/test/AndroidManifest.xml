@@ -14,6 +14,6 @@
      limitations under the License.
 -->
 
-<manifest package="com.google.android.exoplayer2.core.test">
+<manifest package="com.google.android.exoplayer3.core.test">
   <uses-sdk/>
 </manifest>

@@ -7,26 +7,26 @@ import android.net.TrafficStats;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.DefaultRenderersFactory;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.LoadControl;
-import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.RenderersFactory;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.analytics.AnalyticsCollector;
-import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.MediaSourceEventListener;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.util.Clock;
-import com.google.android.exoplayer2.util.EventLogger;
-import com.google.android.exoplayer2.util.Log;
-import com.google.android.exoplayer2.video.VideoListener;
+import com.google.android.exoplayer3.DefaultLoadControl;
+import com.google.android.exoplayer3.DefaultRenderersFactory;
+import com.google.android.exoplayer3.ExoPlaybackException;
+import com.google.android.exoplayer3.LoadControl;
+import com.google.android.exoplayer3.PlaybackParameters;
+import com.google.android.exoplayer3.Player;
+import com.google.android.exoplayer3.RenderersFactory;
+import com.google.android.exoplayer3.SimpleExoPlayer;
+import com.google.android.exoplayer3.analytics.AnalyticsCollector;
+import com.google.android.exoplayer3.source.DefaultMediaSourceFactory;
+import com.google.android.exoplayer3.source.MediaSource;
+import com.google.android.exoplayer3.source.MediaSourceEventListener;
+import com.google.android.exoplayer3.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer3.trackselection.MappingTrackSelector;
+import com.google.android.exoplayer3.trackselection.TrackSelector;
+import com.google.android.exoplayer3.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer3.util.Clock;
+import com.google.android.exoplayer3.util.EventLogger;
+import com.google.android.exoplayer3.util.Log;
+import com.google.android.exoplayer3.video.VideoListener;
 import com.yc.kernel.inter.AbstractVideoPlayer;
 import com.yc.kernel.inter.VideoPlayerListener;
 import com.yc.kernel.utils.PlayerConstant;
@@ -39,7 +39,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
-import static com.google.android.exoplayer2.ExoPlaybackException.TYPE_SOURCE;
+import static com.google.android.exoplayer3.ExoPlaybackException.TYPE_SOURCE;
 
 /**
  * <pre>

@@ -15,6 +15,6 @@
   ~ limitations under the License.
   -->
 
-<manifest package="com.google.android.exoplayer2.ext.okhttp.test">
+<manifest package="com.google.android.exoplayer3.ext.okhttp.test">
     <uses-sdk/>
 </manifest>
