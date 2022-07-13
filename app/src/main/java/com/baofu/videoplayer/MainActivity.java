@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 .loadImage(this);
         //是否展示底部进度条
         controller.showBottomProgress(true);
+        controller.showShare(true);
         //设置控制器
         videoView.setController(controller);
 

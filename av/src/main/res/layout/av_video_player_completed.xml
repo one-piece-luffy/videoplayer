@@ -28,6 +28,7 @@
 
 
     <LinearLayout
+        android:id="@+id/shareLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
@@ -88,5 +89,17 @@
         </LinearLayout>
     </LinearLayout>
 
-
+    <ImageView
+        android:id="@+id/iv_play"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_gravity="center"
+        android:background="@drawable/av_bg_fadded_round"
+        android:padding="16dp"
+        android:src="@drawable/av_vector_play_button"
+        android:visibility="gone"/>
 </FrameLayout>

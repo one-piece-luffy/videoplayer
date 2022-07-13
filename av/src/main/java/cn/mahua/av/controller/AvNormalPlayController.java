@@ -441,4 +441,13 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
     }
 
+    /**
+     * 播放完成是否显示分享布局
+     * @param show
+     */
+    public void showShare(boolean show){
+        if(mAvBottomView!=null){
+            mAvCompleteView.showShare(show);
+        }
+    }
 }

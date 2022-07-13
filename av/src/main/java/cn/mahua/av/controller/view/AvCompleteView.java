@@ -57,6 +57,8 @@ public class AvCompleteView extends FrameLayout implements InterControlView, Vie
     private ImageView mIvReplay;
     private LinearLayout mLlShare;
     private ImageView mIvShare;
+    private ImageView iv_play;
+    private View shareLayout;
     protected ControllerClickListener controllerClickListener;
     public AvCompleteView(@NonNull Context context) {
         super(context);
@@ -90,17 +92,20 @@ public class AvCompleteView extends FrameLayout implements InterControlView, Vie
         mIvReplay = view.findViewById(R.id.iv_replay);
         mLlShare = view.findViewById(R.id.ll_share);
         mIvShare = view.findViewById(R.id.iv_share);
+        iv_play = view.findViewById(R.id.iv_play);
+        shareLayout = view.findViewById(R.id.shareLayout);
     }
 
     private void initListener() {
         mLlReplay.setOnClickListener(this);
         mLlShare.setOnClickListener(this);
         mIvStopFullscreen.setOnClickListener(this);
+        iv_play.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
-        if (v == mLlReplay){
+        if (v == mLlReplay||v==iv_play){
             //点击重播
             mControlWrapper.replay(true);
         } else if (v == mLlShare){
@@ -180,5 +185,14 @@ public class AvCompleteView extends FrameLayout implements InterControlView, Vie
     }
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
+    }
+    public void showShare(boolean show){
+        if (show) {
+            shareLayout.setVisibility(View.VISIBLE);
+            iv_play.setVisibility(View.GONE);
+        } else {
+            shareLayout.setVisibility(View.GONE);
+            iv_play.setVisibility(View.VISIBLE);
+        }
     }
 }
