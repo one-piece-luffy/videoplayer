@@ -233,6 +233,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     @Override
     public void onVisibilityChanged(boolean isVisible, Animation anim) {
         if (isVisible) {
+            bringToFront();
             mLlBottomContainer.setVisibility(VISIBLE);
             if (anim != null) {
                 mLlBottomContainer.startAnimation(anim);

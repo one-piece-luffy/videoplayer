@@ -188,6 +188,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
             }
         }
         if (getVisibility() == VISIBLE) {
+            bringToFront();
             boolean isLand= ((Activity) getContext()).getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
             if (mControlWrapper.isFullScreen()||isLand) {
                 //显示电量

@@ -3,20 +3,6 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/app/src/main/res/layout/av_tools_item.xml" value="0.18489583333333334" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/drawable/av_bg_fadded_round.xml" value="0.18" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/drawable/av_vector_play_button.xml" value="0.18" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/drawable/selector_av_lock.xml" value="0.193" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/drawable/shape_speed_bg.xml" value="0.193" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_guide.xml" value="0.1" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_normal_player_standard.xml" value="0.1" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_video_player_completed.xml" value="0.17603850050658562" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_video_player_gesture.xml" value="0.18489583333333334" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_video_player_normal_bottom.xml" value="0.17603850050658562" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_video_player_prepare.xml" value="0.3619791666666667" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_video_player_standard.xml" value="0.358695652173913" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/av_video_player_top.xml" value="0.358695652173913" />
-        <entry key="..\:/Users/64679/Documents/GitHub/videoplayer/av/src/main/res/layout/layout_store_controller.xml" value="0.18489583333333334" />
         <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_progress.xml" value="0.14583333333333334" />
         <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_thumb.xml" value="0.26564102564102565" />
         <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/seek_thumb_normal.xml" value="0.26564102564102565" />
@@ -24,10 +10,12 @@
         <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/selector_play_button.xml" value="0.26979166666666665" />
         <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/drawable/store_progress_bar_style.xml" value="0.26979166666666665" />
         <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/layout/custom_video_player_loading.xml" value="0.25364583333333335" />
+        <entry key="..\:/project/videoplayer/YCPlayerLib/VideoPlayer/src/main/res/layout/old_video_player_bottom.xml" value="0.2111111111111111" />
         <entry key="..\:/project/videoplayer/app/src/main/res/layout/activity_main.xml" value="0.25364583333333335" />
         <entry key="..\:/project/videoplayer/app/src/main/res/layout/av_tools_item.xml" value="0.19074074074074074" />
         <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_bottom_util_view.xml" value="0.19074074074074074" />
         <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_dialog_speed_list.xml" value="0.1" />
+        <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_guide.xml" value="0.24947916666666667" />
         <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_item_dialog_speed_list.xml" value="0.12552083333333333" />
         <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_video_player_completed.xml" value="0.25364583333333335" />
         <entry key="..\:/project/videoplayer/av/src/main/res/layout/av_video_player_gesture.xml" value="0.25364583333333335" />
@@ -43,7 +31,6 @@
       </map>
     </option>
   </component>
-  <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>

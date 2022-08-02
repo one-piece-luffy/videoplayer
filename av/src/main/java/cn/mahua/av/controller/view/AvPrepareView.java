@@ -68,8 +68,9 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     TextView mTvTcpSpeed;
     private Timer mUpdateNetSpeedTimer;
     private TimerTask mUpdateNetSpeedTask;
-    boolean mHideTcp;
+    boolean mShowTcp;
     TextView mTvLoading;
+    FrameLayout mRoot;
 
     public AvPrepareView(@NonNull Context context) {
         super(context);
@@ -105,6 +106,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
         mLoadingLayout = view.findViewById(R.id.loading_layout);
         mTvTcpSpeed = view.findViewById(R.id.tcp_speed);
         mTvLoading = view.findViewById(R.id.tv_loading);
+        mRoot = view.findViewById(R.id.root);
     }
 
     private void initListener() {
@@ -114,6 +116,12 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                 mFlNetWarning.setVisibility(GONE);
                 VideoViewManager.instance().setPlayOnMobileNetwork(true);
                 mControlWrapper.start();
+            }
+        });
+        mRoot.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mControlWrapper. toggleShowState();
             }
         });
     }
@@ -149,9 +157,11 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     public void onPlayStateChanged(int playState) {
         switch (playState) {
             case ConstantKeys.CurrentState.STATE_PREPARING:
+                Log.e("asdf","STATE_PREPARING");
                 showLoading();
                 break;
             case ConstantKeys.CurrentState.STATE_BUFFERING_PAUSED:
+                Log.e("asdf","STATE_BUFFERING_PAUSED");
                 setVisibility(VISIBLE);
                 mIvStartPlay.setVisibility(View.GONE);
                 mFlNetWarning.setVisibility(GONE);
@@ -160,17 +170,19 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                 //开启缓冲时更新网络加载速度
                 startUpdateNetSpeedTimer();
                 break;
-            case ConstantKeys.CurrentState.STATE_PLAYING:
+//            case ConstantKeys.CurrentState.STATE_PLAYING:
             case ConstantKeys.CurrentState.STATE_PAUSED:
             case ConstantKeys.CurrentState.STATE_ERROR:
             case ConstantKeys.CurrentState.STATE_COMPLETED:
             case ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING:
             case ConstantKeys.CurrentState.STATE_ONCE_LIVE:
             case ConstantKeys.CurrentState.STATE_PREPARED:
+                Log.e("asdf","STATE_PLAYING:"+playState);
                 setVisibility(GONE);
                 cancelUpdateNetSpeedTimer();
                 break;
             case ConstantKeys.CurrentState.STATE_IDLE:
+                Log.e("asdf","STATE_IDLE");
                 setVisibility(VISIBLE);
                 bringToFront();
                 cancelUpdateNetSpeedTimer();
@@ -180,6 +192,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                 mIvThumb.setVisibility(View.VISIBLE);
                 break;
             case ConstantKeys.CurrentState.STATE_START_ABORT:
+                Log.e("asdf","STATE_START_ABORT");
                 setVisibility(VISIBLE);
                 mFlNetWarning.setVisibility(VISIBLE);
                 mFlNetWarning.bringToFront();
@@ -238,7 +251,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                         public void run() {
                             long tcpSpeed = mControlWrapper.getTcpSpeed();
                             VideoLogUtils.i("获取网络加载速度++++++++" + tcpSpeed);
-                            if (tcpSpeed > 0&&!mHideTcp) {
+                            if (tcpSpeed > 0&&mShowTcp) {
                                 //显示网速
                                 mTvTcpSpeed.setVisibility(View.VISIBLE);
                                 mTvTcpSpeed.setText(AvUtils.getSizeStr(tcpSpeed));
@@ -270,11 +283,11 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     }
 
     public void showTcpSpeed(boolean show){
-        mHideTcp=true;
-        if(mTvTcpSpeed!=null){
-            if(show){
+        mShowTcp = show;
+        if (mTvTcpSpeed != null) {
+            if (show) {
                 mTvTcpSpeed.setVisibility(View.VISIBLE);
-            }else{
+            } else {
                 mTvTcpSpeed.setVisibility(View.GONE);
             }
         }
