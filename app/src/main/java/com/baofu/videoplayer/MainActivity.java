@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
                 "User-Agent",
                 "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
         );
-        videoView.setUrl("https://sod12.btycsw.com/20220714/yBluPk8J/index.m3u8", header);
+        videoView.setUrl("http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4", header);
         //开始播放
         videoView.start();
         videoView.postDelayed(new Runnable() {
