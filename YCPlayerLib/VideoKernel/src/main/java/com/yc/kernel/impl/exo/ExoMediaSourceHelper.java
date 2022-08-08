@@ -84,6 +84,7 @@ public final class ExoMediaSourceHelper {
             RtmpDataSourceFactory rtmpDataSourceFactory = new RtmpDataSourceFactory(null);
             return new ProgressiveMediaSource.Factory(rtmpDataSourceFactory).createMediaSource(contentUri);
         }
+
         int contentType = inferContentType(uri);
         DataSource.Factory factory;
         if (isCache) {
@@ -93,6 +94,10 @@ public final class ExoMediaSourceHelper {
         }
         if (mHttpDataSourceFactory != null) {
             setHeaders(headers);
+        }
+
+        if(headers!=null&&"m3u8".equals(headers.get("type"))){
+            return new HlsMediaSource.Factory(factory).createMediaSource(contentUri);
         }
         switch (contentType) {
             case C.TYPE_DASH:
@@ -111,7 +116,7 @@ public final class ExoMediaSourceHelper {
         fileName = Util.toLowerInvariant(fileName);
         if (fileName.contains(".mpd")) {
             return C.TYPE_DASH;
-        } else if (fileName.contains(".m3u8")) {
+        } else if (fileName.contains(".m3u8")||fileName.contains("127.0.0.1")) {
             return C.TYPE_HLS;
         } else if (fileName.matches(".*\\.ism(l)?(/manifest(\\(.+\\))?)?")) {
             return C.TYPE_SS;

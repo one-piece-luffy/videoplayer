@@ -61,7 +61,7 @@ dependencies {
 
 
     api project(':YCPlayerLib:VideoBarrage')
-    api project(':YCPlayerLib:VideoCache')
+//    api project(':YCPlayerLib:VideoCache')
     api project(':YCPlayerLib:VideoKernel')
     api project(':YCPlayerLib:VideoM3u8')
     api project(':YCPlayerLib:VideoPlayer')

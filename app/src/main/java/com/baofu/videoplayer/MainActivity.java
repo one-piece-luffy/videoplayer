@@ -1,16 +1,18 @@
 package com.baofu.videoplayer;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.allfootball.news.imageloader.ImageLoader;
-import com.allfootball.news.imageloader.ImageOption;
 import com.baofu.base.utils.CommonUtils;
+import com.jeffmony.videocache.control.LocalProxyVideoControl;
+import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
 import com.yc.video.player.VideoPlayer;
@@ -95,21 +97,44 @@ public class MainActivity extends AppCompatActivity {
                 "User-Agent",
                 "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
         );
-        videoView.setUrl("http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4", header);
+        header.put("type","m3u8");
+
+//        String url="http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4";
+        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";
+        String link=url;
+        if(url.contains("m3u8")){
+            //开启视频缓存
+            ProxyCacheUtils.getConfig().setUseOkHttp(true);
+            link = ProxyCacheUtils.getProxyUrl(Uri.parse(url).toString(), header, null);
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+                    //开始缓存
+                    LocalProxyVideoControl mLocalProxyVideoControl = new LocalProxyVideoControl();
+                    mLocalProxyVideoControl.startRequestVideoInfo(url, header, null);
+                }
+            }.start();
+        }
+
+
+        videoView.setUrl(link, header);
         //开始播放
         videoView.start();
         videoView.postDelayed(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(MainActivity.this,"0.5倍速播放",Toast.LENGTH_SHORT).show();
-                controller.setSpeed(SpeedInterface.sp0_50);
+                Toast.makeText(MainActivity.this,"1.5倍速播放",Toast.LENGTH_SHORT).show();
+                controller.setSpeed(SpeedInterface.sp1_50);
             }
         },500);
+
 
         //直接显示加载框
 //        controller.showPreviewLoading();
 
     }
+
 
     private void setListener() {
         videoView.setOnStateChangeListener(new OnVideoStateListener() {
