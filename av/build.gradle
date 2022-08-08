@@ -69,4 +69,6 @@ dependencies {
     api project(':YCPlayerLib:VideoSqlLite')
     api project(':YCPlayerLib:VideoTool')
     api project(':YCPlayerLib:VideoView')
+    //视频缓存
+    api project(path: ':videocache')
 }
