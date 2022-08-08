@@ -48,5 +48,7 @@ dependencies {
 //    }
 
     implementation project(path: ':av')
+    implementation project(path: ':videocache')
+//    implementation 'com.github.JeffMony:JeffVideoCache:1.0.0'
 
 }

@@ -1,5 +1,6 @@
 rootProject.name = "videoplayer"
 include ':app'
+include ':videocache'
 
 include ':av'
 
