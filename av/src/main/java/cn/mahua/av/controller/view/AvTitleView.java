@@ -62,6 +62,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
     private MarqueeTextView mTvTitle;
     private ImageView mIvBattery;
     private TextClock mTvSysTime;
+    boolean hideTitle;
 
     private BatteryReceiver mBatteryReceiver;
     private boolean mIsRegister;//是否注册BatteryReceiver
@@ -122,6 +123,12 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
         }
     }
 
+    public void hideTitle(boolean hideTitle) {
+        this.hideTitle = hideTitle;
+        if(hideTitle){
+            mTvTitle.setVisibility(GONE);
+        }
+    }
 
     public void setTitle(String title) {
         mTvTitle.post(new Runnable() {
@@ -194,12 +201,15 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
                 //显示电量
                 mIvBattery.setVisibility(VISIBLE);
                 mTvSysTime.setVisibility(VISIBLE);
-                mTvTitle.setVisibility(VISIBLE);
             } else {
                 //不显示电量
                 mIvBattery.setVisibility(GONE);
                 mTvSysTime.setVisibility(GONE);
+            }
+            if(hideTitle){
                 mTvTitle.setVisibility(GONE);
+            }else {
+                mTvTitle.setVisibility(VISIBLE);
             }
         }
     }

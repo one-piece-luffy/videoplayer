@@ -315,6 +315,11 @@ public class TvController extends GestureVideoController implements View.OnClick
             titleView.setTitle(title);
         }
     }
+    public void hideTitle(boolean hide) {
+        if (titleView!=null){
+            titleView.hideTitle(hide);
+        }
+    }
 
 
     public TextView getTvLiveWaitMessage() {
