@@ -40,7 +40,12 @@ public class SocketProcessTask implements Runnable {
             inputStream = mSocket.getInputStream();
             HttpRequest request = new HttpRequest(inputStream, mSocket.getInetAddress());
             while(!mSocket.isClosed()) {
-                request.parseRequest();
+                try {
+                    request.parseRequest();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
                 BaseResponse response;
                 String url = request.getUri();
                 url = url.substring(1);

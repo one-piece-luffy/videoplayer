@@ -11,7 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
+import com.baofu.videocache.VideoProxyCacheManager;
 import com.baofu.videocache.control.LocalProxyVideoControl;
+import com.baofu.videocache.listener.ISocketListener;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
@@ -116,6 +118,22 @@ public class MainActivity extends AppCompatActivity {
                     mLocalProxyVideoControl.startRequestVideoInfo(url, header, null);
                 }
             }.start();
+            VideoProxyCacheManager.getInstance().addSocketListener(url, new ISocketListener() {
+                @Override
+                public void timeout() {
+                    Log.e("tag","socket red timeout");
+                    if(isFinishing()){
+                        return;
+                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            videoView.seekTo(videoView.getCurrentPosition()-2000);
+                        }
+                    });
+
+                }
+            });
         }
 
 

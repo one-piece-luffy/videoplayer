@@ -5,6 +5,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -12,6 +13,7 @@ import com.baofu.videocache.common.ProxyMessage;
 import com.baofu.videocache.common.VideoCacheConfig;
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.common.VideoType;
+import com.baofu.videocache.listener.ISocketListener;
 import com.baofu.videocache.listener.IVideoCacheListener;
 import com.baofu.videocache.listener.IVideoCacheTaskListener;
 import com.baofu.videocache.listener.IVideoInfoParsedListener;
@@ -53,6 +55,7 @@ public class VideoProxyCacheManager {
     private Map<String, VideoCacheTask> mCacheTaskMap = new ConcurrentHashMap<>();
     private Map<String, VideoCacheInfo> mCacheInfoMap = new ConcurrentHashMap<>();
     private Map<String, IVideoCacheListener> mCacheListenerMap = new ConcurrentHashMap<>();
+    public Map<String, ISocketListener> mSocketListenerMap = new ConcurrentHashMap<>();
     private Map<String, Long> mVideoSeekMd5PositionMap = new ConcurrentHashMap<>();      //发生seek的时候加入set, 如果可以播放了, remove掉
     private final Object mSeekPositionLock = new Object();
 
@@ -289,6 +292,17 @@ public class VideoProxyCacheManager {
         mCacheListenerMap.remove(videoUrl);
     }
 
+    public void addSocketListener(String videoUrl, @NonNull ISocketListener listener) {
+        if (TextUtils.isEmpty(videoUrl)) {
+            return;
+        }
+        mSocketListenerMap.put(videoUrl, listener);
+    }
+
+    public void removeSocketListener(String videoUrl) {
+        mSocketListenerMap.remove(videoUrl);
+    }
+
     public void releaseProxyReleases(String videoUrl) {
         removeCacheListener(videoUrl);
         String md5 = ProxyCacheUtils.computeMD5(videoUrl);
@@ -448,6 +462,7 @@ public class VideoProxyCacheManager {
                 cacheInfo.setSpeed(speed);
                 mCacheInfoMap.put(cacheInfo.getVideoUrl(), cacheInfo);
                 mProxyHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_PROGRESS, cacheInfo).sendToTarget();
+                Log.e("asdf","onTaskProgress");
             }
 
             @Override
@@ -458,6 +473,7 @@ public class VideoProxyCacheManager {
                 cacheInfo.setSpeed(speed);
                 cacheInfo.setTsLengthMap(tsLengthMap);
                 mCacheInfoMap.put(cacheInfo.getVideoUrl(), cacheInfo);
+                Log.e("asdf","onM3U8TaskProgress");
                 mProxyHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_PROGRESS, cacheInfo).sendToTarget();
             }
 
@@ -741,6 +757,7 @@ public class VideoProxyCacheManager {
             return false;
         }
         File segFile = new File(filePath);
+        long length=segFile.length();
         if (!segFile.exists() || segFile.length() == 0) {
             return false;
         }

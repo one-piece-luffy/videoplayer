@@ -1,6 +1,10 @@
 package com.baofu.videocache.socket.request;
 
+import android.util.Log;
+
+import com.baofu.videocache.VideoProxyCacheManager;
 import com.baofu.videocache.common.VideoCacheException;
+import com.baofu.videocache.listener.ISocketListener;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.baofu.videocache.utils.StorageUtils;
 
@@ -59,6 +63,17 @@ public class HttpRequest {
             throw e;
         } catch (IOException e) {
             ProxyCacheUtils.close(mInputStream);
+            e.printStackTrace();
+
+            String url = mUri.substring(1);
+            url = ProxyCacheUtils.decodeUriWithBase64(url);
+            Log.e("asdf","url:"+url);
+            String arr=url.split(ProxyCacheUtils.SEG_PROXY_SPLIT_STR)[0];
+
+            ISocketListener listener=VideoProxyCacheManager.getInstance().mSocketListenerMap.get(arr);
+            if(listener!=null){
+                listener.timeout();
+            }
             throw new SocketException("Socket Shutdown");
         } catch (Exception e) {
             ProxyCacheUtils.close(mInputStream);
