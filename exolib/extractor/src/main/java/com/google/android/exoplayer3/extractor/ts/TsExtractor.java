@@ -446,9 +446,10 @@ public final class TsExtractor implements Extractor {
     int endOfPacket = syncBytePosition + TS_PACKET_SIZE;
     if (endOfPacket > limit) {
       bytesSinceLastSync += syncBytePosition - searchStart;
-      if (mode == MODE_HLS && bytesSinceLastSync > TS_PACKET_SIZE * 2) {
-        throw new ParserException("Cannot find sync byte. Most likely not a Transport Stream.");
-      }
+      //todo 不抛出这个异常
+//      if (mode == MODE_HLS && bytesSinceLastSync > TS_PACKET_SIZE * 2) {
+//        throw new ParserException("Cannot find sync byte. Most likely not a Transport Stream.");
+//      }
     } else {
       // We have found a packet within the buffer.
       bytesSinceLastSync = 0;

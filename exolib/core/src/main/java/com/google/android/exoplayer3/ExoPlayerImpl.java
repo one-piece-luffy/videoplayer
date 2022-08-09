@@ -1281,6 +1281,7 @@ import static java.lang.Math.min;
         try {
           mplayerForListeners.seekTo(position + 2000);
           mplayerForListeners.prepare();
+          mplayerForListeners.play();
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -1292,6 +1293,7 @@ import static java.lang.Math.min;
           try {
             mplayerForListeners.seekTo(position + 5000);
             mplayerForListeners.prepare();
+            mplayerForListeners.play();
           } catch (Exception e) {
             e.printStackTrace();
           }
@@ -1301,6 +1303,7 @@ import static java.lang.Math.min;
           try {
             mplayerForListeners.seekTo(position + 10000);
             mplayerForListeners.prepare();
+            mplayerForListeners.play();
           } catch (Exception e) {
             e.printStackTrace();
           }

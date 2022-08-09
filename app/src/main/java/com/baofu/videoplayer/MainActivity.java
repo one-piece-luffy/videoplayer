@@ -11,8 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
-import com.jeffmony.videocache.control.LocalProxyVideoControl;
-import com.jeffmony.videocache.utils.ProxyCacheUtils;
+import com.baofu.videocache.control.LocalProxyVideoControl;
+import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
 import com.yc.video.player.VideoPlayer;
@@ -100,7 +100,8 @@ public class MainActivity extends AppCompatActivity {
         header.put("type","m3u8");
 
 //        String url="http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4";
-        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";
+//        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";
+        String url="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";
         String link=url;
         if(url.contains("m3u8")){
             //开启视频缓存
