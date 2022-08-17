@@ -31,6 +31,7 @@ public class HttpUtils {
     public static final int RESPONSE_200 = 200;
     public static final int RESPONSE_206 = 206;
     public static final int RESPONSE_503 = 503;
+    public static final int RESPONSE_429 = 429;
 
     public static HttpURLConnection getConnection(String videoUrl, Map<String, String> headers) throws IOException {
         return getConnection(videoUrl, headers, false);

@@ -17,6 +17,8 @@ public class M3U8 {
     private int mVersion = 3;            //版本号
     private boolean mIsLive;             //是否是直播
     private List<M3U8Seg> mSegList;      //分片seg 列表
+    public byte[] encryptionKey;
+    public String encryptionIV;
 
     public M3U8(String url) {
         mUrl = url;

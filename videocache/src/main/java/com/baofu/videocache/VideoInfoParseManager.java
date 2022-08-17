@@ -37,6 +37,7 @@ public class VideoInfoParseManager {
     private Map<String, String> mHeaders;
     private String mContentType;
     private long mContentLength;
+    public M3U8 m3u8;
 
     public static VideoInfoParseManager getInstance() {
         if (sInstance == null) {
@@ -178,7 +179,7 @@ public class VideoInfoParseManager {
      */
     private void parseNetworkM3U8Info(VideoCacheInfo cacheInfo) {
         try {
-            M3U8 m3u8 = M3U8Utils.parseNetworkM3U8Info(cacheInfo.getVideoUrl(), cacheInfo.getVideoUrl(), mHeaders, 0);
+            m3u8 = M3U8Utils.parseNetworkM3U8Info(cacheInfo.getVideoUrl(), cacheInfo.getVideoUrl(), mHeaders, 0);
 
             if (m3u8.isIsLive()) {
                 //说明M3U8是直播
@@ -227,6 +228,7 @@ public class VideoInfoParseManager {
                     File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
                     try {
                         M3U8 m3u8 = M3U8Utils.parseLocalM3U8Info(localM3U8File, cacheInfo.getVideoUrl());
+                        VideoInfoParseManager.getInstance().m3u8=m3u8;
                         cacheInfo.setTotalTs(m3u8.getSegCount());
                         mListener.onM3U8ParsedFinished(m3u8, cacheInfo);
                     } catch (Exception e) {
@@ -292,6 +294,9 @@ public class VideoInfoParseManager {
         } catch (Exception e) {
             mListener.onNonM3U8ParsedFailed(new VideoCacheException(e.getMessage()), cacheInfo);
         }
+    }
+    public void release(){
+        m3u8=null;
     }
 
 }

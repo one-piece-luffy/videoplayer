@@ -2,7 +2,7 @@ package com.baofu.videocache.m3u8;
 
 import java.util.regex.Pattern;
 
-public class Constants {
+public class M3U8Constants {
 
     // base hls tag:
     public static final String PLAYLIST_HEADER = "#EXTM3U";    // must

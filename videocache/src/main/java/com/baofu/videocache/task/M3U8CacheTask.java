@@ -1,13 +1,16 @@
 package com.baofu.videocache.task;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.m3u8.M3U8;
 import com.baofu.videocache.m3u8.M3U8Seg;
 import com.baofu.videocache.model.VideoCacheInfo;
+import com.baofu.videocache.utils.AES128Utils;
 import com.baofu.videocache.utils.HttpUtils;
 import com.baofu.videocache.utils.LogUtils;
+import com.baofu.videocache.utils.OkHttpUtil;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.baofu.videocache.utils.StorageUtils;
 
@@ -15,8 +18,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +31,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Response;
 
 public class M3U8CacheTask extends VideoCacheTask {
 
@@ -38,10 +47,14 @@ public class M3U8CacheTask extends VideoCacheTask {
     private int mTotalSegCount;
     private Map<Integer, Long> mSegLengthMap;
     private List<M3U8Seg> mSegList;
+    M3U8 mM3U8;
+    final static int MAX_RETRY_COUNT=1;
+    private final static int MAX_RETRY_COUNT_503 = 3;//遇到503的重试次数
 
     public M3U8CacheTask(VideoCacheInfo cacheInfo, Map<String, String> headers, M3U8 m3u8) {
         super(cacheInfo, headers);
         mSegList = m3u8.getSegList();
+        this.mM3U8=m3u8;
         mTotalSegCount = cacheInfo.getTotalTs();
         mCachedSegCount = cacheInfo.getCachedTs();
         mSegLengthMap = cacheInfo.getTsLengthMap();
@@ -63,6 +76,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void initM3U8TsInfo() {
+        //todo
         long tempCachedSize = 0;
         int tempCachedTs = 0;
         for (int index = 0; index < mSegList.size(); index++) {
@@ -120,20 +134,24 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void seekToCacheTaskFromServer(int segIndex) {
-        LogUtils.i(TAG, "seekToCacheTaskFromServer segIndex="+segIndex);
+        Log.e(TAG, "================seek segIndex="+segIndex);
         pauseCacheTask();
         startRequestVideoRange(segIndex);
     }
 
     private void startRequestVideoRange(int curTs) {
+        Log.e(TAG,"startRequest m3u8");
         if (mCacheInfo.isCompleted()) {
             notifyOnTaskCompleted();
+            Log.e(TAG,"isCompleted");
             return;
         }
         if (isTaskRunning()) {
             //已经存在的任务不需要重新创建了
+            Log.e(TAG,"task m3u8 is running");
             return;
         }
+        Log.e(TAG,"curTs:"+curTs);
         mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
                 TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
@@ -143,7 +161,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                 try {
                     startDownloadSegTask(seg);
                 } catch (Exception e) {
-                    LogUtils.w(TAG, "M3U8 ts video download failed, exception=" + e);
+                    Log.e(TAG, "M3U8 ts video download failed, exception=" + e);
                     notifyOnTaskFailed(e);
                 }
             });
@@ -151,7 +169,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startDownloadSegTask(M3U8Seg seg) throws Exception {
-        LogUtils.i(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
+       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
             File initSegmentFile = new File(mSaveDir, initSegmentName);
@@ -163,7 +181,8 @@ public class M3U8CacheTask extends VideoCacheTask {
         File segFile = new File(mSaveDir, segName);
         if (!segFile.exists()) {
             // ts is network resource, download ts file then rename it to local file.
-            downloadSegFile(seg, segFile, seg.getUrl());
+//            downloadSegFile(seg, segFile, seg.getUrl());
+            downloadFile(seg, segFile, seg.getUrl());
         }
 
         //确保当前文件下载完整
@@ -176,6 +195,119 @@ public class M3U8CacheTask extends VideoCacheTask {
             notifyCacheProgress();
         }
     }
+
+    public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
+        Log.e(TAG,"队列开始下载ts");
+        InputStream inputStream = null;
+
+        ReadableByteChannel rbc = null;
+        FileOutputStream fos = null;
+        FileChannel foutc = null;
+        Response response=null;
+        try {
+
+            response = OkHttpUtil.getInstance().requestSync(videoUrl,mHeaders);
+            int responseCode = response.code();
+            if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
+                ts.setRetryCount(0);
+                inputStream = response.body().byteStream();
+                long contentLength =  response.body().contentLength();
+
+                byte[] encryptionKey = ts.encryptionKey == null ? mM3U8.encryptionKey : ts.encryptionKey;
+                String iv = ts.encryptionKey == null ? mM3U8.encryptionIV : ts.getKeyIv();
+                if ( encryptionKey != null) {
+                    String tsInitSegmentName = ts.getInitSegmentName() + ".temp";
+                    File tsInitSegmentFile = new File(mSaveDir, tsInitSegmentName);
+
+                    rbc = Channels.newChannel(inputStream);
+                    fos = new FileOutputStream(tsInitSegmentFile);
+                    foutc = fos.getChannel();
+                    foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
+
+                    FileOutputStream fileOutputStream = null;
+                    try {
+                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
+                        if (result != null) {
+                            fileOutputStream = new FileOutputStream(file);
+                            fileOutputStream.write(result);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (fileOutputStream != null) {
+                            fileOutputStream.close();
+                            tsInitSegmentFile.delete();
+                        }
+                    }
+                } else {
+                    rbc = Channels.newChannel(inputStream);
+                    fos = new FileOutputStream(file);
+                    foutc = fos.getChannel();
+                    foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
+                }
+
+                if (contentLength <= 0) {
+                    contentLength = file.length();
+                }
+                ts.setContentLength(contentLength);
+
+            } else {
+                ts.setRetryCount(ts.getRetryCount() + 1);
+                if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {
+                    if (ts.getRetryCount() <= MAX_RETRY_COUNT_503) {
+                        //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
+                        int ran= 4000+(int) (Math.random()*20000);
+                        Thread.sleep(ran);
+                        Log.e(TAG, "sleep:" + ran);
+                        downloadFile(ts, file, videoUrl);
+                    }
+                } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
+                    Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+
+                    downloadFile(ts, file, videoUrl);
+                } else {
+                    Log.e(TAG, "====error   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+                }
+            }
+
+
+        } catch (InterruptedIOException e) {
+            //被中断了，使用stop时会抛出这个，不需要处理
+//            Log.e(TAG, "InterruptedIOException" );
+            return;
+        } catch (Exception e) {
+            Log.e(TAG,e.getMessage());
+            e.printStackTrace();
+            ts.setRetryCount(ts.getRetryCount() + 1);
+            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
+                Log.e(TAG, "====retry, exception=" + e.getMessage());
+                downloadFile(ts, file, videoUrl);
+            }
+        } finally {
+            ProxyCacheUtils.close(inputStream);
+            ProxyCacheUtils.close(fos);
+            if(response!=null){
+                ProxyCacheUtils.close(response.body());
+            }
+            if (rbc != null) {
+                try {
+                    rbc.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (foutc != null) {
+                try {
+                    foutc.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+    }
+
 
     private void downloadSegFile(M3U8Seg seg, File segFile, String downloadUrl) throws Exception {
         HttpURLConnection connection = null;
@@ -275,6 +407,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void notifyCacheProgress() {
+        Log.e(TAG,"notifyCacheProgress");
         updateM3U8TsInfo();
         if (mCachedSegCount > mTotalSegCount) {
             mCachedSegCount = mTotalSegCount;

@@ -354,15 +354,18 @@ public class VideoProxyCacheManager {
             VideoInfoParseManager.getInstance().parseVideoInfo(videoCacheInfo, headers, extraParams, new IVideoInfoParsedListener() {
                 @Override
                 public void onM3U8ParsedFinished(M3U8 m3u8, VideoCacheInfo cacheInfo) {
+                    Log.e("asdf","========onM3U8ParsedFinished");
                     notifyLocalProxyLock(lock);
                     mM3U8LocalProxyMd5Set.add(md5);
                     //开始发起请求M3U8视频中的ts数据
                     startM3U8Task(m3u8, cacheInfo, headers);
+
                 }
 
                 @Override
                 public void onM3U8ParsedFailed(VideoCacheException e, VideoCacheInfo cacheInfo) {
                     notifyLocalProxyLock(lock);
+                    Log.e("asdf","========onM3U8ParsedFailed");
                     mProxyHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_ERROR, cacheInfo).sendToTarget();
                 }
 
@@ -480,6 +483,8 @@ public class VideoProxyCacheManager {
             @Override
             public void onTaskFailed(Exception e) {
                 notifyLocalProxyLock(lock);
+                Log.e("asdf","onTaskFailed:");
+                e.printStackTrace();
                 mProxyHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_ERROR, cacheInfo).sendToTarget();
             }
 

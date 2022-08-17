@@ -31,6 +31,8 @@ public class M3U8Seg implements Comparable<M3U8Seg> {
     private boolean mHasInitSegment;       //分片前是否有#EXT-X-MAP
     private String mInitSegmentUri;        //MAP的url
     private String mSegmentByteRange;      //MAP的range
+    public byte[] encryptionKey;
+    public boolean mIsMessyKey;                 //当前加密key是否是乱码
 
     public void setParentUrl(String parentUrl) { mParentUrl = parentUrl; }
 
@@ -198,6 +200,10 @@ public class M3U8Seg implements Comparable<M3U8Seg> {
         String proxyUrl = String.format(Locale.US, "http://%s:%d/%s", ProxyCacheUtils.LOCAL_PROXY_HOST,
                 ProxyCacheUtils.getLocalPort(), ProxyCacheUtils.encodeUriWithBase64(proxyExtraInfo));
         return proxyUrl;
+    }
+
+    public String getLocalKeyUri() {
+        return  "local" + ".key";
     }
 
 }

@@ -390,10 +390,10 @@ public class ExoMediaPlayer extends AbstractVideoPlayer implements VideoListener
             //先使用getUidRxBytes方法获取该进程总接收量，如果没获取到就把当前接收数据总量设置为0，否则就获取接收的总流量并转为kb
             int uid = mAppContext.getApplicationInfo().uid;
             long nowTotalRxBytes = TrafficStats.getUidRxBytes(uid) == TrafficStats.UNSUPPORTED ? 0 : (TrafficStats.getTotalRxBytes() );
-            Log.e("ExoMediaPlayer","==nowTotalRxBytes1:"+nowTotalRxBytes);
+            Log.i("ExoMediaPlayer","==nowTotalRxBytes1:"+nowTotalRxBytes);
             if (nowTotalRxBytes <= 0) {
                 nowTotalRxBytes = getTotalBytesManual(uid);
-                Log.e("ExoMediaPlayer","==nowTotalRxBytes2:"+nowTotalRxBytes);
+                Log.i("ExoMediaPlayer","==nowTotalRxBytes2:"+nowTotalRxBytes);
             }
 
             //记录当前的时间

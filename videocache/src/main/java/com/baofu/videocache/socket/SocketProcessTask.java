@@ -1,6 +1,7 @@
 package com.baofu.videocache.socket;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.socket.request.HttpRequest;
@@ -12,10 +13,14 @@ import com.baofu.videocache.utils.HttpUtils;
 import com.baofu.videocache.utils.LogUtils;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,6 +36,7 @@ public class SocketProcessTask implements Runnable {
 
     @Override
     public void run() {
+
         sRequestCountAtomic.addAndGet(1);
         LogUtils.i(TAG, "sRequestCountAtomic : " + sRequestCountAtomic.get());
         OutputStream outputStream = null;
@@ -40,17 +46,17 @@ public class SocketProcessTask implements Runnable {
             inputStream = mSocket.getInputStream();
             HttpRequest request = new HttpRequest(inputStream, mSocket.getInetAddress());
             while(!mSocket.isClosed()) {
-                try {
+//                try {
                     request.parseRequest();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+//                }catch (Exception e){
+//                    e.printStackTrace();
+//                }
 
                 BaseResponse response;
                 String url = request.getUri();
                 url = url.substring(1);
                 url = ProxyCacheUtils.decodeUriWithBase64(url);
-                LogUtils.d(TAG, "request url=" + url);
+                Log.e(TAG, "request url=" + url);
 
                 long currentTime = System.currentTimeMillis();
                 ProxyCacheUtils.setSocketTime(currentTime);
@@ -96,6 +102,7 @@ public class SocketProcessTask implements Runnable {
                     response = new M3U8SegResponse(request, parentUrl, videoUrl, headers, currentTime, fileName);
                     response.sendResponse(mSocket, outputStream);
                 } else {
+                    Log.e("asdf","error url:"+url);
                     throw new VideoCacheException("Local Socket Error url");
                 }
 
@@ -103,13 +110,13 @@ public class SocketProcessTask implements Runnable {
 
         } catch (Exception e) {
             e.printStackTrace();
-            LogUtils.w(TAG,"socket request failed, exception=" + e);
+            Log.e(TAG,"socket request failed, exception=" + e);
         } finally {
             ProxyCacheUtils.close(outputStream);
             ProxyCacheUtils.close(inputStream);
             ProxyCacheUtils.close(mSocket);
             int count = sRequestCountAtomic.decrementAndGet();
-            LogUtils.i(TAG, "finally Socket solve count = " + count);
+            Log.e(TAG, "finally Socket solve count = " + count);
         }
     }
 }

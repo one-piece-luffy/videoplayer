@@ -382,7 +382,7 @@ public abstract class GestureVideoController extends BaseVideoController impleme
      */
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        VideoLogUtils.e("事件----------事件拦截----------");
+        VideoLogUtils.i("事件----------事件拦截----------");
         return super.onInterceptTouchEvent(ev);
     }
 
@@ -396,7 +396,7 @@ public abstract class GestureVideoController extends BaseVideoController impleme
      */
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        VideoLogUtils.e("事件----------事件分发----------");
+        VideoLogUtils.i("事件----------事件分发----------");
         return super.dispatchTouchEvent(ev);
     }
 
@@ -407,7 +407,7 @@ public abstract class GestureVideoController extends BaseVideoController impleme
      */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        VideoLogUtils.e("事件----------事件触摸----------");
+        VideoLogUtils.i("事件----------事件触摸----------");
         //滑动结束时事件处理
         if (!mGestureDetector.onTouchEvent(event)) {
             int action = event.getAction();

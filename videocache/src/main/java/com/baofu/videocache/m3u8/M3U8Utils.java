@@ -5,20 +5,26 @@ import android.text.TextUtils;
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.utils.HttpUtils;
 import com.baofu.videocache.utils.LogUtils;
+import com.baofu.videocache.utils.OkHttpUtil;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.baofu.videocache.utils.UrlUtils;
+import com.baofu.videocache.utils.VideoDownloadUtils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import okhttp3.Response;
 
 /**
  * @author jeffmony
@@ -39,78 +45,84 @@ public class M3U8Utils {
      * @throws IOException
      */
     public static M3U8 parseNetworkM3U8Info(String parentUrl, String videoUrl, Map<String, String> headers, int retryCount) throws IOException {
-        InputStreamReader inputStreamReader = null;
         BufferedReader bufferedReader = null;
+        Response response=null;
         try {
-            HttpURLConnection connection = HttpUtils.getConnection(videoUrl, headers);
-            int responseCode = connection.getResponseCode();
+//            HttpURLConnection connection = HttpUtils.getConnection(videoUrl, headers, VideoDownloadUtils.getDownloadConfig().ignoreAllCertErrors);
+//            int responseCode = connection.getResponseCode();
+
+            response = OkHttpUtil.getInstance().requestSync(videoUrl,headers);
+            int responseCode =response.code();
+            LogUtils.i(TAG, "parseNetworkM3U8Info responseCode=" + responseCode);
             if (responseCode == HttpUtils.RESPONSE_503 && retryCount < HttpUtils.MAX_RETRY_COUNT) {
                 return parseNetworkM3U8Info(parentUrl, videoUrl, headers, retryCount + 1);
             }
-            bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
+            bufferedReader = new BufferedReader(new InputStreamReader(response.body().byteStream()));
             M3U8 m3u8 = new M3U8(videoUrl);
+            float tsDuration = 0;
             int targetDuration = 0;
+            int tsIndex = 0;
             int version = 0;
             int sequence = 0;
             boolean hasDiscontinuity = false;
             boolean hasEndList = false;
-            boolean hasMasterList = false;
+            boolean hasStreamInfo = false;
             boolean hasKey = false;
             boolean hasInitSegment = false;
             String method = null;
-            String keyIv = null;
-            String keyUrl = null;
+            String encryptionIV = null;
+            String encryptionKeyUri = null;
             String initSegmentUri = null;
             String segmentByteRange = null;
-            float segDuration = 0;
-            int segIndex = 0;
-
             String line;
+            int errorCount = 0;
+            //从网络读取出来的key
+            byte[] encryptionKey=null;
             while ((line = bufferedReader.readLine()) != null) {
                 line = line.trim();
                 if (TextUtils.isEmpty(line)) {
                     continue;
                 }
-                if (line.startsWith(Constants.TAG_PREFIX)) {
-                    if (line.startsWith(Constants.TAG_MEDIA_DURATION)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_MEDIA_DURATION);
+//                LogUtils.i(TAG, "line = " + line);
+                if (line.startsWith(M3U8Constants.TAG_PREFIX)) {
+                    if (line.startsWith(M3U8Constants.TAG_MEDIA_DURATION)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_DURATION);
                         if (!TextUtils.isEmpty(ret)) {
-                            segDuration = Float.parseFloat(ret);
+                            tsDuration = Float.parseFloat(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_TARGET_DURATION)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_TARGET_DURATION);
+                    } else if (line.startsWith(M3U8Constants.TAG_TARGET_DURATION)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_TARGET_DURATION);
                         if (!TextUtils.isEmpty(ret)) {
                             targetDuration = Integer.parseInt(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_VERSION)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_VERSION);
+                    } else if (line.startsWith(M3U8Constants.TAG_VERSION)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_VERSION);
                         if (!TextUtils.isEmpty(ret)) {
                             version = Integer.parseInt(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_MEDIA_SEQUENCE)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_MEDIA_SEQUENCE);
+                    } else if (line.startsWith(M3U8Constants.TAG_MEDIA_SEQUENCE)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_SEQUENCE);
                         if (!TextUtils.isEmpty(ret)) {
                             sequence = Integer.parseInt(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_STREAM_INF)) {
-                        hasMasterList = true;
-                    } else if (line.startsWith(Constants.TAG_DISCONTINUITY)) {
+                    } else if (line.startsWith(M3U8Constants.TAG_STREAM_INF)) {
+                        hasStreamInfo = true;
+                    } else if (line.startsWith(M3U8Constants.TAG_DISCONTINUITY)) {
                         hasDiscontinuity = true;
-                    } else if (line.startsWith(Constants.TAG_ENDLIST)) {
+                    } else if (line.startsWith(M3U8Constants.TAG_ENDLIST)) {
                         hasEndList = true;
-                    } else if (line.startsWith(Constants.TAG_KEY)) {
+                    } else if (line.startsWith(M3U8Constants.TAG_KEY)) {
                         hasKey = true;
-                        method = parseOptionalStringAttr(line, Constants.REGEX_METHOD);
-                        String keyFormat = parseOptionalStringAttr(line, Constants.REGEX_KEYFORMAT);
-                        if (!Constants.METHOD_NONE.equals(method)) {
-                            keyIv = parseOptionalStringAttr(line, Constants.REGEX_IV);
-                            if (Constants.KEYFORMAT_IDENTITY.equals(keyFormat) || keyFormat == null) {
-                                if (Constants.METHOD_AES_128.equals(method)) {
+                        method = parseOptionalStringAttr(line, M3U8Constants.REGEX_METHOD);
+                        String keyFormat = parseOptionalStringAttr(line, M3U8Constants.REGEX_KEYFORMAT);
+                        if (!M3U8Constants.METHOD_NONE.equals(method)) {
+                            encryptionIV = parseOptionalStringAttr(line, M3U8Constants.REGEX_IV);
+                            if (M3U8Constants.KEYFORMAT_IDENTITY.equals(keyFormat) || keyFormat == null) {
+                                if (M3U8Constants.METHOD_AES_128.equals(method)) {
                                     // The segment is fully encrypted using an identity key.
-                                    String tempKeyUri = parseStringAttr(line, Constants.REGEX_URI);
+                                    String tempKeyUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
                                     if (tempKeyUri != null) {
-                                        keyUrl = UrlUtils.getM3U8MasterUrl(videoUrl, tempKeyUri);
+                                        encryptionKeyUri = getM3U8AbsoluteUrl(videoUrl, tempKeyUri);
                                     }
                                 } else {
                                     // Do nothing. Samples are encrypted using an identity key,
@@ -121,55 +133,63 @@ public class M3U8Utils {
                                 // Do nothing.
                             }
                         }
-                    } else if (line.startsWith(Constants.TAG_INIT_SEGMENT)) {
-                        String tempInitSegmentUri = parseStringAttr(line, Constants.REGEX_URI);
+                    } else if (line.startsWith(M3U8Constants.TAG_INIT_SEGMENT)) {
+                        String tempInitSegmentUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
                         if (!TextUtils.isEmpty(tempInitSegmentUri)) {
                             hasInitSegment = true;
-                            initSegmentUri = UrlUtils.getM3U8MasterUrl(videoUrl, tempInitSegmentUri);
-                            segmentByteRange = parseOptionalStringAttr(line, Constants.REGEX_ATTR_BYTERANGE);
+                            initSegmentUri = getM3U8AbsoluteUrl(videoUrl, tempInitSegmentUri);
+                            segmentByteRange = parseOptionalStringAttr(line, M3U8Constants.REGEX_ATTR_BYTERANGE);
                         }
                     }
                     continue;
                 }
-
                 // It has '#EXT-X-STREAM-INF' tag;
-                if (hasMasterList) {
+                if (hasStreamInfo) {
                     String tempUrl = UrlUtils.getM3U8MasterUrl(videoUrl, line);
-                    return parseNetworkM3U8Info(parentUrl, tempUrl, headers, retryCount);
-                }
 
-                if (Math.abs(segDuration) < 0.001f) {
+                    return parseNetworkM3U8Info(parentUrl,getM3U8AbsoluteUrl(videoUrl, line), headers, retryCount+1);
+                }
+                if (Math.abs(tsDuration) < 0.001f) {
                     continue;
                 }
+                M3U8Seg ts = new M3U8Seg();
+                ts.setParentUrl(parentUrl);
+                String tsUrl = getM3U8AbsoluteUrl(videoUrl, line);
+                ts.setUrl(tsUrl);
+                ts.setDuration(tsDuration);
+                ts.setSegIndex(tsIndex);
+                ts.setHasDiscontinuity(hasDiscontinuity);
 
-                M3U8Seg seg = new M3U8Seg();
-                seg.setParentUrl(parentUrl);
-                String tempUrl = UrlUtils.getM3U8MasterUrl(videoUrl, line);
-                seg.setUrl(tempUrl);
-                seg.setSegIndex(segIndex);
-                seg.setDuration(segDuration);
-                seg.setHasDiscontinuity(hasDiscontinuity);
-                seg.setHasKey(hasKey);
                 if (hasKey) {
-                    seg.setMethod(method);
-                    seg.setKeyIv(keyIv);
-                    seg.setKeyUrl(keyUrl);
+                    if (encryptionKey == null) {
+                        encryptionKey = parseKey(encryptionKeyUri);
+                        ts.encryptionKey = encryptionKey;
+                    }
+                    ts.setHasKey(true);
+                    ts.encryptionKey = encryptionKey;
+                    ts.setMethod(method);
+                    ts.setKeyUrl(encryptionKeyUri);
+                    ts.setKeyIv(encryptionIV);
+                    m3u8.encryptionKey=encryptionKey;
+                    m3u8.encryptionIV=encryptionIV;
                 }
                 if (hasInitSegment) {
-                    seg.setInitSegmentInfo(initSegmentUri, segmentByteRange);
+                    ts.setInitSegmentInfo(initSegmentUri, segmentByteRange);
                 }
-                m3u8.addSeg(seg);
-                segIndex++;
-                segDuration = 0;
+                m3u8.addSeg(ts);
+                tsIndex++;
+                tsDuration = 0;
+                hasStreamInfo = false;
                 hasDiscontinuity = false;
                 hasKey = false;
                 hasInitSegment = false;
                 method = null;
-                keyUrl = null;
-                keyIv = null;
+                encryptionKeyUri = null;
+                encryptionIV = null;
                 initSegmentUri = null;
                 segmentByteRange = null;
             }
+
 
             m3u8.setTargetDuration(targetDuration);
             m3u8.setVersion(version);
@@ -177,9 +197,10 @@ public class M3U8Utils {
             m3u8.setIsLive(!hasEndList);
             return m3u8;
         } catch (IOException e) {
+            e.printStackTrace();
             throw e;
         } finally {
-            ProxyCacheUtils.close(inputStreamReader);
+            ProxyCacheUtils.close(response.body());
             ProxyCacheUtils.close(bufferedReader);
         }
     }
@@ -194,65 +215,57 @@ public class M3U8Utils {
             inputStreamReader = new InputStreamReader(new FileInputStream(localM3U8File));
             bufferedReader = new BufferedReader(inputStreamReader);
             M3U8 m3u8 = new M3U8(videoUrl);
+            float tsDuration = 0;
             int targetDuration = 0;
+            int tsIndex = 0;
             int version = 0;
             int sequence = 0;
             boolean hasDiscontinuity = false;
-            boolean hasEndList = false;
             boolean hasKey = false;
             boolean hasInitSegment = false;
             String method = null;
-            String keyIv = null;
-            String keyUrl = null;
+            String encryptionIV = null;
+            String encryptionKeyUri = null;
             String initSegmentUri = null;
             String segmentByteRange = null;
-            float segDuration = 0;
-            int segIndex = 0;
-
             String line;
+            //从网络读取出来的key
+            byte[] encryptionKey=null;
             while ((line = bufferedReader.readLine()) != null) {
-                line = line.trim();
-                if (TextUtils.isEmpty(line)) {
-                    continue;
-                }
-                if (line.startsWith(Constants.TAG_PREFIX)) {
-                    if (line.startsWith(Constants.TAG_MEDIA_DURATION)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_MEDIA_DURATION);
+                LogUtils.i(TAG, "line = " + line);
+                if (line.startsWith(M3U8Constants.TAG_PREFIX)) {
+                    if (line.startsWith(M3U8Constants.TAG_MEDIA_DURATION)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_DURATION);
                         if (!TextUtils.isEmpty(ret)) {
-                            segDuration = Float.parseFloat(ret);
+                            tsDuration = Float.parseFloat(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_TARGET_DURATION)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_TARGET_DURATION);
+                    } else if (line.startsWith(M3U8Constants.TAG_TARGET_DURATION)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_TARGET_DURATION);
                         if (!TextUtils.isEmpty(ret)) {
                             targetDuration = Integer.parseInt(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_VERSION)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_VERSION);
+                    } else if (line.startsWith(M3U8Constants.TAG_VERSION)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_VERSION);
                         if (!TextUtils.isEmpty(ret)) {
                             version = Integer.parseInt(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_MEDIA_SEQUENCE)) {
-                        String ret = parseStringAttr(line, Constants.REGEX_MEDIA_SEQUENCE);
+                    } else if (line.startsWith(M3U8Constants.TAG_MEDIA_SEQUENCE)) {
+                        String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_SEQUENCE);
                         if (!TextUtils.isEmpty(ret)) {
                             sequence = Integer.parseInt(ret);
                         }
-                    } else if (line.startsWith(Constants.TAG_DISCONTINUITY)) {
+                    } else if (line.startsWith(M3U8Constants.TAG_DISCONTINUITY)) {
                         hasDiscontinuity = true;
-                    } else if (line.startsWith(Constants.TAG_ENDLIST)) {
-                        hasEndList = true;
-                    } else if (line.startsWith(Constants.TAG_KEY)) {
+                    } else if (line.startsWith(M3U8Constants.TAG_KEY)) {
                         hasKey = true;
-                        method = parseOptionalStringAttr(line, Constants.REGEX_METHOD);
-                        String keyFormat = parseOptionalStringAttr(line, Constants.REGEX_KEYFORMAT);
-                        if (!Constants.METHOD_NONE.equals(method)) {
-                            keyIv = parseOptionalStringAttr(line, Constants.REGEX_IV);
-                            if (Constants.KEYFORMAT_IDENTITY.equals(keyFormat) || keyFormat == null) {
-                                if (Constants.METHOD_AES_128.equals(method)) {
+                        method = parseOptionalStringAttr(line, M3U8Constants.REGEX_METHOD);
+                        String keyFormat = parseOptionalStringAttr(line, M3U8Constants.REGEX_KEYFORMAT);
+                        if (!M3U8Constants.METHOD_NONE.equals(method)) {
+                            encryptionIV = parseOptionalStringAttr(line, M3U8Constants.REGEX_IV);
+                            if (M3U8Constants.KEYFORMAT_IDENTITY.equals(keyFormat) || keyFormat == null) {
+                                if (M3U8Constants.METHOD_AES_128.equals(method)) {
                                     // The segment is fully encrypted using an identity key.
-                                    String tempKeyUri = parseStringAttr(line, Constants.REGEX_URI);
-                                    if (tempKeyUri != null) {
-                                        keyUrl = UrlUtils.getM3U8MasterUrl(videoUrl, tempKeyUri);
-                                    }
+                                    encryptionKeyUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
                                 } else {
                                     // Do nothing. Samples are encrypted using an identity key,
                                     // but this is not supported. Hopefully, a traditional DRM
@@ -262,54 +275,55 @@ public class M3U8Utils {
                                 // Do nothing.
                             }
                         }
-                    } else if (line.startsWith(Constants.TAG_INIT_SEGMENT)) {
-                        initSegmentUri = parseStringAttr(line, Constants.REGEX_URI);
+                    } else if (line.startsWith(M3U8Constants.TAG_INIT_SEGMENT)) {
+                        initSegmentUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
                         if (!TextUtils.isEmpty(initSegmentUri)) {
                             hasInitSegment = true;
-                            segmentByteRange = parseOptionalStringAttr(line, Constants.REGEX_ATTR_BYTERANGE);
+                            segmentByteRange = parseOptionalStringAttr(line, M3U8Constants.REGEX_ATTR_BYTERANGE);
                         }
                     }
                     continue;
                 }
+                M3U8Seg ts = new M3U8Seg();
+                ts.setUrl(line);
+                ts.setDuration(tsDuration);
+                ts.setSegIndex(tsIndex);
+                ts.setHasDiscontinuity(hasDiscontinuity);
 
-                if (Math.abs(segDuration) < 0.001f) {
-                    continue;
-                }
-
-                M3U8Seg seg = new M3U8Seg();
-                String tempUrl = UrlUtils.getM3U8MasterUrl(videoUrl, line);
-                seg.setUrl(tempUrl);
-                seg.setSegIndex(segIndex);
-                seg.setDuration(segDuration);
-                seg.setHasDiscontinuity(hasDiscontinuity);
-                seg.setHasKey(hasKey);
                 if (hasKey) {
-                    seg.setMethod(method);
-                    seg.setKeyIv(keyIv);
-                    seg.setKeyUrl(keyUrl);
+                    if (encryptionKey == null) {
+                        encryptionKey = parseKey(encryptionKeyUri);
+                        ts.encryptionKey = encryptionKey;
+                    }
+                    ts.setHasKey(true);
+                    ts.encryptionKey = encryptionKey;
+                    ts.setMethod(method);
+                    ts.setKeyUrl(encryptionKeyUri);
+                    ts.setKeyIv(encryptionIV);
+                    m3u8.encryptionKey=encryptionKey;
+                    m3u8.encryptionIV=encryptionIV;
                 }
                 if (hasInitSegment) {
-                    seg.setInitSegmentInfo(initSegmentUri, segmentByteRange);
+                    ts.setInitSegmentInfo(initSegmentUri, segmentByteRange);
                 }
-                m3u8.addSeg(seg);
-                segIndex++;
-                segDuration = 0;
+                m3u8.addSeg(ts);
+                tsIndex++;
+                tsDuration = 0;
                 hasDiscontinuity = false;
                 hasKey = false;
                 hasInitSegment = false;
                 method = null;
-                keyUrl = null;
-                keyIv = null;
+                encryptionKeyUri = null;
+                encryptionIV = null;
                 initSegmentUri = null;
                 segmentByteRange = null;
             }
-
             m3u8.setTargetDuration(targetDuration);
             m3u8.setVersion(version);
             m3u8.setSequence(sequence);
-            m3u8.setIsLive(!hasEndList);
             return m3u8;
-        } catch (Exception e) {
+        } catch (IOException e) {
+            e.printStackTrace();
             throw e;
         } finally {
             ProxyCacheUtils.close(inputStreamReader);
@@ -326,7 +340,23 @@ public class M3U8Utils {
         }
         return null;
     }
+    public static byte[] parseKey(String url){
+        if(TextUtils.isEmpty(url)||!url.startsWith("http"))
+            return null;
+        try {
+            Response response= OkHttpUtil.getInstance().requestSync(url,null);
+            InputStream inStream = response.body().byteStream();
+            //key只能是16位
+            byte[] buffer = new byte[16];
+            if ((inStream.read(buffer)) != -1) {
+                return buffer;
+            }
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     private static String parseOptionalStringAttr(String line, Pattern pattern) {
         if (pattern == null)
             return null;
@@ -334,62 +364,206 @@ public class M3U8Utils {
         return matcher.find() ? matcher.group(1) : null;
     }
 
+    public static String getM3U8AbsoluteUrl(String videoUrl, String line) {
+        if (TextUtils.isEmpty(videoUrl) || TextUtils.isEmpty(line)) {
+            return "";
+        }
+        if (videoUrl.startsWith("file://") || videoUrl.startsWith("/")) {
+            return videoUrl;
+        }
+        String baseUriPath = getBaseUrl(videoUrl);
+        String hostUrl = getHostUrl(videoUrl);
+        if (line.startsWith("//")) {
+            String tempUrl = getSchema(videoUrl) + ":" + line;
+            return tempUrl;
+        }
+        if (line.startsWith("/")) {
+            String pathStr = getPathStr(videoUrl);
+            String longestCommonPrefixStr = getLongestCommonPrefixStr(pathStr, line);
+            if (hostUrl.endsWith("/")) {
+                hostUrl = hostUrl.substring(0, hostUrl.length() - 1);
+            }
+            String tempUrl = hostUrl + longestCommonPrefixStr + line.substring(longestCommonPrefixStr.length());
+            return tempUrl;
+        }
+        if (line.startsWith("http")) {
+            return line;
+        }
+        return baseUriPath + line;
+    }
+    private static String getSchema(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return "";
+        }
+        int index = url.indexOf("://");
+        if (index != -1) {
+            String result = url.substring(0, index);
+            return result;
+        }
+        return "";
+    }
+
     /**
-     * 将m3u8结构保存到本地
+     * 例如https://xvideo.d666111.com/xvideo/taohuadao56152307/index.m3u8
+     * 我们希望得到https://xvideo.d666111.com/xvideo/taohuadao56152307/
+     *
+     * @param url
+     * @return
+     */
+    public static String getBaseUrl(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return "";
+        }
+        int slashIndex = url.lastIndexOf("/");
+        if (slashIndex != -1) {
+            return url.substring(0, slashIndex + 1);
+        }
+        return url;
+    }
+
+    /**
+     * 例如https://xvideo.d666111.com/xvideo/taohuadao56152307/index.m3u8
+     * 我们希望得到https://xvideo.d666111.com/
+     *
+     * @param url
+     * @return
+     */
+    public static String getHostUrl(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return "";
+        }
+        try {
+            URL formatURL = new URL(url);
+            String host = formatURL.getHost();
+            if (host == null) {
+                return url;
+            }
+            int hostIndex = url.indexOf(host);
+            if (hostIndex != -1) {
+                int port = formatURL.getPort();
+                String resultUrl;
+                if (port != -1) {
+                    resultUrl = url.substring(0, hostIndex + host.length()) + ":" + port + "/";
+                } else {
+                    resultUrl = url.substring(0, hostIndex + host.length()) + "/";
+                }
+                return resultUrl;
+            }
+            return url;
+        } catch (Exception e) {
+            return url;
+        }
+    }
+
+    /**
+     * 例如https://xvideo.d666111.com/xvideo/taohuadao56152307/index.m3u8
+     * 我们希望得到   /xvideo/taohuadao56152307/index.m3u8
+     *
+     * @param url
+     * @return
+     */
+    public static String getPathStr(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return "";
+        }
+        String hostUrl = getHostUrl(url);
+        if (TextUtils.isEmpty(hostUrl)) {
+            return url;
+        }
+        return url.substring(hostUrl.length() - 1);
+    }
+    /**
+     * 获取两个字符串的最长公共前缀
+     * /xvideo/taohuadao56152307/500kb/hls/index.m3u8   与     /xvideo/taohuadao56152307/index.m3u8
+     * <p>
+     * /xvideo/taohuadao56152307/500kb/hls/jNd4fapZ.ts  与     /xvideo/taohuadao56152307/500kb/hls/index.m3u8
+     *
+     * @param str1
+     * @param str2
+     * @return
+     */
+    public static String getLongestCommonPrefixStr(String str1, String str2) {
+        if (TextUtils.isEmpty(str1) || TextUtils.isEmpty(str2)) {
+            return "";
+        }
+        if (TextUtils.equals(str1, str2)) {
+            return str1;
+        }
+        char[] arr1 = str1.toCharArray();
+        char[] arr2 = str2.toCharArray();
+        int j = 0;
+        while (j < arr1.length && j < arr2.length) {
+            if (arr1[j] != arr2[j]) {
+                break;
+            }
+            j++;
+        }
+        return str1.substring(0, j);
+    }
+
+    /**
+     * 将远程的m3u8结构保存到本地
      * @param m3u8File
      * @param m3u8
      * @throws Exception
      */
     public static void createLocalM3U8File(File m3u8File, M3U8 m3u8) throws Exception{
         if (m3u8File.exists()) {
-            //如果这个文件存在，说明之前存储过这个文件，不用重复存储了。
+            m3u8File.delete();
             return;
         }
-        BufferedWriter bfw = null;
-        try {
-            bfw = new BufferedWriter(new FileWriter(m3u8File, false));
-            bfw.write(Constants.PLAYLIST_HEADER + "\n");
-            bfw.write(Constants.TAG_VERSION + ":" + m3u8.getVersion() + "\n");
-            bfw.write(Constants.TAG_MEDIA_SEQUENCE + ":" + m3u8.getSequence() + "\n");
-            bfw.write(Constants.TAG_TARGET_DURATION + ":" + m3u8.getTargetDuration() + "\n");
-            for (M3U8Seg m3u8Ts : m3u8.getSegList()) {
-                if (m3u8Ts.hasInitSegment()) {
-                    String initSegmentInfo;
-                    if (m3u8Ts.getSegmentByteRange() != null) {
-                        initSegmentInfo = "URI=\"" + m3u8Ts.getInitSegmentUri() + "\"" + ",BYTERANGE=\"" + m3u8Ts.getSegmentByteRange() + "\"";
-                    } else {
-                        initSegmentInfo = "URI=\"" + m3u8Ts.getInitSegmentUri()  + "\"";
-                    }
-                    bfw.write(Constants.TAG_INIT_SEGMENT + ":" + initSegmentInfo + "\n");
+        BufferedWriter bfw = new BufferedWriter(new FileWriter(m3u8File, false));
+        bfw.write(M3U8Constants.PLAYLIST_HEADER + "\n");
+        bfw.write(M3U8Constants.TAG_VERSION + ":" + m3u8.getVersion() + "\n");
+        bfw.write(M3U8Constants.TAG_MEDIA_SEQUENCE + ":" + m3u8.getSequence() + "\n");
+        bfw.write(M3U8Constants.TAG_TARGET_DURATION + ":" + m3u8.getTargetDuration() + "\n");
+        for (M3U8Seg m3u8Ts : m3u8.getSegList()) {
+            if (m3u8Ts.hasInitSegment()) {
+                String initSegmentInfo;
+                if (m3u8Ts.getSegmentByteRange() != null) {
+                    initSegmentInfo = "URI=\"" + m3u8Ts.getInitSegmentUri() + "\"" + ",BYTERANGE=\"" + m3u8Ts.getSegmentByteRange() + "\"";
+                } else {
+                    initSegmentInfo = "URI=\"" + m3u8Ts.getInitSegmentUri() + "\"";
                 }
-                if (m3u8Ts.isHasKey() && !TextUtils.isEmpty(m3u8Ts.getMethod())) {
+                bfw.write(M3U8Constants.TAG_INIT_SEGMENT + ":" + initSegmentInfo + "\n");
+            }
+            if (m3u8Ts.isHasKey()) {
+                if (m3u8Ts.getMethod() != null) {
                     String key = "METHOD=" + m3u8Ts.getMethod();
-                    if (!TextUtils.isEmpty(m3u8Ts.getKeyUrl())) {
-                        key += ",URI=\"" + m3u8Ts.getKeyUrl() + "\"";
-                        if (!TextUtils.isEmpty(m3u8Ts.getKeyIv())) {
+                    if (m3u8Ts.getKeyUrl() != null) {
+                        String keyUri = m3u8Ts.getKeyUrl();
+                        key += ",URI=\"" + keyUri + "\"";
+                        URL keyURL = new URL(keyUri);
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(keyURL.openStream()));
+                        StringBuilder textBuilder = new StringBuilder();
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            textBuilder.append(line);
+                        }
+                        boolean isMessyStr = VideoDownloadUtils.isMessyCode(textBuilder.toString());
+                        m3u8Ts.mIsMessyKey=isMessyStr;
+                        File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
+                        FileOutputStream outputStream = new FileOutputStream(keyFile);
+                        outputStream.write(textBuilder.toString().getBytes());
+                        bufferedReader.close();
+                        outputStream.close();
+                        if (m3u8Ts.getKeyIv() != null) {
                             key += ",IV=" + m3u8Ts.getKeyIv();
                         }
                     }
-                    bfw.write(Constants.TAG_KEY + ":" + key + "\n");
+                    bfw.write(M3U8Constants.TAG_KEY + ":" + key + "\n");
                 }
-                if (m3u8Ts.isHasDiscontinuity()) {
-                    bfw.write(Constants.TAG_DISCONTINUITY + "\n");
-                }
-                bfw.write(Constants.TAG_MEDIA_DURATION + ":" + m3u8Ts.getDuration() + ",\n");
-                bfw.write(m3u8Ts.getUrl());
-                bfw.newLine();
             }
-            bfw.write(Constants.TAG_ENDLIST);
-            bfw.flush();
-        } catch (Exception e){
-            LogUtils.w(TAG, "createLocalM3U8File failed exception = " + e.getMessage());
-            if (m3u8File.exists()) {
-                m3u8File.delete();
+            if (m3u8Ts.isHasDiscontinuity()) {
+                bfw.write(M3U8Constants.TAG_DISCONTINUITY + "\n");
             }
-            throw e;
-        } finally {
-            ProxyCacheUtils.close(bfw);
+            bfw.write(M3U8Constants.TAG_MEDIA_DURATION + ":" + m3u8Ts.getDuration() + ",\n");
+            bfw.write(m3u8Ts.getUrl());
+            bfw.newLine();
         }
+        bfw.write(M3U8Constants.TAG_ENDLIST);
+        bfw.flush();
+        bfw.close();
     }
 
     /**
@@ -402,10 +576,10 @@ public class M3U8Utils {
      */
     public static void createProxyM3U8File(File m3u8File, M3U8 m3u8, String md5, Map<String, String> headers) throws Exception {
         BufferedWriter bfw = new BufferedWriter(new FileWriter(m3u8File, false));
-        bfw.write(Constants.PLAYLIST_HEADER + "\n");
-        bfw.write(Constants.TAG_VERSION + ":" + m3u8.getVersion() + "\n");
-        bfw.write(Constants.TAG_MEDIA_SEQUENCE + ":" + m3u8.getSequence() + "\n");
-        bfw.write(Constants.TAG_TARGET_DURATION + ":" + m3u8.getTargetDuration() + "\n");
+        bfw.write(M3U8Constants.PLAYLIST_HEADER + "\n");
+        bfw.write(M3U8Constants.TAG_VERSION + ":" + m3u8.getVersion() + "\n");
+        bfw.write(M3U8Constants.TAG_MEDIA_SEQUENCE + ":" + m3u8.getSequence() + "\n");
+        bfw.write(M3U8Constants.TAG_TARGET_DURATION + ":" + m3u8.getTargetDuration() + "\n");
 
         for (M3U8Seg m3u8Ts : m3u8.getSegList()) {
             if (m3u8Ts.hasInitSegment()) {
@@ -413,25 +587,44 @@ public class M3U8Utils {
                 if (m3u8Ts.getSegmentByteRange() != null) {
                     initSegmentInfo += ",BYTERANGE=\"" + m3u8Ts.getSegmentByteRange() +"\"";
                 }
-                bfw.write(Constants.TAG_INIT_SEGMENT + ":" + initSegmentInfo + "\n");
+                bfw.write(M3U8Constants.TAG_INIT_SEGMENT + ":" + initSegmentInfo + "\n");
             }
-            if (m3u8Ts.isHasKey() && !TextUtils.isEmpty(m3u8Ts.getMethod())) {
-                String key = "METHOD=" + m3u8Ts.getMethod();
-                if (!TextUtils.isEmpty(m3u8Ts.getKeyUrl())) {
-                    key += ",URI=\"" + m3u8Ts.getKeyUrl() + "\"";
-                    if (!TextUtils.isEmpty(m3u8Ts.getKeyIv())) {
-                        key += ",IV=" + m3u8Ts.getKeyIv();
+            if (m3u8Ts.isHasKey()) {
+                if (m3u8Ts.getMethod() != null) {
+                    String key = "METHOD=" + m3u8Ts.getMethod();
+                    if (m3u8Ts.getKeyUrl() != null) {
+                        String keyUri = m3u8Ts.getKeyUrl();
+
+                        URL keyURL = new URL(keyUri);
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(keyURL.openStream()));
+                        StringBuilder textBuilder = new StringBuilder();
+                        String line;
+                        while ((line = bufferedReader.readLine()) != null) {
+                            textBuilder.append(line);
+                        }
+                        m3u8Ts.mIsMessyKey=VideoDownloadUtils.isMessyCode(textBuilder.toString());
+                        File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
+                        FileOutputStream outputStream = new FileOutputStream(keyFile);
+                        outputStream.write(textBuilder.toString().getBytes());
+                        bufferedReader.close();
+                        outputStream.close();
+                        key += ",URI=\"" + keyUri + "\"";
+                        if (m3u8Ts.getKeyIv() != null) {
+                            key += ",IV=" + m3u8Ts.getKeyIv();
+                        }
                     }
+                    //不写入key
+//                    bfw.write(M3U8Constants.TAG_KEY + ":" + key + "\n");
                 }
-                bfw.write(Constants.TAG_KEY + ":" + key + "\n");
             }
             if (m3u8Ts.isHasDiscontinuity()) {
-                bfw.write(Constants.TAG_DISCONTINUITY + "\n");
+                bfw.write(M3U8Constants.TAG_DISCONTINUITY + "\n");
             }
-            bfw.write(Constants.TAG_MEDIA_DURATION + ":" + m3u8Ts.getDuration() + ",\n");
+            bfw.write(M3U8Constants.TAG_MEDIA_DURATION + ":" + m3u8Ts.getDuration() + ",\n");
             bfw.write(m3u8Ts.getSegProxyUrl(md5, headers) + "\n");
+            bfw.newLine();
         }
-        bfw.write(Constants.TAG_ENDLIST);
+        bfw.write(M3U8Constants.TAG_ENDLIST);
         bfw.flush();
         bfw.close();
     }

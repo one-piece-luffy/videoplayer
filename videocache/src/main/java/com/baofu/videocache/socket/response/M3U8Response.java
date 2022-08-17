@@ -1,6 +1,7 @@
 package com.baofu.videocache.socket.response;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.baofu.videocache.VideoLockManager;
 import com.baofu.videocache.VideoProxyCacheManager;
@@ -45,24 +46,28 @@ public class M3U8Response extends BaseResponse {
         }
         Object lock = VideoLockManager.getInstance().getLock(mMd5);
         int waitTime = WAIT_TIME;
-
+        Log.e(TAG,"=========等待解析网络m3u8");
         /**
          * 1.如果文件不存在或者proxy M3U8文件没有生成
          * 2.当前M3U8不能是直播
          */
         while(!mFile.exists() || !VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5)) {
             if (VideoProxyCacheManager.getInstance().isM3U8LiveType(mMd5)) {
+                Log.e(TAG,"=========VideoCacheException");
                 throw new VideoCacheException("M3U8 is live type");
             }
             synchronized (lock) {
                 lock.wait(waitTime);
             }
+
         }
+        Log.e(TAG,"==========M3U8 proxy file start read");
         RandomAccessFile randomAccessFile = null;
 
         try {
             randomAccessFile = new RandomAccessFile(mFile, "r");
             if (randomAccessFile == null) {
+                Log.e(TAG,"M3U8 proxy file not found");
                 throw new VideoCacheException("M3U8 proxy file not found, this=" + this);
             }
 
@@ -70,7 +75,8 @@ public class M3U8Response extends BaseResponse {
             byte[] buffer = new byte[bufferedSize];
             long available = randomAccessFile.length();
             long offset = 0;
-
+            Log.e(TAG,"=========sendBody");
+            //todo
             while (shouldSendResponse(socket, mMd5)) {
                 if (available == 0) {
                     synchronized (lock) {
@@ -81,6 +87,7 @@ public class M3U8Response extends BaseResponse {
                     if (waitTime < MAX_WAIT_TIME) {
                         waitTime *= 2;
                     }
+                    Log.e(TAG,"Send M3U8 video info end, available=0");
                 } else {
                     randomAccessFile.seek(offset);
                     int readLength;
@@ -89,7 +96,7 @@ public class M3U8Response extends BaseResponse {
                         outputStream.write(buffer, 0, readLength);
                         randomAccessFile.seek(offset);
                     }
-                    LogUtils.i(TAG, "Send M3U8 video info end, this="+this);
+                    Log.e(TAG,"Send M3U8 video info end, this="+this);
                     break;
                 }
             }

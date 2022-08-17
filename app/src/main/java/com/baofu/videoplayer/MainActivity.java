@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
+import com.baofu.videocache.VideoInfoParseManager;
 import com.baofu.videocache.VideoProxyCacheManager;
 import com.baofu.videocache.control.LocalProxyVideoControl;
 import com.baofu.videocache.listener.ISocketListener;
@@ -29,7 +30,7 @@ import cn.mahua.av.play.ControllerClickListener;
 public class MainActivity extends AppCompatActivity {
     VideoPlayer videoView;
     AvNormalPlayController controller;
-
+    LocalProxyVideoControl mLocalProxyVideoControl;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,20 +103,21 @@ public class MainActivity extends AppCompatActivity {
         header.put("type","m3u8");
 
 //        String url="http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4";
-//        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";
-        String url="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";
+//        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";//镜双城//
+//      String url="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";//海贼王
+        String url="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
         String link=url;
         if(url.contains("m3u8")){
             //开启视频缓存
             ProxyCacheUtils.getConfig().setUseOkHttp(true);
-            link = ProxyCacheUtils.getProxyUrl(Uri.parse(url).toString(), header, null);
+            link = ProxyCacheUtils.getProxyUrl(Uri.parse(url).toString(), null, null);
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
                     //开始缓存
-                    LocalProxyVideoControl mLocalProxyVideoControl = new LocalProxyVideoControl();
-                    mLocalProxyVideoControl.startRequestVideoInfo(url, header, null);
+                    mLocalProxyVideoControl = new LocalProxyVideoControl();
+                    mLocalProxyVideoControl.startRequestVideoInfo(url, null, null);
                 }
             }.start();
             VideoProxyCacheManager.getInstance().addSocketListener(url, new ISocketListener() {
@@ -128,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            videoView.seekTo(videoView.getCurrentPosition()-2000);
+                            videoView.seekTo(videoView.getCurrentPosition()+2000);
                         }
                     });
 
@@ -231,7 +233,10 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         if (videoView != null) {
             videoView.release();
-
         }
+        if(mLocalProxyVideoControl!=null){
+            mLocalProxyVideoControl.pauseLocalProxyTask();
+        }
+        VideoInfoParseManager.getInstance().release();
     }
 }
