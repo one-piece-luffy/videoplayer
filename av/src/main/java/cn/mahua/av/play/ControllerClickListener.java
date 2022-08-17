@@ -8,4 +8,5 @@ public interface ControllerClickListener {
     void next();
     void tryFix();
     void onSpeedClick(String speed);
+    void onUserSeek(long position);
 }

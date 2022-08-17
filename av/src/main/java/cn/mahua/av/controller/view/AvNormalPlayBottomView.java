@@ -424,6 +424,9 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     public void onStopTrackingTouch(SeekBar seekBar) {
         long duration = mControlWrapper.getDuration();
         long newPosition = (duration * seekBar.getProgress()) / mPbBottomProgress.getMax();
+        if(controllerClickListener!=null){
+            controllerClickListener.onUserSeek(newPosition);
+        }
         mControlWrapper.seekTo((int) newPosition);
         mIsDragging = false;
         mControlWrapper.startProgress();

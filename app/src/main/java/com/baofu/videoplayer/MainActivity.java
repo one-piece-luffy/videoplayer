@@ -81,6 +81,13 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
+            @Override
+            public void onUserSeek(long position) {
+//                if(mLocalProxyVideoControl!=null){
+//                    mLocalProxyVideoControl.seekToCachePosition(position,videoView.getDuration());
+//                }
+            }
+
         });
         //设置播放器缩略图
         ImageLoader.getInstance().placeholder(R.drawable.a)
@@ -103,9 +110,9 @@ public class MainActivity extends AppCompatActivity {
         header.put("type","m3u8");
 
 //        String url="http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4";
-//        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";//镜双城//
+        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";//镜双城//
 //      String url="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";//海贼王
-        String url="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
+//        String url="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
         String link=url;
         if(url.contains("m3u8")){
             //开启视频缓存
