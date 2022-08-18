@@ -43,16 +43,16 @@
         android:id="@+id/long_speed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="75dp"
-        android:layout_gravity="center_horizontal"
+        android:layout_gravity="center_vertical|right"
+        android:layout_marginRight="20dp"
         android:gravity="center"
         android:orientation="horizontal"
         android:visibility="gone"
         tools:visibility="visible"
-        android:paddingLeft="15dp"
-        android:paddingRight="15dp"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp"
         android:background="@drawable/shape_speed_bg"
        >
 
@@ -69,7 +69,7 @@
             android:layout_height="wrap_content"
             android:clickable="false"
             android:text="x3 "
-            android:textSize="16dp"
+            android:textSize="14dp"
             android:textStyle="bold"
             android:textColor="#fff"
             android:layout_marginLeft="3dp"
@@ -80,8 +80,8 @@
             android:layout_height="wrap_content"
             android:clickable="false"
 
-            android:textSize="16dp"
-            android:textColor="#aaffffff"
+            android:textSize="14dp"
+            android:textColor="#fff"
             android:text="@string/speeding"
             />
 

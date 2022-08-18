@@ -140,6 +140,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
                 setSpeed(speed);
             }
         });
+
         this.addControlComponent(gestureControlView);
     }
 
@@ -381,6 +382,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
 
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
+
         if(mAvBottomView!=null){
             mAvBottomView.setControllerClickListener(controllerClickListener);
         }
@@ -389,6 +391,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
         if(mErrorView!=null){
             mErrorView.setControllerClickListener(controllerClickListener);
+        }
+        if(gestureControlView!=null){
+            gestureControlView.setControllerClickListener(controllerClickListener);
         }
     }
 

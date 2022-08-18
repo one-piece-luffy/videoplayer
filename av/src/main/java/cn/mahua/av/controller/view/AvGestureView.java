@@ -42,6 +42,7 @@ import com.yc.video.tool.PlayerUtils;
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.listener.OnSpeedChangeListener;
+import cn.mahua.av.play.ControllerClickListener;
 
 /**
  * 手势控制
@@ -67,10 +68,13 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
     ViewGroup mLongSpeed;
     float mLastSpeed;
     boolean isLongPress;
+    //是否滑动改变了进度
+    long mSlidePosition=-1;
     ImageView mIvQuick;
     final  String TAG="AvGestureView";
     AnimationDrawable mAnimationDrawable;
     OnSpeedChangeListener onSpeedChangeListener;
+    ControllerClickListener controllerClickListener;
     public AvGestureView(@NonNull Context context) {
         super(context);
         init(context);
@@ -111,6 +115,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
 
     public void setOnSpeedChangeListener(OnSpeedChangeListener onSpeedChangeListener) {
         this.onSpeedChangeListener = onSpeedChangeListener;
+    }
+    public void setControllerClickListener(ControllerClickListener controllerClickListener) {
+        this.controllerClickListener = controllerClickListener;
     }
 
     @Override
@@ -172,6 +179,12 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
                 mAnimationDrawable.stop();
             }
         }
+        if(mSlidePosition>-1){
+            if(controllerClickListener!=null){
+                controllerClickListener.onUserSeek(mSlidePosition);
+                mSlidePosition=-1;
+            }
+        }
     }
 
     /**
@@ -189,6 +202,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
             mIvIcon.setImageResource(R.drawable.ic_player_fast_rewind);
         }
         mTvPercent.setText(String.format("%s/%s", PlayerUtils.formatTime(slidePosition), PlayerUtils.formatTime(duration)));
+        mSlidePosition=slidePosition;
     }
 
     /**

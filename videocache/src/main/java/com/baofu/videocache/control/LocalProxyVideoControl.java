@@ -1,5 +1,7 @@
 package com.baofu.videocache.control;
 
+import android.util.Log;
+
 import com.baofu.videocache.VideoProxyCacheManager;
 import com.baofu.videocache.common.VideoParams;
 import com.baofu.videocache.listener.IVideoCacheListener;
@@ -28,7 +30,9 @@ public class LocalProxyVideoControl {
         }
 
         @Override
-        public void onCacheError(VideoCacheInfo cacheInfo, int errorCode) { }
+        public void onCacheError(VideoCacheInfo cacheInfo, int errorCode) {
+
+        }
 
         @Override
         public void onCacheForbidden(VideoCacheInfo cacheInfo) { }
@@ -61,7 +65,6 @@ public class LocalProxyVideoControl {
         VideoProxyCacheManager.getInstance().resumeCacheTask(mVideoUrl);
     }
 
-    // TODO: 2022/8/17  
     public void seekToCachePosition(long position,long totalDuration) {
         if (totalDuration > 0) {
             float percent = position * 1.0f / totalDuration;

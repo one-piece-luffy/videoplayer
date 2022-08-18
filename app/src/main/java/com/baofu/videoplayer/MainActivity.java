@@ -83,9 +83,9 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onUserSeek(long position) {
-//                if(mLocalProxyVideoControl!=null){
-//                    mLocalProxyVideoControl.seekToCachePosition(position,videoView.getDuration());
-//                }
+                if(mLocalProxyVideoControl!=null){
+                    mLocalProxyVideoControl.seekToCachePosition(position,videoView.getDuration());
+                }
             }
 
         });

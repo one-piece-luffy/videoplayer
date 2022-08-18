@@ -102,7 +102,11 @@ public class M3U8CacheTask extends VideoCacheTask {
     public void pauseCacheTask() {
         LogUtils.i(TAG, "pauseCacheTask");
         if (isTaskRunning()) {
-            mTaskExecutor.shutdownNow();
+            try {
+                mTaskExecutor.shutdownNow();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
@@ -134,16 +138,16 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void seekToCacheTaskFromServer(int segIndex) {
-        Log.e(TAG, "================seek segIndex="+segIndex);
+//        Log.e(TAG, "================seek segIndex="+segIndex);
         pauseCacheTask();
         startRequestVideoRange(segIndex);
     }
 
     private void startRequestVideoRange(int curTs) {
-        Log.e(TAG,"startRequest m3u8");
+//        Log.e(TAG,"startRequest m3u8");
         if (mCacheInfo.isCompleted()) {
             notifyOnTaskCompleted();
-            Log.e(TAG,"isCompleted");
+            Log.e(TAG,"m3u8 isCompleted");
             return;
         }
         if (isTaskRunning()) {
@@ -151,7 +155,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             Log.e(TAG,"task m3u8 is running");
             return;
         }
-        Log.e(TAG,"curTs:"+curTs);
+//        Log.e(TAG,"curTs:"+curTs);
         mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
                 TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.DiscardOldestPolicy());
@@ -161,7 +165,8 @@ public class M3U8CacheTask extends VideoCacheTask {
                 try {
                     startDownloadSegTask(seg);
                 } catch (Exception e) {
-                    Log.e(TAG, "M3U8 ts video download failed, exception=" + e);
+                    e.printStackTrace();
+//                    Log.e(TAG, "M3U8 ts video download failed, exception=" + e);
                     notifyOnTaskFailed(e);
                 }
             });
@@ -169,7 +174,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startDownloadSegTask(M3U8Seg seg) throws Exception {
-       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
+//       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
             File initSegmentFile = new File(mSaveDir, initSegmentName);
@@ -250,7 +255,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                     contentLength = file.length();
                 }
                 ts.setContentLength(contentLength);
-
+                Log.e(TAG,"队列ts下载完成");
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {
@@ -258,15 +263,14 @@ public class M3U8CacheTask extends VideoCacheTask {
                         //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
                         int ran= 4000+(int) (Math.random()*20000);
                         Thread.sleep(ran);
-                        Log.e(TAG, "sleep:" + ran);
                         downloadFile(ts, file, videoUrl);
                     }
                 } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-                    Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+//                    Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
 
                     downloadFile(ts, file, videoUrl);
                 } else {
-                    Log.e(TAG, "====error   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+//                    Log.e(TAG, "====error   responseCode=" + responseCode + "  ts:" + ts.getUrl());
                 }
             }
 
@@ -280,7 +284,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             e.printStackTrace();
             ts.setRetryCount(ts.getRetryCount() + 1);
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-                Log.e(TAG, "====retry, exception=" + e.getMessage());
+//                Log.e(TAG, "====retry, exception=" + e.getMessage());
                 downloadFile(ts, file, videoUrl);
             }
         } finally {
@@ -407,7 +411,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void notifyCacheProgress() {
-        Log.e(TAG,"notifyCacheProgress");
+        Log.i(TAG,"notifyCacheProgress");
         updateM3U8TsInfo();
         if (mCachedSegCount > mTotalSegCount) {
             mCachedSegCount = mTotalSegCount;
