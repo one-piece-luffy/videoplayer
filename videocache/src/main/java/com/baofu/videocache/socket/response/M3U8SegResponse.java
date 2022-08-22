@@ -37,7 +37,7 @@ import okhttp3.Response;
 /**
  * @author jeffmony
  * M3U8-TS视频的local server端
- *
+ * <p>
  * https://iqiyi.cdn9-okzy.com/20210217/22550_b228d68b/1000k/hls/6f2ac117eac000000.ts&jeffmony_seg&/c462e3fd379ce23333aabed0a3837848/0.ts&jeffmony_seg&unknown
  */
 public class M3U8SegResponse extends BaseResponse {
@@ -50,15 +50,15 @@ public class M3U8SegResponse extends BaseResponse {
     private int mSegIndex;      //M3U8 ts对应的索引位置
     private long mSegLength;
     private String mFileName;
-    int MAX_RETRY_COUNT=1;
-    int MAX_RETRY_COUNT_503=3;
+    int MAX_RETRY_COUNT = 1;
+    int MAX_RETRY_COUNT_503 = 3;
 
     public M3U8SegResponse(HttpRequest request, String parentUrl, String videoUrl, Map<String, String> headers, long time, String fileName) throws Exception {
         super(request, videoUrl, headers, time);
         mParentUrl = parentUrl;
         mSegUrl = videoUrl;
         mSegFile = new File(mCachePath, fileName);
-        LogUtils.i(TAG, "SegFilePath="+mSegFile.getAbsolutePath());
+        LogUtils.i(TAG, "SegFilePath=" + mSegFile.getAbsolutePath());
         mFileName = mSegFile.getName();
         mM3U8Md5 = getM3U8Md5(fileName);
         if (mHeaders == null) {
@@ -67,7 +67,7 @@ public class M3U8SegResponse extends BaseResponse {
         mHeaders.put("Connection", "close");
         mSegIndex = getSegIndex(fileName);
         mResponseState = ResponseState.OK;
-        LogUtils.i(TAG, "index="+mSegIndex+", parentUrl="+mParentUrl+", segUrl="+mSegUrl);
+        LogUtils.i(TAG, "index=" + mSegIndex + ", parentUrl=" + mParentUrl + ", segUrl=" + mSegUrl);
         VideoProxyCacheManager.getInstance().seekToCacheTaskFromServer(mParentUrl, mSegIndex);
     }
 
@@ -100,17 +100,17 @@ public class M3U8SegResponse extends BaseResponse {
 
     @Override
     public void sendBody(Socket socket, OutputStream outputStream, long pending) throws Exception {
-        Log.e(TAG,"开始解析ts："+mFileName);
-        Log.e(TAG,"ts exits："+mSegFile.exists());
-        if(mSegFile.exists()){
+        Log.e(TAG, "开始解析ts：" + mFileName);
+        Log.e(TAG, "ts exits：" + mSegFile.exists());
+        if (mSegFile.exists()) {
 //            sendBody2(socket,outputStream);
-                    sendBody(outputStream,new FileInputStream(mSegFile));
+            sendBody(outputStream, new FileInputStream(mSegFile));
             return;
         }
 
         if (mFileName.startsWith(ProxyCacheUtils.INIT_SEGMENT_PREFIX)) {
-            Log.e(TAG,"ts startsWith INIT_SEGMENT_PREFIX");
-            while(!mSegFile.exists()) {
+            Log.e(TAG, "ts startsWith INIT_SEGMENT_PREFIX");
+            while (!mSegFile.exists()) {
                 downloadFile(mSegUrl, mSegFile);
                 if (mSegLength > 0 && mSegLength == mSegFile.length()) {
                     break;
@@ -135,7 +135,7 @@ public class M3U8SegResponse extends BaseResponse {
             downloadFile(mSegUrl, mSegFile);
         }
 //        sendBody2(socket,outputStream);
-        sendBody(outputStream,new FileInputStream(mSegFile));
+        sendBody(outputStream, new FileInputStream(mSegFile));
     }
 
     private void sendBody2(Socket socket, OutputStream outputStream) throws Exception {
@@ -149,17 +149,17 @@ public class M3U8SegResponse extends BaseResponse {
             int bufferedSize = StorageUtils.DEFAULT_BUFFER_SIZE;
             byte[] buffer = new byte[bufferedSize];
             long offset = 0;
-            boolean shouldSendResponse=shouldSendResponse(socket, mM3U8Md5);
-            Log.e(TAG,"isM3U8SegCompleted："+shouldSendResponse);
-            while(shouldSendResponse) {
+            boolean shouldSendResponse = shouldSendResponse(socket, mM3U8Md5);
+            Log.e(TAG, "isM3U8SegCompleted：" + shouldSendResponse);
+            while (shouldSendResponse) {
                 randomAccessFile.seek(offset);
                 int readLength;
-                while((readLength = randomAccessFile.read(buffer, 0, buffer.length)) != -1) {
+                while ((readLength = randomAccessFile.read(buffer, 0, buffer.length)) != -1) {
                     offset += readLength;
                     outputStream.write(buffer, 0, readLength);
                     randomAccessFile.seek(offset);
                 }
-                LogUtils.d(TAG, "Send M3U8 ts file end, this="+this);
+                LogUtils.d(TAG, "Send M3U8 ts file end, this=" + this);
                 break;
             }
         } catch (Exception e) {
@@ -168,23 +168,24 @@ public class M3U8SegResponse extends BaseResponse {
             ProxyCacheUtils.close(randomAccessFile);
         }
     }
-    private void sendBody(OutputStream outputStream,InputStream mInputStream) throws IOException {
-        long buffer_size = 8*1024;
+
+    private void sendBody(OutputStream outputStream, InputStream mInputStream) throws IOException {
+        long buffer_size = 8 * 1024;
         byte[] buff = new byte[(int) buffer_size];
-        int read=0;
+        int read = 0;
         if (mInputStream == null) {
-            Log.e(TAG,"inputstream is null");
+            Log.e(TAG, "inputstream is null");
             return;
         }
         while ((read = mInputStream.read(buff)) != -1) {
             outputStream.write(buff, 0, read);
 //            Log.e(TAG,"write buff");
         }
-        Log.e(TAG,"write finish");
+        Log.e(TAG, "write finish");
     }
 
     private void downloadSegFile(String url, File file) throws Exception {
-        Log.e(TAG,"开始下载ts 方法二："+url+" file:"+file.getAbsolutePath());
+        Log.e(TAG, "开始下载ts 方法二：" + url + " file:" + file.getAbsolutePath());
         HttpURLConnection connection = null;
         InputStream inputStream = null;
         try {
@@ -195,7 +196,7 @@ public class M3U8SegResponse extends BaseResponse {
                 mSegLength = connection.getContentLength();
                 saveSegFile(inputStream, file);
             }
-            Log.e(TAG,"ts下载完成");
+            Log.e(TAG, "ts下载完成");
         } catch (Exception e) {
             throw e;
         } finally {
@@ -205,60 +206,61 @@ public class M3U8SegResponse extends BaseResponse {
             ProxyCacheUtils.close(inputStream);
         }
     }
-    public void downloadFile(String videoUrl,File file) throws Exception {
-        if(!file.exists()){
-            File file1=new File(file.getParentFile().getAbsolutePath());
+
+    public void downloadFile(String videoUrl, File file) throws Exception {
+        if (!file.exists()) {
+            File file1 = new File(file.getParentFile().getAbsolutePath());
             file1.mkdir();
         }
-        M3U8 m3u8= VideoInfoParseManager.getInstance().m3u8;
-        if(m3u8==null){
-            Log.e(TAG,"m3u8 is null："+videoUrl);
-            downloadSegFile(videoUrl,file);
+        M3U8 m3u8 = VideoInfoParseManager.getInstance().m3u8;
+        if (m3u8 == null) {
+            Log.e(TAG, "m3u8 is null：" + videoUrl);
+            downloadSegFile(videoUrl, file);
             return;
         }
-        Log.e(TAG,"m3u8 list："+m3u8.getSegList().size());
-        M3U8Seg ts=null;
-        for(int i=0;i<m3u8.getSegList().size();i++){
-            M3U8Seg m3U8Seg=m3u8.getSegList().get(i);
-            if(m3U8Seg.getUrl().equals(videoUrl)){
-                ts=m3U8Seg;
+        Log.e(TAG, "m3u8 list：" + m3u8.getSegList().size());
+        M3U8Seg ts = null;
+        for (int i = 0; i < m3u8.getSegList().size(); i++) {
+            M3U8Seg m3U8Seg = m3u8.getSegList().get(i);
+            if (m3U8Seg.getUrl().equals(videoUrl)) {
+                ts = m3U8Seg;
                 break;
             }
         }
-        if(ts==null){
-            Log.e(TAG,"ts is null："+videoUrl);
-            downloadSegFile(videoUrl,file);
+        if (ts == null) {
+            Log.e(TAG, "ts is null：" + videoUrl);
+            downloadSegFile(videoUrl, file);
             return;
         }
-        Log.e(TAG,"开始下载ts 方法一："+videoUrl+" file:"+file.getAbsolutePath());
+        Log.e(TAG, "开始下载ts 方法一：" + videoUrl + " file:" + file.getAbsolutePath());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
         FileOutputStream fos = null;
         FileChannel foutc = null;
-        Response response=null;
+        Response response = null;
         try {
 
-            response = OkHttpUtil.getInstance().requestSync(videoUrl,mHeaders);
+            response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
                 ts.setRetryCount(0);
                 inputStream = response.body().byteStream();
-                long contentLength =  response.body().contentLength();
+                long contentLength = response.body().contentLength();
 
                 byte[] encryptionKey = ts.encryptionKey == null ? m3u8.encryptionKey : ts.encryptionKey;
                 String iv = ts.encryptionKey == null ? m3u8.encryptionIV : ts.getKeyIv();
-                if ( encryptionKey != null) {
+                if (encryptionKey != null) {
 
                     String tsInitSegmentName = ts.getInitSegmentName() + ".temp";
                     File tsInitSegmentFile = new File(file.getParentFile().getAbsolutePath(), tsInitSegmentName);
-                    
+
 
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tsInitSegmentFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
-                    Log.e(TAG,"解密ts");
+                    Log.e(TAG, "解密ts");
                     FileOutputStream fileOutputStream = null;
                     try {
                         byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
@@ -285,21 +287,21 @@ public class M3U8SegResponse extends BaseResponse {
                     contentLength = file.length();
                 }
                 ts.setContentLength(contentLength);
-                Log.e(TAG,"ts下载完成");
+                Log.e(TAG, "ts下载完成");
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
-                if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {
+                if (responseCode == HttpUtils.RESPONSE_503 || responseCode == HttpUtils.RESPONSE_429) {
                     if (ts.getRetryCount() <= MAX_RETRY_COUNT_503) {
                         //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
-                        int ran= 4000+(int) (Math.random()*20000);
+                        int ran = 4000 + (int) (Math.random() * 20000);
                         Thread.sleep(ran);
                         Log.e(TAG, "sleep:" + ran);
-                        downloadFile(  videoUrl,file);
+                        downloadFile(videoUrl, file);
                     }
                 } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
                     Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
 
-                    downloadFile(  videoUrl,file);
+                    downloadFile(videoUrl, file);
                 } else {
                     Log.e(TAG, "====error   responseCode=" + responseCode + "  ts:" + ts.getUrl());
                 }
@@ -308,20 +310,20 @@ public class M3U8SegResponse extends BaseResponse {
 
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
-            Log.e(TAG, "InterruptedIOException" );
+            Log.e(TAG, "InterruptedIOException");
             return;
         } catch (Exception e) {
-            Log.e(TAG,e.getMessage());
+            Log.e(TAG, e.getMessage());
             e.printStackTrace();
             ts.setRetryCount(ts.getRetryCount() + 1);
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
                 Log.e(TAG, "====retry, exception=" + e.getMessage());
-                downloadFile(  videoUrl,file);
+                downloadFile(videoUrl, file);
             }
         } finally {
             ProxyCacheUtils.close(inputStream);
             ProxyCacheUtils.close(fos);
-            if(response!=null){
+            if (response != null) {
                 ProxyCacheUtils.close(response.body());
             }
             if (rbc != null) {
