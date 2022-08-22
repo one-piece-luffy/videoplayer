@@ -185,7 +185,7 @@ public class M3U8SegResponse extends BaseResponse {
     }
 
     private void downloadSegFile(String url, File file) throws Exception {
-        Log.e(TAG, "开始下载ts 方法二：" + url + " file:" + file.getAbsolutePath());
+//        Log.e(TAG, "开始下载ts 方法二：" + url + " file:" + file.getAbsolutePath());
         HttpURLConnection connection = null;
         InputStream inputStream = null;
         try {
@@ -196,7 +196,7 @@ public class M3U8SegResponse extends BaseResponse {
                 mSegLength = connection.getContentLength();
                 saveSegFile(inputStream, file);
             }
-            Log.e(TAG, "ts下载完成");
+//            Log.e(TAG, "ts下载完成");
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -221,7 +221,7 @@ public class M3U8SegResponse extends BaseResponse {
         if (m3u8 == null) {
             Log.e(TAG, "m3u8 is null：" + videoUrl);
         }else {
-            Log.e(TAG, "m3u8 list：" + m3u8.getSegList().size());
+//            Log.e(TAG, "m3u8 list：" + m3u8.getSegList().size());
             for (int i = 0; i < m3u8.getSegList().size(); i++) {
                 M3U8Seg m3U8Seg = m3u8.getSegList().get(i);
                 if (m3U8Seg.getUrl().equals(videoUrl)) {
@@ -232,11 +232,11 @@ public class M3U8SegResponse extends BaseResponse {
         }
 
         if (ts == null) {
-            Log.e(TAG, "ts is null：" + videoUrl);
+//            Log.e(TAG, "ts is null：" + videoUrl);
             ts=new M3U8Seg();
             ts.setUrl(videoUrl);
         }
-        Log.e(TAG, "开始下载ts 方法一：" + videoUrl + " file:" + file.getAbsolutePath());
+//        Log.e(TAG, "开始下载ts 方法一：" + videoUrl + " file:" + file.getAbsolutePath());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
@@ -269,7 +269,7 @@ public class M3U8SegResponse extends BaseResponse {
                     fos = new FileOutputStream(tsInitSegmentFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
-                    Log.e(TAG, "解密ts");
+//                    Log.e(TAG, "解密ts");
                     FileOutputStream fileOutputStream = null;
                     try {
                         byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
@@ -296,7 +296,7 @@ public class M3U8SegResponse extends BaseResponse {
                     contentLength = file.length();
                 }
                 ts.setContentLength(contentLength);
-                Log.e(TAG, "ts下载完成");
+//                Log.e(TAG, "ts下载完成");
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503 || responseCode == HttpUtils.RESPONSE_429) {
@@ -308,11 +308,9 @@ public class M3U8SegResponse extends BaseResponse {
                         downloadFile(videoUrl, file);
                     }
                 } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-                    Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+//                    Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
 
                     downloadFile(videoUrl, file);
-                } else {
-                    Log.e(TAG, "====error   responseCode=" + responseCode + "  ts:" + ts.getUrl());
                 }
             }
 
@@ -320,11 +318,9 @@ public class M3U8SegResponse extends BaseResponse {
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
         } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
             e.printStackTrace();
             ts.setRetryCount(ts.getRetryCount() + 1);
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-                Log.e(TAG, "====retry, exception=" + e.getMessage());
                 downloadFile(videoUrl, file);
             }
         } finally {

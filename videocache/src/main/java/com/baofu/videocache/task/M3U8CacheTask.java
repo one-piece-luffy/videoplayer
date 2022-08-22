@@ -151,10 +151,14 @@ public class M3U8CacheTask extends VideoCacheTask {
             Log.e(TAG,"task m3u8 is running");
             return;
         }
-
-        if (mTaskExecutor != null) {
-            mTaskExecutor.shutdownNow();
+        try {
+            if (mTaskExecutor != null) {
+                mTaskExecutor.shutdownNow();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
         mTaskExecutor = null;
         mTaskExecutor = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
         for (int index = curTs; index < mTotalSegCount; index++) {
@@ -172,7 +176,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startDownloadSegTask(M3U8Seg seg)  {
-       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
+//       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
             File initSegmentFile = new File(mSaveDir, initSegmentName);
@@ -200,7 +204,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
-        Log.e(TAG,"队列开始下载ts");
+//        Log.e(TAG,"队列开始下载ts");
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
@@ -253,7 +257,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                     contentLength = file.length();
                 }
                 ts.setContentLength(contentLength);
-                Log.e(TAG,"队列ts下载完成");
+//                Log.e(TAG,"队列ts下载完成");
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {
@@ -282,9 +286,9 @@ public class M3U8CacheTask extends VideoCacheTask {
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
 //                Log.e(TAG, "====retry, exception=" + e.getMessage());
                 downloadFile(ts, file, videoUrl);
-                Log.e("asdf","重试");
+//                Log.e("asdf","重试");
             }else {
-                Log.e("asdf","失败");
+//                Log.e("asdf","失败");
             }
         } finally {
             ProxyCacheUtils.close(inputStream);

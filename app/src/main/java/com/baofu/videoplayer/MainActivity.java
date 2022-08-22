@@ -2,6 +2,7 @@ package com.baofu.videoplayer;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     AvNormalPlayController controller;
     LocalProxyVideoControl mLocalProxyVideoControl;
     String mUrl;
+    //倍速播放速度
+    String speed;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void initPlayer(){
+
         videoView = findViewById(R.id.videoView);
         controller = new AvNormalPlayController(this);
         //设置标题
@@ -109,13 +113,6 @@ public class MainActivity extends AppCompatActivity {
         setVideoListener();
 
 
-        videoView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(MainActivity.this,"1.5倍速播放",Toast.LENGTH_SHORT).show();
-                controller.setSpeed(SpeedInterface.sp1_50);
-            }
-        },3000);
 
 
         //直接显示加载框
@@ -176,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void setVideoListener() {
+        speed = SpeedInterface.sp1_50;
         videoView.setOnStateChangeListener(new OnVideoStateListener() {
             @Override
             public void onPlayerStateChanged(int playerState) {
@@ -214,6 +212,13 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("", "error");
                         break;
                     case ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING:
+                        //设置倍速播放为为上一次的速度
+                        if (!TextUtils.isEmpty(speed)) {
+                            Toast.makeText(MainActivity.this,"1.5倍速播放",Toast.LENGTH_SHORT).show();
+                            controller.setSpeed(SpeedInterface.sp1_50);
+                            speed = null;
+
+                        }
                         break;
                     case ConstantKeys.CurrentState.STATE_PLAYING:
                         break;

@@ -56,7 +56,7 @@ public class SocketProcessTask implements Runnable {
                 String url = request.getUri();
                 url = url.substring(1);
                 url = ProxyCacheUtils.decodeUriWithBase64(url);
-                Log.e(TAG, "request url=" + url);
+//                Log.e(TAG, "request url=" + url);
 
                 long currentTime = System.currentTimeMillis();
                 ProxyCacheUtils.setSocketTime(currentTime);
@@ -102,7 +102,7 @@ public class SocketProcessTask implements Runnable {
                     response = new M3U8SegResponse(request, parentUrl, videoUrl, headers, currentTime, fileName);
                     response.sendResponse(mSocket, outputStream);
                 } else {
-                    Log.e("asdf","error url:"+url);
+//                    Log.e("asdf","error url:"+url);
                     throw new VideoCacheException("Local Socket Error url");
                 }
 
@@ -116,7 +116,7 @@ public class SocketProcessTask implements Runnable {
             ProxyCacheUtils.close(inputStream);
             ProxyCacheUtils.close(mSocket);
             int count = sRequestCountAtomic.decrementAndGet();
-            Log.e(TAG, "finally Socket solve count = " + count);
+//            Log.e(TAG, "finally Socket solve count = " + count);
         }
     }
 }
