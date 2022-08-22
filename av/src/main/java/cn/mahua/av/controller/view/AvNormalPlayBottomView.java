@@ -45,6 +45,7 @@ import com.yc.video.ui.view.InterControlView;
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.play.ControllerClickListener;
+import cn.mahua.av.utils.AvSharePreference;
 import cn.mahua.av.widget.view.SpeedDialog;
 
 import static com.yc.video.config.ConstantKeys.PlayerScreenScaleType.SCREEN_SCALE_16_9;
@@ -195,6 +196,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                 @Override
                 public void onSpeedItemClick(String speed) {
                     setSpeed(speed);
+                    AvSharePreference.saveLastPlaySpeed(mContext,speed);
                     if(controllerClickListener!=null){
                         controllerClickListener.onSpeedClick(speed);
 

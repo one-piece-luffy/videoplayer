@@ -3,6 +3,7 @@ package cn.mahua.av.controller;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -24,8 +25,10 @@ import cn.mahua.av.controller.view.AvGuideView;
 import cn.mahua.av.controller.view.AvNormalPlayBottomView;
 import cn.mahua.av.controller.view.AvPrepareView;
 import cn.mahua.av.controller.view.AvTitleView;
+import cn.mahua.av.listener.OnLongPressListener;
 import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.play.ControllerClickListener;
+import cn.mahua.av.utils.AvSharePreference;
 
 public class AvNormalPlayController extends GestureVideoController implements View.OnClickListener{
     public AvNormalPlayController(Context context) {
@@ -57,7 +60,8 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
      * 是否是直播，默认不是
      */
     public static boolean IS_LIVE = false;
-
+    boolean isLongPress;
+    String lastSpeed;
 
 
     @Override
@@ -72,6 +76,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         initFindViewById();
         initListener();
         initConfig();
+        lastSpeed= AvSharePreference.getLastPlaySpeed(context);
     }
 
     private void initFindViewById() {
@@ -138,6 +143,12 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             @Override
             public void onChange(String speed) {
                 setSpeed(speed);
+            }
+        });
+        gestureControlView.setOnLongPressListener(new OnLongPressListener() {
+            @Override
+            public void onLongPress(boolean longpress) {
+                isLongPress=longpress;
             }
         });
 
@@ -343,6 +354,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     protected void setProgress(int duration, int position) {
         super.setProgress(duration, position);
 //        Log.e("asdf","==speed:"+mControlWrapper.getTcpSpeed()+"kb");
+        if(!isLongPress&&!TextUtils.isEmpty(lastSpeed)&&!lastSpeed.equals( String.valueOf(mControlWrapper.getSpeed()))){
+            setSpeed(lastSpeed);
+        }
     }
 
     @Override

@@ -41,6 +41,7 @@ import com.yc.video.tool.PlayerUtils;
 
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
+import cn.mahua.av.listener.OnLongPressListener;
 import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.play.ControllerClickListener;
 
@@ -74,6 +75,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
     final  String TAG="AvGestureView";
     AnimationDrawable mAnimationDrawable;
     OnSpeedChangeListener onSpeedChangeListener;
+    OnLongPressListener onLongPressListener;
     ControllerClickListener controllerClickListener;
     public AvGestureView(@NonNull Context context) {
         super(context);
@@ -115,6 +117,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
 
     public void setOnSpeedChangeListener(OnSpeedChangeListener onSpeedChangeListener) {
         this.onSpeedChangeListener = onSpeedChangeListener;
+    }
+    public void setOnLongPressListener(OnLongPressListener onLongPressListener) {
+        this.onLongPressListener = onLongPressListener;
     }
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
@@ -185,6 +190,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
                 mSlidePosition=-1;
             }
         }
+        if(onLongPressListener!=null){
+            onLongPressListener.onLongPress(false);
+        }
     }
 
     /**
@@ -236,6 +244,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
     @Override
     public void onLongPress() {
         mLastSpeed = mControlWrapper.getSpeed();
+        if(onLongPressListener!=null){
+            onLongPressListener.onLongPress(true);
+        }
         isLongPress=true;
         mControlWrapper.setSpeed(3);
         mLongSpeed.setVisibility(View.VISIBLE);
