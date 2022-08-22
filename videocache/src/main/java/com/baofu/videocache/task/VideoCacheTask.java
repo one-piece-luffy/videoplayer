@@ -11,6 +11,7 @@ import com.baofu.videocache.utils.VideoProxyThreadUtils;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public abstract class VideoCacheTask {
@@ -18,7 +19,7 @@ public abstract class VideoCacheTask {
     protected VideoCacheInfo mCacheInfo;
     protected Map<String, String> mHeaders;
     protected IVideoCacheTaskListener mListener;
-    protected ThreadPoolExecutor mTaskExecutor;
+    protected ExecutorService mTaskExecutor;
 
     protected volatile long mCachedSize;      //当前缓存大小
     protected volatile long mLastCachedSize;  //上一次缓存大小
@@ -105,13 +106,6 @@ public abstract class VideoCacheTask {
      * @return
      */
     public long getMp4CachedPosition(long position) { return -1L; }
-
-    protected void setThreadPoolArgument(int corePoolSize, int maxPoolSize) {
-        if (isTaskRunning()) {
-            mTaskExecutor.setCorePoolSize(corePoolSize);
-            mTaskExecutor.setMaximumPoolSize(maxPoolSize);
-        }
-    }
 
     protected void saveVideoInfo() {
         VideoProxyThreadUtils.submitRunnableTask(() -> StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir));

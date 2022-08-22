@@ -172,7 +172,7 @@ public class M3U8SegResponse extends BaseResponse {
     private void sendBody(OutputStream outputStream, InputStream mInputStream) throws IOException {
         long buffer_size = 8 * 1024;
         byte[] buff = new byte[(int) buffer_size];
-        int read = 0;
+        int read ;
         if (mInputStream == null) {
             Log.e(TAG, "inputstream is null");
             return;
@@ -198,6 +198,7 @@ public class M3U8SegResponse extends BaseResponse {
             }
             Log.e(TAG, "ts下载完成");
         } catch (Exception e) {
+            e.printStackTrace();
             throw e;
         } finally {
             if (connection != null) {
@@ -207,30 +208,33 @@ public class M3U8SegResponse extends BaseResponse {
         }
     }
 
-    public void downloadFile(String videoUrl, File file) throws Exception {
+    public void downloadFile(String videoUrl, File file)  {
         if (!file.exists()) {
-            File file1 = new File(file.getParentFile().getAbsolutePath());
-            file1.mkdir();
-        }
-        M3U8 m3u8 = VideoInfoParseManager.getInstance().m3u8;
-        if (m3u8 == null) {
-            Log.e(TAG, "m3u8 is null：" + videoUrl);
-            downloadSegFile(videoUrl, file);
-            return;
-        }
-        Log.e(TAG, "m3u8 list：" + m3u8.getSegList().size());
-        M3U8Seg ts = null;
-        for (int i = 0; i < m3u8.getSegList().size(); i++) {
-            M3U8Seg m3U8Seg = m3u8.getSegList().get(i);
-            if (m3U8Seg.getUrl().equals(videoUrl)) {
-                ts = m3U8Seg;
-                break;
+            File parent = file.getParentFile();
+            if(parent!=null){
+                File file1=new File(parent.getAbsolutePath());
+                file1.mkdir();
             }
         }
+        M3U8 m3u8 = VideoInfoParseManager.getInstance().m3u8;
+        M3U8Seg ts = null;
+        if (m3u8 == null) {
+            Log.e(TAG, "m3u8 is null：" + videoUrl);
+        }else {
+            Log.e(TAG, "m3u8 list：" + m3u8.getSegList().size());
+            for (int i = 0; i < m3u8.getSegList().size(); i++) {
+                M3U8Seg m3U8Seg = m3u8.getSegList().get(i);
+                if (m3U8Seg.getUrl().equals(videoUrl)) {
+                    ts = m3U8Seg;
+                    break;
+                }
+            }
+        }
+
         if (ts == null) {
             Log.e(TAG, "ts is null：" + videoUrl);
-            downloadSegFile(videoUrl, file);
-            return;
+            ts=new M3U8Seg();
+            ts.setUrl(videoUrl);
         }
         Log.e(TAG, "开始下载ts 方法一：" + videoUrl + " file:" + file.getAbsolutePath());
         InputStream inputStream = null;
@@ -248,8 +252,13 @@ public class M3U8SegResponse extends BaseResponse {
                 inputStream = response.body().byteStream();
                 long contentLength = response.body().contentLength();
 
-                byte[] encryptionKey = ts.encryptionKey == null ? m3u8.encryptionKey : ts.encryptionKey;
-                String iv = ts.encryptionKey == null ? m3u8.encryptionIV : ts.getKeyIv();
+                byte[] encryptionKey ;
+                if( ts.encryptionKey == null&&m3u8!=null){
+                    encryptionKey=m3u8.encryptionKey;
+                }else {
+                    encryptionKey=ts.encryptionKey;
+                }
+                String iv = ts.encryptionKey == null&&m3u8!=null ? m3u8.encryptionIV : ts.getKeyIv();
                 if (encryptionKey != null) {
 
                     String tsInitSegmentName = ts.getInitSegmentName() + ".temp";
@@ -310,8 +319,6 @@ public class M3U8SegResponse extends BaseResponse {
 
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
-            Log.e(TAG, "InterruptedIOException");
-            return;
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
             e.printStackTrace();

@@ -26,7 +26,7 @@ import javax.net.ssl.TrustManager;
 public class HttpUtils {
 
     private static final String TAG = "HttpUtils";
-    public static final int MAX_RETRY_COUNT = 100;
+    public static final int MAX_RETRY_COUNT = 5;
     public static final int MAX_REDIRECT = 100;
     public static final int RESPONSE_200 = 200;
     public static final int RESPONSE_206 = 206;

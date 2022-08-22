@@ -52,11 +52,11 @@ public class VideoProxyCacheManager {
     private static volatile VideoProxyCacheManager sInstance = null;
     private ProxyMessageHandler mProxyHandler;
 
-    private Map<String, VideoCacheTask> mCacheTaskMap = new ConcurrentHashMap<>();
-    private Map<String, VideoCacheInfo> mCacheInfoMap = new ConcurrentHashMap<>();
-    private Map<String, IVideoCacheListener> mCacheListenerMap = new ConcurrentHashMap<>();
-    public Map<String, ISocketListener> mSocketListenerMap = new ConcurrentHashMap<>();
-    private Map<String, Long> mVideoSeekMd5PositionMap = new ConcurrentHashMap<>();      //发生seek的时候加入set, 如果可以播放了, remove掉
+    private final Map<String, VideoCacheTask> mCacheTaskMap = new ConcurrentHashMap<>();
+    private final Map<String, VideoCacheInfo> mCacheInfoMap = new ConcurrentHashMap<>();
+    private final Map<String, IVideoCacheListener> mCacheListenerMap = new ConcurrentHashMap<>();
+    public final Map<String, ISocketListener> mSocketListenerMap = new ConcurrentHashMap<>();
+    private final Map<String, Long> mVideoSeekMd5PositionMap = new ConcurrentHashMap<>();      //发生seek的时候加入set, 如果可以播放了, remove掉
     private final Object mSeekPositionLock = new Object();
 
     private Set<String> mM3U8LocalProxyMd5Set = new ConcurrentSkipListSet<>();
@@ -425,9 +425,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 开始缓存M3U8任务
-     * @param m3u8
-     * @param cacheInfo
-     * @param headers
      */
     private void startM3U8Task(M3U8 m3u8, VideoCacheInfo cacheInfo, Map<String, String> headers) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(cacheInfo.getVideoUrl());
@@ -440,8 +437,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 开始缓存非M3U8任务
-     * @param cacheInfo
-     * @param headers
      */
     private void startNonM3U8Task(VideoCacheInfo cacheInfo, Map<String, String> headers) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(cacheInfo.getVideoUrl());
@@ -515,7 +510,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 暂停缓存任务, 一般是主线程操作
-     * @param url
      */
     public void pauseCacheTask(String url) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
@@ -534,7 +528,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 恢复缓存任务,一般是主线程操作
-     * @param url
      */
     public void resumeCacheTask(String url) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
@@ -546,8 +539,6 @@ public class VideoProxyCacheManager {
     /**
      * 拖动播放进度条之后的操作
      * 纯粹客户端的操作, 一般是主线程操作
-     * @param url
-     * @param percent
      */
     public void seekToCacheTaskFromClient(String url, float percent) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
@@ -610,8 +601,6 @@ public class VideoProxyCacheManager {
      * 从服务端调用过来, 肯定不是主线程, 所以要切换到主线程
      *
      * 这是针对非M3U8视频的
-     * @param url
-     * @param startPosition
      */
     public void seekToCacheTaskFromServer(String url, long startPosition) {
         String md5 = ProxyCacheUtils.computeMD5(url);
@@ -637,8 +626,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 针对M3U8视频,从服务端传入分片索引到客户端来
-     * @param url
-     * @param segIndex
      */
     public void seekToCacheTaskFromServer(String url, int segIndex) {
         String md5 = ProxyCacheUtils.computeMD5(url);
@@ -660,9 +647,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 当前MP4视频是否已经缓存到了startPosition位置
-     * @param url
-     * @param startPosition
-     * @return
      */
     public boolean isMp4PositionSegExisted(String url, long startPosition) {
         if (startPosition == -1L) {
@@ -678,8 +662,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 当前MP4文件是否下载完全
-     * @param url
-     * @return
      */
     public boolean isMp4Completed(String url) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
@@ -691,9 +673,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 从position开始,之后的数据都缓存完全了.
-     * @param url
-     * @param position
-     * @return
      */
     public boolean isMp4CompletedFromPosition(String url, long position) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
@@ -705,9 +684,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 当前position数据是否可以write到socket中
-     * @param url
-     * @param position
-     * @return
      */
     public boolean shouldWriteResponseData(String url, long position) {
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
@@ -733,8 +709,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 当前proxy m3u8是否生成
-     * @param md5
-     * @return
      */
     public boolean isM3U8LocalProxyReady(String md5) {
         return mM3U8LocalProxyMd5Set.contains(md5);
@@ -742,8 +716,6 @@ public class VideoProxyCacheManager {
 
     /**
      * 是否是直播类型
-     * @param md5
-     * @return
      */
     public boolean isM3U8LiveType(String md5) {
         return mM3U8LiveMd5Set.contains(md5);

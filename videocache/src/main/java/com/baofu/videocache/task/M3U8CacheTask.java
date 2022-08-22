@@ -1,9 +1,7 @@
 package com.baofu.videocache.task;
 
-import android.text.TextUtils;
 import android.util.Log;
 
-import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.m3u8.M3U8;
 import com.baofu.videocache.m3u8.M3U8Seg;
 import com.baofu.videocache.model.VideoCacheInfo;
@@ -12,15 +10,11 @@ import com.baofu.videocache.utils.HttpUtils;
 import com.baofu.videocache.utils.LogUtils;
 import com.baofu.videocache.utils.OkHttpUtil;
 import com.baofu.videocache.utils.ProxyCacheUtils;
-import com.baofu.videocache.utils.StorageUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -28,9 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Response;
 
@@ -38,10 +29,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     private static final String TAG = "M3U8CacheTask";
 
-    private static final int THREAD_POOL_COUNT = 6;
-    private static final int CONTINUOUS_SUCCESS_TS_THRESHOLD = 6;
-    private volatile int mM3U8DownloadPoolCount;
-    private volatile int mContinuousSuccessSegCount;   //连续请求分片成功的个数
+    private static final int THREAD_POOL_COUNT = 5;
 
     private int mCachedSegCount;
     private int mTotalSegCount;
@@ -76,7 +64,6 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void initM3U8TsInfo() {
-        //todo
         long tempCachedSize = 0;
         int tempCachedTs = 0;
         for (int index = 0; index < mSegList.size(); index++) {
@@ -164,10 +151,12 @@ public class M3U8CacheTask extends VideoCacheTask {
             Log.e(TAG,"task m3u8 is running");
             return;
         }
-//        Log.e(TAG,"curTs:"+curTs);
-        mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
-                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.DiscardOldestPolicy());
+
+        if (mTaskExecutor != null) {
+            mTaskExecutor.shutdownNow();
+        }
+        mTaskExecutor = null;
+        mTaskExecutor = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
         for (int index = curTs; index < mTotalSegCount; index++) {
             final M3U8Seg seg = mSegList.get(index);
             mTaskExecutor.execute(() -> {
@@ -182,13 +171,13 @@ public class M3U8CacheTask extends VideoCacheTask {
         }
     }
 
-    private void startDownloadSegTask(M3U8Seg seg) throws Exception {
+    private void startDownloadSegTask(M3U8Seg seg)  {
        Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
             File initSegmentFile = new File(mSaveDir, initSegmentName);
             if (!initSegmentFile.exists()) {
-                downloadSegFile(seg, initSegmentFile, seg.getInitSegmentUri());
+                downloadFile(seg, initSegmentFile, seg.getInitSegmentUri());
             }
         }
         String segName = seg.getSegName();
@@ -278,8 +267,6 @@ public class M3U8CacheTask extends VideoCacheTask {
 //                    Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
 
                     downloadFile(ts, file, videoUrl);
-                } else {
-//                    Log.e(TAG, "====error   responseCode=" + responseCode + "  ts:" + ts.getUrl());
                 }
             }
 
@@ -287,136 +274,29 @@ public class M3U8CacheTask extends VideoCacheTask {
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
 //            Log.e(TAG, "InterruptedIOException" );
-            return;
+
         } catch (Exception e) {
             e.printStackTrace();
+
             ts.setRetryCount(ts.getRetryCount() + 1);
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
 //                Log.e(TAG, "====retry, exception=" + e.getMessage());
                 downloadFile(ts, file, videoUrl);
+                Log.e("asdf","重试");
+            }else {
+                Log.e("asdf","失败");
             }
         } finally {
             ProxyCacheUtils.close(inputStream);
             ProxyCacheUtils.close(fos);
-            if(response!=null){
-                ProxyCacheUtils.close(response.body());
-            }
-            if (rbc != null) {
-                try {
-                    rbc.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (foutc != null) {
-                try {
-                    foutc.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            ProxyCacheUtils.close(response);
+            ProxyCacheUtils.close(rbc);
+            ProxyCacheUtils.close(foutc);
         }
 
 
     }
 
-
-    private void downloadSegFile(M3U8Seg seg, File segFile, String downloadUrl) throws Exception {
-        HttpURLConnection connection = null;
-        InputStream inputStream = null;
-        try {
-            connection = HttpUtils.getConnection(downloadUrl, mHeaders);
-            int responseCode = connection.getResponseCode();
-            if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
-                seg.setRetryCount(0);
-                if (mContinuousSuccessSegCount > CONTINUOUS_SUCCESS_TS_THRESHOLD && mM3U8DownloadPoolCount < THREAD_POOL_COUNT) {
-                    mM3U8DownloadPoolCount += 1;
-                    mContinuousSuccessSegCount -= 1;
-                    setThreadPoolArgument(mM3U8DownloadPoolCount, mM3U8DownloadPoolCount);
-                }
-                inputStream = connection.getInputStream();
-                long contentLength = connection.getContentLength();
-                saveSegFile(inputStream, segFile, contentLength, seg, downloadUrl);
-            } else {
-                mContinuousSuccessSegCount = 0;
-                if (responseCode == HttpUtils.RESPONSE_503) {
-                    if (mM3U8DownloadPoolCount > 1) {
-                        mM3U8DownloadPoolCount -= 1;
-                        setThreadPoolArgument(mM3U8DownloadPoolCount, mM3U8DownloadPoolCount);
-                        downloadSegFile(seg, segFile, downloadUrl);
-                    } else {
-                        seg.setRetryCount(seg.getRetryCount() + 1);
-                        if (seg.getRetryCount() < HttpUtils.MAX_RETRY_COUNT) {
-                            downloadSegFile(seg, segFile, downloadUrl);
-                        } else {
-                            throw new VideoCacheException("retry download exceed the limit times, threadPool overload.");
-                        }
-                    }
-                } else {
-                    throw new VideoCacheException("download failed, responseCode=" + responseCode);
-                }
-            }
-        } catch (Exception e) {
-            LogUtils.w(TAG, "downloadFile failed, exception=" + e.getMessage());
-            throw e;
-        } finally {
-            HttpUtils.closeConnection(connection);
-            ProxyCacheUtils.close(inputStream);
-        }
-    }
-
-    private void saveSegFile(InputStream inputStream, File file, long contentLength, M3U8Seg seg, String downloadUrl) throws Exception {
-        FileOutputStream fos = null;
-        long totalLength = 0;
-        try {
-            fos = new FileOutputStream(file);
-            int len;
-            byte[] buf = new byte[StorageUtils.DEFAULT_BUFFER_SIZE];
-            while ((len = inputStream.read(buf)) != -1) {
-                totalLength += len;
-                fos.write(buf, 0, len);
-            }
-            if (contentLength > 0 && contentLength == totalLength) {
-                seg.setContentLength(contentLength);
-            } else {
-                seg.setContentLength(totalLength);
-            }
-        } catch (IOException e) {
-            if (file.exists() && ((contentLength > 0 && contentLength == file.length()) || (contentLength == -1 && totalLength == file.length()))) {
-                //这时候说明file已经下载完成了
-            } else {
-                if ((e instanceof ProtocolException &&
-                        !TextUtils.isEmpty(e.getMessage()) &&
-                        e.getMessage().contains("unexpected end of stream")) &&
-                        (contentLength > totalLength && totalLength == file.length())) {
-                    if (file.length() == 0) {
-                        seg.setRetryCount(seg.getRetryCount() + 1);
-                        if (seg.getRetryCount() < HttpUtils.MAX_RETRY_COUNT) {
-                            downloadSegFile(seg, file, downloadUrl);
-                        } else {
-                            LogUtils.w(TAG, file.getAbsolutePath() + ", length=" + file.length() + ", saveFile failed, exception=" + e);
-                            if (file.exists()) {
-                                file.delete();
-                            }
-                            throw e;
-                        }
-                    } else {
-                        seg.setContentLength(totalLength);
-                    }
-                } else {
-                    LogUtils.w(TAG, file.getAbsolutePath() + " saveFile failed, exception=" + e);
-                    if (file.exists()) {
-                        file.delete();
-                    }
-                    throw e;
-                }
-            }
-
-        } finally {
-            ProxyCacheUtils.close(inputStream);
-            ProxyCacheUtils.close(fos);
-        }
-    }
 
     private void notifyCacheProgress() {
         Log.i(TAG,"notifyCacheProgress");
