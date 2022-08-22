@@ -30,7 +30,7 @@ import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.play.ControllerClickListener;
 import cn.mahua.av.utils.AvSharePreference;
 
-public class AvNormalPlayController extends GestureVideoController implements View.OnClickListener{
+public class AvNormalPlayController extends GestureVideoController implements View.OnClickListener {
     public AvNormalPlayController(Context context) {
         super(context);
     }
@@ -60,8 +60,12 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
      * 是否是直播，默认不是
      */
     public static boolean IS_LIVE = false;
+    //是否长按状态
     boolean isLongPress;
+    //上一次选择的播放速度
     String lastSpeed;
+    //记住播放速度
+    boolean remindSpeed = true;
 
 
     @Override
@@ -76,7 +80,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         initFindViewById();
         initListener();
         initConfig();
-        lastSpeed= AvSharePreference.getLastPlaySpeed(context);
+        lastSpeed = AvSharePreference.getLastPlaySpeed(context);
     }
 
     private void initFindViewById() {
@@ -101,7 +105,6 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         //添加视图到界面
         addDefaultControlComponent();
     }
-
 
 
     /**
@@ -148,7 +151,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         gestureControlView.setOnLongPressListener(new OnLongPressListener() {
             @Override
             public void onLongPress(boolean longpress) {
-                isLongPress=longpress;
+                isLongPress = longpress;
             }
         });
 
@@ -159,17 +162,17 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     /**
      * 切换直播/回放类型
      */
-    public void changePlayType(){
+    public void changePlayType() {
         if (IS_LIVE) {
             //添加底部播放控制条
-            if (liveControlView==null){
+            if (liveControlView == null) {
                 liveControlView = new CustomLiveControlView(mContext);
             }
             this.removeControlComponent(liveControlView);
             this.addControlComponent(liveControlView);
 
             //添加直播还未开始视图
-            if (customOncePlayView==null){
+            if (customOncePlayView == null) {
                 customOncePlayView = new CustomOncePlayView(mContext);
                 tvLiveWaitMessage = customOncePlayView.getTvMessage();
             }
@@ -177,12 +180,12 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             this.addControlComponent(customOncePlayView);
 
             //直播视频，移除回放视图
-            if (mAvBottomView!=null){
+            if (mAvBottomView != null) {
                 this.removeControlComponent(mAvBottomView);
             }
         } else {
             //添加底部播放控制条
-            if (mAvBottomView==null){
+            if (mAvBottomView == null) {
                 mAvBottomView = new AvNormalPlayBottomView(mContext);
                 //是否显示底部进度条。默认显示
                 mAvBottomView.showBottomProgress(true);
@@ -192,10 +195,10 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             this.addControlComponent(mAvBottomView);
 
             //正常视频，移除直播视图
-            if (liveControlView!=null){
+            if (liveControlView != null) {
                 this.removeControlComponent(liveControlView);
             }
-            if (customOncePlayView!=null){
+            if (customOncePlayView != null) {
                 this.removeControlComponent(customOncePlayView);
             }
         }
@@ -249,7 +252,8 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
      * MODE_NORMAL              普通模式
      * MODE_FULL_SCREEN         全屏模式
      * MODE_TINY_WINDOW         小屏模式
-     * @param playerState                   播放模式
+     *
+     * @param playerState 播放模式
      */
     @Override
     protected void onPlayerStateChanged(int playerState) {
@@ -298,7 +302,8 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
      * 6                暂停缓冲(播放器正在播放时，缓冲区数据不足，进行缓冲，此时暂停播放器，继续缓冲，缓冲区数据足够后恢复暂停
      * 7                播放完成
      * 8                开始播放中止
-     * @param playState                     播放状态，主要是指播放器的各种状态
+     *
+     * @param playState 播放状态，主要是指播放器的各种状态
      */
     @Override
     protected void onPlayStateChanged(int playState) {
@@ -338,7 +343,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
         Activity activity = PlayerUtils.scanForActivity(getContext());
         //如果不是全屏模式，则直接关闭页面activity
-        if (PlayerUtils.isActivityLiving(activity)){
+        if (PlayerUtils.isActivityLiving(activity)) {
             activity.finish();
         }
         return super.onBackPressed();
@@ -353,8 +358,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     @Override
     protected void setProgress(int duration, int position) {
         super.setProgress(duration, position);
-//        Log.e("asdf","==speed:"+mControlWrapper.getTcpSpeed()+"kb");
-        if(!isLongPress&&!TextUtils.isEmpty(lastSpeed)&&!lastSpeed.equals( String.valueOf(mControlWrapper.getSpeed()))){
+        if (remindSpeed && !isLongPress && !TextUtils.isEmpty(lastSpeed) && !lastSpeed.equals(String.valueOf(mControlWrapper.getSpeed()))) {
             setSpeed(lastSpeed);
         }
     }
@@ -369,11 +373,10 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     }
 
     public void setTitle(String title) {
-        if (titleView!=null){
+        if (titleView != null) {
             titleView.setTitle(title);
         }
     }
-
 
 
     public TextView getTvLiveWaitMessage() {
@@ -387,8 +390,8 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
     }
 
-    public void toggleFullScreen(){
-        if(mControlWrapper==null)
+    public void toggleFullScreen() {
+        if (mControlWrapper == null)
             return;
         Activity activity = PlayerUtils.scanForActivity(getContext());
         mControlWrapper.toggleFullScreen(activity);
@@ -397,32 +400,33 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
 
-        if(mAvBottomView!=null){
+        if (mAvBottomView != null) {
             mAvBottomView.setControllerClickListener(controllerClickListener);
         }
-        if(mAvCompleteView!=null){
+        if (mAvCompleteView != null) {
             mAvCompleteView.setControllerClickListener(controllerClickListener);
         }
-        if(mErrorView!=null){
+        if (mErrorView != null) {
             mErrorView.setControllerClickListener(controllerClickListener);
         }
-        if(gestureControlView!=null){
+        if (gestureControlView != null) {
             gestureControlView.setControllerClickListener(controllerClickListener);
         }
     }
 
-    public void showTcpSpeed(boolean show){
-        if(mPrepareView!=null){
+    public void showTcpSpeed(boolean show) {
+        if (mPrepareView != null) {
             mPrepareView.showTcpSpeed(show);
         }
     }
 
     /**
      * 添加自定义view
+     *
      * @param view
      */
-    public void addTools(View view){
-        if(mAvBottomView!=null){
+    public void addTools(View view) {
+        if (mAvBottomView != null) {
             mAvBottomView.addTools(view);
         }
     }
@@ -430,8 +434,8 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     /**
      * 隐藏下一集
      */
-    public void hideNextBtn(){
-        if(mAvBottomView!=null){
+    public void hideNextBtn() {
+        if (mAvBottomView != null) {
             mAvBottomView.hideNextBtn();
         }
     }
@@ -440,13 +444,13 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
      * 是否显示底部进度条，默认显示
      */
     public void showBottomProgress(boolean isShow) {
-        if(mAvBottomView!=null){
+        if (mAvBottomView != null) {
             mAvBottomView.showBottomProgress(isShow);
         }
     }
 
-    public void setLoadingMessage(String message){
-        if(mPrepareView!=null){
+    public void setLoadingMessage(String message) {
+        if (mPrepareView != null) {
             mPrepareView.setLoadingMessage(message);
         }
     }
@@ -454,19 +458,24 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     /**
      * 直接显示加载框
      */
-    public void showPreviewLoading(){
-        if(mPrepareView!=null){
+    public void showPreviewLoading() {
+        if (mPrepareView != null) {
             mPrepareView.showLoading();
         }
     }
 
     /**
      * 播放完成是否显示分享布局
+     *
      * @param show
      */
-    public void showShare(boolean show){
-        if(mAvBottomView!=null){
+    public void showShare(boolean show) {
+        if (mAvBottomView != null) {
             mAvCompleteView.showShare(show);
         }
+    }
+
+    public void setRemindSpeed(boolean remindSpeed) {
+        this.remindSpeed = remindSpeed;
     }
 }
