@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -114,6 +115,7 @@ public class StorageManager {
     public void initCacheConfig(String rootFilePath, long maxCacheSize, long expiredTime) {
         mRootFilePath = rootFilePath;
         mMaxCacheSize = maxCacheSize;
+//        Log.e(TAG,"mMaxCacheSize:"+mMaxCacheSize);
         mExpiredTime = expiredTime;
 
         mMaxRemainingSize = (long) (0.8f * mMaxCacheSize);
@@ -155,7 +157,11 @@ public class StorageManager {
         }
     }
 
+    /**
+     * 超过缓存的容量限制进行删除
+     */
     private void trimCacheData() {
+        Log.e(TAG,"mCurrentSize:"+mCurrentSize+" mMaxCacheSize:"+mMaxCacheSize);
         if (mCurrentSize > mMaxCacheSize) {
             Iterator<Map.Entry<String, CacheFileInfo>> iterator = mLruCache.entrySet().iterator();
             if (!iterator.hasNext()) return;
@@ -170,6 +176,7 @@ public class StorageManager {
                 CacheFileInfo cacheFileInfo = item.getValue();
 
                 File file = new File(filePath);
+                Log.e(TAG,"超过容量限制进行删除："+filePath);
                 boolean deleted = StorageUtils.deleteFile(file);
                 if (deleted) {
                     mCurrentSize -= cacheFileInfo.mSize;
@@ -192,6 +199,7 @@ public class StorageManager {
     }
 
     private void checkCacheInternal(String filePath) {
+        Log.e(TAG,"checkCacheInternal");
         if (TextUtils.isEmpty(filePath)) return;
         File file = new File(filePath);
         if (!file.exists()) return;

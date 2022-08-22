@@ -2,6 +2,7 @@ package com.baofu.videocache;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.common.VideoType;
@@ -53,6 +54,7 @@ public class VideoInfoParseManager {
     //解析视频类型
     public void parseVideoInfo(VideoCacheInfo cacheInfo, Map<String, String> headers,
                                Map<String, Object> extraParams, IVideoInfoParsedListener listener) {
+
         mListener = listener;
         mHeaders = headers;
         //这两个值开发者可以设置
@@ -70,8 +72,10 @@ public class VideoInfoParseManager {
 
     //使用okhttp网路框架去请求数据
     private void parseVideoInfoByOkHttp(VideoCacheInfo cacheInfo) {
+        Log.e(TAG,"parseVideoInfoByOkHttp mContentType:"+mContentType);
         if (TextUtils.equals(VideoParams.UNKNOWN, mContentType)) {
             String videoUrl = cacheInfo.getVideoUrl();
+            Log.e(TAG,"parseVideoInfoByOkHttp videoUrl:"+videoUrl);
             if (videoUrl.contains("m3u8")) {
                 //这种情况下也基本可以认为video是M3U8类型，虽然判断不太严谨，但是mediaplayer也是这么做的
                 parseNetworkM3U8Info(cacheInfo);
@@ -178,9 +182,10 @@ public class VideoInfoParseManager {
      * @param cacheInfo
      */
     private void parseNetworkM3U8Info(VideoCacheInfo cacheInfo) {
+        Log.e(TAG,"parseNetworkM3U8Info ");
         try {
             m3u8 = M3U8Utils.parseNetworkM3U8Info(cacheInfo.getVideoUrl(), cacheInfo.getVideoUrl(), mHeaders, 0);
-
+            Log.e(TAG,"开始创建m3u8文件 ");
             if (m3u8.isIsLive()) {
                 //说明M3U8是直播
                 mListener.onM3U8LiveCallback(cacheInfo);
@@ -193,7 +198,7 @@ public class VideoInfoParseManager {
                     try {
                         M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
                     } catch (Exception e) {
-                        LogUtils.w(TAG, "parseM3U8Info->createLocalM3U8File failed, exception=" + e);
+                        e.printStackTrace();
                     }
                 });
 
@@ -211,17 +216,21 @@ public class VideoInfoParseManager {
                 mListener.onM3U8ParsedFinished(m3u8, cacheInfo);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             mListener.onM3U8ParsedFailed(new VideoCacheException("parseM3U8Info failed, " + e.getMessage()), cacheInfo);
         }
     }
 
     public void parseProxyM3U8Info(VideoCacheInfo cacheInfo, Map<String, String> headers, VideoInfoParsedListener listener) {
+        Log.e(TAG,"parseProxyM3U8Info");
         mHeaders = headers;
         mListener = listener;
         File proxyM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.PROXY_M3U8_SUFFIX);
         if (!proxyM3U8File.exists()) {
+            Log.e(TAG,"m3u8  exit true");
             parseNetworkM3U8Info(cacheInfo);
         } else {
+            Log.e(TAG,"m3u8 exit false");
             VideoProxyThreadUtils.submitRunnableTask(() -> {
                 boolean result = M3U8Utils.updateM3U8TsPortInfo(proxyM3U8File, ProxyCacheUtils.getLocalPort());
                 if (result) {
@@ -248,6 +257,7 @@ public class VideoInfoParseManager {
      * @param cacheInfo
      */
     private void parseNonM3U8VideoInfoByOkHttp(VideoCacheInfo cacheInfo) {
+        Log.e(TAG,"parseNonM3U8VideoInfoByOkHttp ");
         cacheInfo.setVideoType(VideoType.OTHER_TYPE);
         long contentLength;
 

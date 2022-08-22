@@ -206,6 +206,10 @@ public class M3U8SegResponse extends BaseResponse {
         }
     }
     public void downloadFile(String videoUrl,File file) throws Exception {
+        if(!file.exists()){
+            File file1=new File(file.getParentFile().getAbsolutePath());
+            file1.mkdir();
+        }
         M3U8 m3u8= VideoInfoParseManager.getInstance().m3u8;
         if(m3u8==null){
             Log.e(TAG,"m3u8 is null："+videoUrl);
@@ -248,6 +252,7 @@ public class M3U8SegResponse extends BaseResponse {
 
                     String tsInitSegmentName = ts.getInitSegmentName() + ".temp";
                     File tsInitSegmentFile = new File(file.getParentFile().getAbsolutePath(), tsInitSegmentName);
+                    
 
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tsInitSegmentFile);

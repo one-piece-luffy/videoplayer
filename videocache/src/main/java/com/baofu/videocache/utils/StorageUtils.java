@@ -1,6 +1,7 @@
 package com.baofu.videocache.utils;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.baofu.videocache.model.VideoCacheInfo;
 
@@ -37,7 +38,7 @@ public class StorageUtils {
         LogUtils.i(TAG, "readVideoCacheInfo : dir=" + dir.getAbsolutePath());
         File file = new File(dir, INFO_FILE);
         if (!file.exists()) {
-            LogUtils.i(TAG,"readProxyCacheInfo failed, file not exist.");
+            Log.e(TAG,"readProxyCacheInfo failed, file not exist.");
             return null;
         }
         ObjectInputStream fis = null;
@@ -48,7 +49,7 @@ public class StorageUtils {
                 return info;
             }
         } catch (Exception e) {
-            LogUtils.w(TAG,"readVideoCacheInfo failed, exception=" + e.getMessage());
+            e.printStackTrace();
         } finally {
             ProxyCacheUtils.close(fis);
         }
@@ -110,6 +111,7 @@ public class StorageUtils {
             for (File f : files) {
                 if (!f.delete()) return false;
             }
+
             return file.delete();
         } else {
             return file.delete();

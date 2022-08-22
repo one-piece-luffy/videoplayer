@@ -100,11 +100,14 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void pauseCacheTask() {
-        LogUtils.i(TAG, "pauseCacheTask");
+        Log.e(TAG, "pauseCacheTask");
         if (isTaskRunning()) {
             try {
-                mTaskExecutor.shutdownNow();
-            }catch (Exception e){
+                if (mTaskExecutor != null) {
+
+                    mTaskExecutor.shutdownNow();
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -114,7 +117,13 @@ public class M3U8CacheTask extends VideoCacheTask {
     public void stopCacheTask() {
         LogUtils.i(TAG, "stopCacheTask");
         if (isTaskRunning()) {
-            mTaskExecutor.shutdownNow();
+            try {
+                if (mTaskExecutor != null) {
+                    mTaskExecutor.shutdownNow();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -174,7 +183,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startDownloadSegTask(M3U8Seg seg) throws Exception {
-//       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
+       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
             File initSegmentFile = new File(mSaveDir, initSegmentName);
@@ -280,7 +289,6 @@ public class M3U8CacheTask extends VideoCacheTask {
 //            Log.e(TAG, "InterruptedIOException" );
             return;
         } catch (Exception e) {
-            Log.e(TAG,e.getMessage());
             e.printStackTrace();
             ts.setRetryCount(ts.getRetryCount() + 1);
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {

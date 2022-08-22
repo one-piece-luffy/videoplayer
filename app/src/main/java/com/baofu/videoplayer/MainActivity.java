@@ -31,11 +31,17 @@ public class MainActivity extends AppCompatActivity {
     VideoPlayer videoView;
     AvNormalPlayController controller;
     LocalProxyVideoControl mLocalProxyVideoControl;
+    String mUrl;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initPlayer();
+        init();
+    }
+
+    void initPlayer(){
         videoView = findViewById(R.id.videoView);
         controller = new AvNormalPlayController(this);
         //设置标题
@@ -100,34 +106,51 @@ public class MainActivity extends AppCompatActivity {
         //设置控制器
         videoView.setController(controller);
 
-        setListener();
+        setVideoListener();
 
+
+        videoView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity.this,"1.5倍速播放",Toast.LENGTH_SHORT).show();
+                controller.setSpeed(SpeedInterface.sp1_50);
+            }
+        },3000);
+
+
+        //直接显示加载框
+//        controller.showPreviewLoading();
+    }
+    private void play(){
+
+        videoView.release();
+        if(mLocalProxyVideoControl!=null){
+            mLocalProxyVideoControl.releaseLocalProxyResources();
+        }
         Map<String, String> header = new HashMap();
         header.put(
                 "User-Agent",
                 "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
         );
-        header.put("type","m3u8");
 
-//        String url="http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4";
-        String url="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";//镜双城//
-//      String url="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";//海贼王
-//        String url="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
-        String link=url;
-        if(url.contains("m3u8")){
+
+//
+        String link=mUrl;
+        if(mUrl.contains("m3u8")){
+            header.put("type","m3u8");
             //开启视频缓存
             ProxyCacheUtils.getConfig().setUseOkHttp(true);
-            link = ProxyCacheUtils.getProxyUrl(Uri.parse(url).toString(), null, null);
+            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), null, null);
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
                     //开始缓存
                     mLocalProxyVideoControl = new LocalProxyVideoControl();
-                    mLocalProxyVideoControl.startRequestVideoInfo(url, null, null);
+                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, null, null);
                 }
             }.start();
-            VideoProxyCacheManager.getInstance().addSocketListener(url, new ISocketListener() {
+            VideoProxyCacheManager.getInstance().addSocketListener(mUrl, new ISocketListener() {
                 @Override
                 public void timeout() {
                     Log.e("tag","socket red timeout");
@@ -149,22 +172,10 @@ public class MainActivity extends AppCompatActivity {
         videoView.setUrl(link, header);
         //开始播放
         videoView.start();
-        videoView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(MainActivity.this,"1.5倍速播放",Toast.LENGTH_SHORT).show();
-                controller.setSpeed(SpeedInterface.sp1_50);
-            }
-        },500);
-
-
-        //直接显示加载框
-//        controller.showPreviewLoading();
-
     }
 
 
-    private void setListener() {
+    private void setVideoListener() {
         videoView.setOnStateChangeListener(new OnVideoStateListener() {
             @Override
             public void onPlayerStateChanged(int playerState) {
@@ -217,6 +228,36 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void init(){
+        String mr="http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4";
+        String jsc="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";//镜双城//
+      String hzw="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";//海贼王
+        String zx="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
+        findViewById(R.id.mr).setOnClickListener(v -> {
+            Log.e("asdf","========默认=========");
+            Log.e("asdf","========默认=========");
+            mUrl=mr;
+            play();
+        });
+        findViewById(R.id.jsc).setOnClickListener(v -> {
+            Log.e("asdf","========镜双城=========");
+            Log.e("asdf","========镜双城=========");
+            mUrl=jsc;
+            play();
+        });
+        findViewById(R.id.hzw).setOnClickListener(v -> {
+            Log.e("asdf","========海贼王=========");
+            Log.e("asdf","========海贼王=========");
+            mUrl=hzw;
+            play();
+        });
+        findViewById(R.id.zx).setOnClickListener(v -> {
+            Log.e("asdf","========赘婿==========");
+            Log.e("asdf","========赘婿==========");
+            mUrl=zx;
+            play();
+        });
+    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -242,7 +283,7 @@ public class MainActivity extends AppCompatActivity {
             videoView.release();
         }
         if(mLocalProxyVideoControl!=null){
-            mLocalProxyVideoControl.pauseLocalProxyTask();
+            mLocalProxyVideoControl.releaseLocalProxyResources();
         }
         VideoInfoParseManager.getInstance().release();
     }

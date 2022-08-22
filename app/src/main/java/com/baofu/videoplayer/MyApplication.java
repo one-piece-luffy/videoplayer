@@ -44,7 +44,7 @@ public class MyApplication extends BaseApplication {
                 setConnTimeOut(60 * 1000).                  //网络连接超时
                 setReadTimeOut(60 * 1000).                  //网络读超时
                 setExpireTime(2 * 24 * 60 * 60 * 1000).     //2天的过期时间
-                setMaxCacheSize(2 * 1024 * 1024 * 1024);    //2G的存储上限
+                setMaxCacheSize(2 * 1024 * 1024 * 1024L);    //2G的存储上限
         VideoProxyCacheManager.getInstance().initProxyConfig(builder.build());
 
 

@@ -1,6 +1,7 @@
 package com.baofu.videocache.m3u8;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.utils.HttpUtils;
@@ -53,7 +54,7 @@ public class M3U8Utils {
 
             response = OkHttpUtil.getInstance().requestSync(videoUrl,headers);
             int responseCode =response.code();
-            LogUtils.i(TAG, "parseNetworkM3U8Info responseCode=" + responseCode);
+            Log.e(TAG, "parseNetworkM3U8Info responseCode=" + responseCode);
             if (responseCode == HttpUtils.RESPONSE_503 && retryCount < HttpUtils.MAX_RETRY_COUNT) {
                 return parseNetworkM3U8Info(parentUrl, videoUrl, headers, retryCount + 1);
             }
@@ -508,10 +509,12 @@ public class M3U8Utils {
      * @throws Exception
      */
     public static void createLocalM3U8File(File m3u8File, M3U8 m3u8) throws Exception{
-        if (m3u8File.exists()) {
-            m3u8File.delete();
-            return;
-        }
+//        if (m3u8File.exists()) {
+//            m3u8File.delete();
+//            //todo 重新创建目录
+//            return;
+//            Log.e(TAG,"M3U8 文件已经存在");
+//        }
         BufferedWriter bfw = new BufferedWriter(new FileWriter(m3u8File, false));
         bfw.write(M3U8Constants.PLAYLIST_HEADER + "\n");
         bfw.write(M3U8Constants.TAG_VERSION + ":" + m3u8.getVersion() + "\n");
