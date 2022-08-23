@@ -26,12 +26,14 @@ import androidx.annotation.Nullable;
 import com.google.android.exoplayer3.Bundleable;
 import com.google.android.exoplayer3.C;
 import com.google.android.exoplayer3.util.Util;
+
+import org.checkerframework.checker.nullness.compatqual.NullableType;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.checkerframework.checker.nullness.compatqual.NullableType;
 
 /**
  * Represents ad group times and information on the state and URIs of ads within each ad group.
