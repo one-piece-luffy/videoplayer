@@ -44,6 +44,7 @@ import com.yc.video.ui.view.InterControlView;
 
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
+import cn.mahua.av.listener.OnSpeedClickListener;
 import cn.mahua.av.play.ControllerClickListener;
 import cn.mahua.av.utils.AvSharePreference;
 import cn.mahua.av.widget.view.SpeedDialog;
@@ -83,6 +84,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     ImageView iv_av_next;
     ImageView iv_fullscreen;
     protected ControllerClickListener controllerClickListener;
+    protected OnSpeedClickListener onSpeedClickListener;
     int mCurrentScaleType = SCREEN_SCALE_DEFAULT;
     float mLastSpeed;
     float mCurrentSpeed;
@@ -192,17 +194,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                     break;
             }
         } else if (v == tv_speed) {
-            new SpeedDialog(mContext, mControlWrapper.getSpeed() + "", new SpeedDialog.OnSpeedItemClickListener() {
-                @Override
-                public void onSpeedItemClick(String speed) {
-                    setSpeed(speed);
-                    AvSharePreference.saveLastPlaySpeed(mContext,speed);
-                    if(controllerClickListener!=null){
-                        controllerClickListener.onSpeedClick(speed);
-
-                    }
-                }
-            }).show();
+            new SpeedDialog(mContext, mControlWrapper.getSpeed() + "",onSpeedClickListener).show();
 
         } else if (v == iv_av_next) {
             if (controllerClickListener != null) {
@@ -448,6 +440,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     }
 
     public void setSpeed(String speed) {
+        Log.e("asdff","speed:"+speed);
         // 转为小写处理
         switch (speed) {
             case SpeedInterface.sp0_50:
@@ -511,6 +504,10 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
 
     public void setControllerClickListener(ControllerClickListener controllerClickListener) {
         this.controllerClickListener = controllerClickListener;
+    }
+
+    public void setOnSpeedClickListener(OnSpeedClickListener onSpeedClickListener) {
+        this.onSpeedClickListener = onSpeedClickListener;
     }
 
     /**

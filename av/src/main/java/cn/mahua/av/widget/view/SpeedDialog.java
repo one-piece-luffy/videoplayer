@@ -20,15 +20,16 @@ import java.util.List;
 
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
+import cn.mahua.av.listener.OnSpeedClickListener;
 
 public class SpeedDialog extends Dialog {
     List<String> playList = new ArrayList();
     String speed;
-    OnSpeedItemClickListener listener;
+    OnSpeedClickListener listener;
     RecyclerView recyclerView;
     Context mContext;
 
-    public SpeedDialog(@NonNull Context context, String speed, OnSpeedItemClickListener listener) {
+    public SpeedDialog(@NonNull Context context, String speed, OnSpeedClickListener listener) {
         super(context, R.style.PlayListDialogStyle);
         this.speed = speed;
         mContext = context;
@@ -95,7 +96,7 @@ public class SpeedDialog extends Dialog {
                     @Override
                     public void onClick(View v) {
                         speed = list.get(temp);
-                        listener.onSpeedItemClick(speed);
+                        listener.onSpeedClick(speed);
                         notifyDataSetChanged();
                         dismiss();
                     }
@@ -120,8 +121,4 @@ public class SpeedDialog extends Dialog {
         }
     }
 
-    public interface OnSpeedItemClickListener {
-
-        public void onSpeedItemClick(String speed);
-    }
 }

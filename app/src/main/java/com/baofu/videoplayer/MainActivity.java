@@ -86,10 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
             }
 
-            @Override
-            public void onSpeedClick(String speed) {
 
-            }
 
             @Override
             public void onUserSeek(long position) {

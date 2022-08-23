@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -27,6 +28,7 @@ import cn.mahua.av.controller.view.AvPrepareView;
 import cn.mahua.av.controller.view.AvTitleView;
 import cn.mahua.av.listener.OnLongPressListener;
 import cn.mahua.av.listener.OnSpeedChangeListener;
+import cn.mahua.av.listener.OnSpeedClickListener;
 import cn.mahua.av.play.ControllerClickListener;
 import cn.mahua.av.utils.AvSharePreference;
 
@@ -402,6 +404,14 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
 
         if (mAvBottomView != null) {
             mAvBottomView.setControllerClickListener(controllerClickListener);
+            mAvBottomView.setOnSpeedClickListener(new OnSpeedClickListener() {
+                @Override
+                public void onSpeedClick(String speed) {
+                    lastSpeed=speed;
+                    setSpeed(speed);
+                    AvSharePreference.saveLastPlaySpeed(mContext,speed);
+                }
+            });
         }
         if (mAvCompleteView != null) {
             mAvCompleteView.setControllerClickListener(controllerClickListener);
