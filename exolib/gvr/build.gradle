@@ -34,4 +34,3 @@ ext {
     releaseArtifact = 'extension-gvr'
     releaseDescription = 'Google VR extension for ExoPlayer.'
 }
-apply from: '../publish.gradle'

@@ -31,4 +31,3 @@ ext {
     releaseArtifact = 'extension-rtmp'
     releaseDescription = 'RTMP extension for ExoPlayer.'
 }
-apply from: '../publish.gradle'

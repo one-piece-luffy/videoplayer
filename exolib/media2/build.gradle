@@ -34,4 +34,3 @@ ext {
     releaseArtifact = 'extension-media2'
     releaseDescription = 'Media2 extension for ExoPlayer.'
 }
-apply from: '../publish.gradle'

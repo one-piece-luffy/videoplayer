@@ -32,4 +32,3 @@ ext {
     releaseArtifact = 'extension-workmanager'
     releaseDescription = 'WorkManager extension for ExoPlayer.'
 }
-apply from: '../publish.gradle'

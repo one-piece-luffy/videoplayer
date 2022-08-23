@@ -33,4 +33,3 @@ ext {
     releaseArtifact = 'extension-cast'
     releaseDescription = 'Cast extension for ExoPlayer.'
 }
-apply from: '../publish.gradle'

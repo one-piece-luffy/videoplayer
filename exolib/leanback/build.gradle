@@ -33,4 +33,3 @@ ext {
     releaseArtifact = 'extension-leanback'
     releaseDescription = 'Leanback extension for ExoPlayer.'
 }
-apply from: '../publish.gradle'
