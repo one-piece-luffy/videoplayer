@@ -253,14 +253,15 @@ public abstract class GestureVideoController extends BaseVideoController impleme
         float deltaY = e1.getY() - e2.getY();
         //如果是第一次触摸
         if (mFirstTouch) {
+            mHalfScreen = PlayerUtils.getScreenWidth(getContext(), true) / 2;
             //判断是左右滑动，还是上下滑动
             mChangePosition = Math.abs(distanceX) >= Math.abs(distanceY);
             if (!mChangePosition) {
                 //上下滑动，滑动左边改变音量；滑动右边改变亮度
                 //半屏宽度
-                if (mHalfScreen==0){
-                    mHalfScreen = PlayerUtils.getScreenWidth(getContext(), true) / 2;
-                }
+//                if (mHalfScreen==0){
+
+//                }
                 if (e2.getX() > mHalfScreen) {
                     mChangeVolume = true;
                 } else {
