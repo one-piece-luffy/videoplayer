@@ -161,10 +161,11 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         mTaskExecutor = null;
         mTaskExecutor = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
-        for (int index = curTs; index < mTotalSegCount; index++) {
-            final M3U8Seg seg = mSegList.get(index);
+        for (int index = curTs; index < mSegList.size(); index++) {
+           final int temp=index;
             mTaskExecutor.execute(() -> {
                 try {
+                    final M3U8Seg seg = mSegList.get(temp);
                     startDownloadSegTask(seg);
                 } catch (Exception e) {
                     e.printStackTrace();
