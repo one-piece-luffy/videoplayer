@@ -186,10 +186,10 @@ public class VideoInfoParseManager {
         try {
             m3u8 = M3U8Utils.parseNetworkM3U8Info(cacheInfo.getVideoUrl(), cacheInfo.getVideoUrl(), mHeaders, 0);
             Log.e(TAG,"开始创建m3u8文件 ");
-            if (m3u8.isIsLive()) {
-                //说明M3U8是直播
-                mListener.onM3U8LiveCallback(cacheInfo);
-            } else {
+//            if (m3u8.isIsLive()) {
+//                //说明M3U8是直播
+//                mListener.onM3U8LiveCallback(cacheInfo);
+//            } else {
                 cacheInfo.setVideoType(VideoType.M3U8_TYPE);
                 cacheInfo.setTotalTs(m3u8.getSegCount());
                 // 1.将M3U8结构保存到本地
@@ -214,7 +214,7 @@ public class VideoInfoParseManager {
 
                 // 2.构建一个本地代理的m3u8结构
                 mListener.onM3U8ParsedFinished(m3u8, cacheInfo);
-            }
+//            }
         } catch (Exception e) {
             e.printStackTrace();
             mListener.onM3U8ParsedFailed(new VideoCacheException("parseM3U8Info failed, " + e.getMessage()), cacheInfo);

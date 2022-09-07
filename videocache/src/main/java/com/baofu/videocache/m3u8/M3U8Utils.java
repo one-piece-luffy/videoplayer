@@ -84,7 +84,7 @@ public class M3U8Utils {
                 if (TextUtils.isEmpty(line)) {
                     continue;
                 }
-//                LogUtils.i(TAG, "line = " + line);
+                LogUtils.i(TAG, "line = " + line);
                 if (line.startsWith(M3U8Constants.TAG_PREFIX)) {
                     if (line.startsWith(M3U8Constants.TAG_MEDIA_DURATION)) {
                         String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_DURATION);
@@ -195,7 +195,8 @@ public class M3U8Utils {
             m3u8.setTargetDuration(targetDuration);
             m3u8.setVersion(version);
             m3u8.setSequence(sequence);
-            m3u8.setIsLive(!hasEndList);
+            //去掉这个，不然有的m3u8无法下载  https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8
+//            m3u8.setIsLive(!hasEndList);
             return m3u8;
         } catch (IOException e) {
             e.printStackTrace();

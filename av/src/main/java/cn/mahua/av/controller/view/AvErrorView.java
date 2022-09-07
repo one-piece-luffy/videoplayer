@@ -57,6 +57,7 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
     private TextView mTvMessage;
     private TextView mTvRetry;
     private TextView mTvErrorChangeSource;
+    private TextView mTvErrorTryFix;
     private ImageView mIvStopFullscreen;
 
     private ControlWrapper mControlWrapper;
@@ -92,12 +93,14 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
         mTvRetry = view.findViewById(R.id.tv_retry);
         mIvStopFullscreen = view.findViewById(R.id.iv_stop_fullscreen);
         mTvErrorChangeSource = view.findViewById(R.id.tv_error_change_source);
+        mTvErrorTryFix = view.findViewById(R.id.tv_error_try_fix);
     }
 
     private void initListener() {
         mTvRetry.setOnClickListener(this);
         mIvStopFullscreen.setOnClickListener(this);
         mTvErrorChangeSource.setOnClickListener(this);
+        mTvErrorTryFix.setOnClickListener(this);
     }
 
 
@@ -107,6 +110,11 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
             setVisibility(GONE);
             mControlWrapper.replay(false);
         } else  if (v == mTvErrorChangeSource){
+            setVisibility(GONE);
+            if(controllerClickListener!=null){
+                controllerClickListener.changeSource();
+            }
+        } else  if (v == mTvErrorTryFix){
             setVisibility(GONE);
             if(controllerClickListener!=null){
                 controllerClickListener.tryFix();

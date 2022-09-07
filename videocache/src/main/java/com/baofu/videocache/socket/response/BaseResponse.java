@@ -91,6 +91,7 @@ public abstract class BaseResponse {
             sendBodyWithCorrectTransferAndEncoding(socket, outputStream);
             outputStream.flush();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new VideoCacheException("send response failed: ", e);
         }
     }

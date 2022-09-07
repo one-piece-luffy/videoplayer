@@ -83,9 +83,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void tryFix() {
-
+                CommonUtils.showToast("try fix");
             }
 
+            @Override
+            public void changeSource() {
+                CommonUtils.showToast("changeSource");
+            }
 
 
             @Override
@@ -122,10 +126,10 @@ public class MainActivity extends AppCompatActivity {
             mLocalProxyVideoControl.releaseLocalProxyResources();
         }
         Map<String, String> header = new HashMap();
-        header.put(
-                "User-Agent",
-                "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
-        );
+//        header.put(
+//                "User-Agent",
+//                "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
+//        );
 
 
 //
@@ -235,6 +239,7 @@ public class MainActivity extends AppCompatActivity {
         String jsc="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";//镜双城//
       String hzw="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";//海贼王
         String zx="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
+        String jdhx="https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8";//皆大欢喜
         findViewById(R.id.mr).setOnClickListener(v -> {
             Log.e("asdf","========默认=========");
             Log.e("asdf","========默认=========");
@@ -257,6 +262,11 @@ public class MainActivity extends AppCompatActivity {
             Log.e("asdf","========赘婿==========");
             Log.e("asdf","========赘婿==========");
             mUrl=zx;
+            play();
+        });
+        findViewById(R.id.jdhx).setOnClickListener(v -> {
+            Log.e("asdf","========皆大欢喜==========");
+            mUrl=jdhx;
             play();
         });
     }

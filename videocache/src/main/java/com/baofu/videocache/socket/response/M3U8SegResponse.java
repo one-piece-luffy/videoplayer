@@ -82,10 +82,10 @@ public class M3U8SegResponse extends BaseResponse {
 
     private int getSegIndex(String str) throws VideoCacheException {
         int idotIndex = str.lastIndexOf(".");
-        if (idotIndex == -1) {
-            throw new VideoCacheException("Error index during getTcd sIndex");
+        if (idotIndex> -1) {
+            str = str.substring(0, idotIndex);
         }
-        str = str.substring(0, idotIndex);
+
         int seperatorIndex = str.lastIndexOf("/");
         if (seperatorIndex == -1) {
             throw new VideoCacheException("Error index during getTsIndex");

@@ -39,4 +39,6 @@
     <string name="long_press">Long press</string>
     <string name="adjust_voice">Adjust voice</string>
     <string name="av_guide_right_desc">Slide on the right</string>
+    <string name="change_source">Change source</string>
+    <string name="try_fix">Try fix</string>
 </resources>
