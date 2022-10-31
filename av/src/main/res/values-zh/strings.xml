@@ -6,13 +6,7 @@
     <string name="av_hd">修复</string>
     <string name="av_replay">重新播放</string>
 
-    <string name="av_speed_1">0.50x</string>
-    <string name="av_speed_2">0.75x</string>
-    <string name="av_speed_3">1.00x</string>
-    <string name="av_speed_4">1.25x</string>
-    <string name="av_speed_5">1.50x</string>
-    <string name="av_speed_6">2.00x</string>
-    <string name="av_speed_7">3.00x</string>
+
 
     <string name="av_danmaku_et_hint">想说点啥~</string>
     <string name="av_danmaku_btn">发送</string>

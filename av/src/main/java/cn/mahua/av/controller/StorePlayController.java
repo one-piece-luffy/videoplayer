@@ -357,29 +357,38 @@ public class StorePlayController extends GestureVideoController implements View.
         if(vodControlView!=null){
             // 转为小写处理
             switch (speed.toLowerCase()) {
-                case SpeedInterface.sp0_50:
-                    mControlWrapper.setSpeed(0.50f);
-                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_1));
-                    break;
+
                 case SpeedInterface.sp0_75:
                     mControlWrapper.setSpeed(0.75f);
-                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_2));
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_0_75));
                     break;
                 case SpeedInterface.sp1_0:
                     mControlWrapper.setSpeed(1f);
-                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_3));
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_1_0));
                     break;
                 case SpeedInterface.sp1_25:
                     mControlWrapper.setSpeed(1.25f);
-                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_4));
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_1_25));
                     break;
                 case SpeedInterface.sp1_50:
                     mControlWrapper.setSpeed(1.5f);
-                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_5));
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_1_5));
+                    break;
+                case SpeedInterface.sp1_75:
+                    mControlWrapper.setSpeed(1.75f);
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_1_75));
                     break;
                 case SpeedInterface.sp2_0:
                     mControlWrapper.setSpeed(2f);
-                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_6));
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_2_0));
+                    break;
+                case SpeedInterface.sp3_0:
+                    mControlWrapper.setSpeed(3f);
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_3_0));
+                    break;
+                case SpeedInterface.sp4_0:
+                    mControlWrapper.setSpeed(4f);
+                    vodControlView.setSpeed(getResources().getString(R.string.av_speed_4_0));
                     break;
                 default:
                     break;

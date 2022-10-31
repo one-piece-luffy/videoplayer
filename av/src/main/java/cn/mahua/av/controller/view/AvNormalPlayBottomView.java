@@ -442,38 +442,43 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     public void setSpeed(String speed) {
 //        Log.e("asdff","speed:"+speed);
         // 转为小写处理
-        switch (speed) {
-            case SpeedInterface.sp0_50:
-                mControlWrapper.setSpeed(0.50f);
-                setTvSpeed(getResources().getString(R.string.av_speed_1));
-                break;
+        switch (speed.toLowerCase()) {
+
             case SpeedInterface.sp0_75:
                 mControlWrapper.setSpeed(0.75f);
-                setTvSpeed(getResources().getString(R.string.av_speed_2));
+                setTvSpeed(getResources().getString(R.string.av_speed_0_75));
                 break;
 //            case SpeedInterface.sp1_0:
 //                mControlWrapper.setSpeed(1f);
-//                setTvSpeed(getResources().getString(R.string.av_speed_3));
+//                setTvSpeed(getResources().getString(R.string.av_speed_1_0));
 //                break;
             case SpeedInterface.sp1_25:
                 mControlWrapper.setSpeed(1.25f);
-                setTvSpeed(getResources().getString(R.string.av_speed_4));
+                setTvSpeed(getResources().getString(R.string.av_speed_1_25));
                 break;
             case SpeedInterface.sp1_50:
                 mControlWrapper.setSpeed(1.5f);
-                setTvSpeed(getResources().getString(R.string.av_speed_5));
+                setTvSpeed(getResources().getString(R.string.av_speed_1_5));
+                break;
+            case SpeedInterface.sp1_75:
+                mControlWrapper.setSpeed(1.75f);
+                setTvSpeed(getResources().getString(R.string.av_speed_1_75));
                 break;
             case SpeedInterface.sp2_0:
                 mControlWrapper.setSpeed(2f);
-                setTvSpeed(getResources().getString(R.string.av_speed_6));
+                setTvSpeed(getResources().getString(R.string.av_speed_2_0));
                 break;
             case SpeedInterface.sp3_0:
                 mControlWrapper.setSpeed(3f);
-                setTvSpeed(getResources().getString(R.string.av_speed_7));
+                setTvSpeed(getResources().getString(R.string.av_speed_3_0));
+                break;
+            case SpeedInterface.sp4_0:
+                mControlWrapper.setSpeed(4f);
+                setTvSpeed(getResources().getString(R.string.av_speed_4_0));
                 break;
             default:
                 mControlWrapper.setSpeed(1f);
-                setTvSpeed(getResources().getString(R.string.av_speed_3));
+                setTvSpeed(getResources().getString(R.string.av_speed_1_0));
                 break;
         }
     }

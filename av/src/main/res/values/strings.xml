@@ -6,13 +6,15 @@
     <string name="av_hd">fix</string>
     <string name="av_replay">Replay</string>
 
-    <string name="av_speed_1">0.50x</string>
-    <string name="av_speed_2">0.75x</string>
-    <string name="av_speed_3">1.00x</string>
-    <string name="av_speed_4">1.25x</string>
-    <string name="av_speed_5">1.50x</string>
-    <string name="av_speed_6">2.00x</string>
-    <string name="av_speed_7">3.00x</string>
+    <string name="av_speed_0_5" translatable="false">0.50x</string>
+    <string name="av_speed_0_75"  translatable="false">0.75x</string>
+    <string name="av_speed_1_0"  translatable="false">1.00x</string>
+    <string name="av_speed_1_25"  translatable="false">1.25x</string>
+    <string name="av_speed_1_5"  translatable="false">1.50x</string>
+    <string name="av_speed_1_75"  translatable="false">1.75x</string>
+    <string name="av_speed_2_0"  translatable="false">2.00x</string>
+    <string name="av_speed_3_0"  translatable="false">3.00x</string>
+    <string name="av_speed_4_0"  translatable="false">4.00x</string>
 
     <string name="av_danmaku_et_hint">Say something~</string>
     <string name="av_danmaku_btn">Send</string>
