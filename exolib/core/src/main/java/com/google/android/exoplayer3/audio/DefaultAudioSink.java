@@ -845,7 +845,7 @@ public final class DefaultAudioSink implements AudioSink {
     } catch (InitializationException e) {
       maybeDisableOffload();
       if (listener != null) {
-        listener.onAudioSinkError(e);
+//        listener.onAudioSinkError(e);
       }
       throw e;
     }
@@ -945,9 +945,9 @@ public final class DefaultAudioSink implements AudioSink {
         maybeDisableOffload();
       }
       WriteException e = new WriteException(error, configuration.inputFormat, isRecoverable);
-      if (listener != null) {
-        listener.onAudioSinkError(e);
-      }
+//      if (listener != null) {
+//        listener.onAudioSinkError(e);
+//      }
       if (e.isRecoverable) {
         throw e; // Do not delay the exception if it can be recovered at higher level.
       }
