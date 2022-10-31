@@ -1,9 +1,9 @@
 ext {
 
-    androidBuildToolsVersion = "29.0.0"
+    androidBuildToolsVersion = "30.0.3"
     androidMinSdkVersion = 21
-    androidTargetSdkVersion = 29
-    androidCompileSdkVersion = 29
+    androidTargetSdkVersion = 32
+    androidCompileSdkVersion = 32
 
 
     constraintLayoutVersion = '1.1.3'

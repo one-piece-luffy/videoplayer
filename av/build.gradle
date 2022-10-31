@@ -5,13 +5,13 @@ group='com.github.one-piece-luffy'
 
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.1'
+    compileSdkVersion 32
+    buildToolsVersion '30.0.3'
 
 
     defaultConfig {
         minSdkVersion 22
-        targetSdkVersion 30
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0"
 
@@ -26,10 +26,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
-    }
+//    compileOptions {
+//        sourceCompatibility = 1.8
+//        targetCompatibility = 1.8
+//    }
 
 }
 

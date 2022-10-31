@@ -3,11 +3,11 @@ apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.one-piece-luffy'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion '29.0.0'
+    compileSdkVersion 32
+    buildToolsVersion '30.0.3'
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 32
         versionCode 1
         versionName "1.0.0"
     }
