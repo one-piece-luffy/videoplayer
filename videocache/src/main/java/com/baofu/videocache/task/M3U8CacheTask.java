@@ -29,7 +29,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     private static final String TAG = "M3U8CacheTask";
 
-    private static final int THREAD_POOL_COUNT = 5;
+    private static final int THREAD_POOL_COUNT = 4;
 
     private int mCachedSegCount;
     private int mTotalSegCount;

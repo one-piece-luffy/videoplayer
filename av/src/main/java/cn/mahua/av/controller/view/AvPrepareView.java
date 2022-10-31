@@ -250,13 +250,13 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                         @Override
                         public void run() {
                             long tcpSpeed = mControlWrapper.getTcpSpeed();
-                            VideoLogUtils.i("获取网络加载速度++++++++" + tcpSpeed);
+//                            VideoLogUtils.i("获取网络加载速度++++++++" + tcpSpeed);
                             if (tcpSpeed > 0&&mShowTcp) {
                                 //显示网速
                                 mTvTcpSpeed.setVisibility(View.VISIBLE);
                                 mTvTcpSpeed.setText(AvUtils.getSizeStr(tcpSpeed));
                             }
-                            Log.i(TAG,"speed:"+tcpSpeed);
+//                            Log.i(TAG,"speed:"+tcpSpeed);
                         }
                     });
 

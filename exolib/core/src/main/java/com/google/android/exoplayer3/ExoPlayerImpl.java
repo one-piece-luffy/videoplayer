@@ -1291,6 +1291,7 @@ import static java.lang.Math.min;
           //todo
           long position = mplayerForListeners.getCurrentPosition();
           try {
+            Log.e(TAG,"=============position+5000");
             mplayerForListeners.seekTo(position + 5000);
             mplayerForListeners.prepare();
             mplayerForListeners.play();
@@ -1304,6 +1305,7 @@ import static java.lang.Math.min;
             mplayerForListeners.seekTo(position + 10000);
             mplayerForListeners.prepare();
             mplayerForListeners.play();
+            Log.e(TAG,"=============position+10000");
           } catch (Exception e) {
             e.printStackTrace();
           }

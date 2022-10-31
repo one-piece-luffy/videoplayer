@@ -173,7 +173,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
                 })
                 .start();
         mLongSpeed.setVisibility(View.GONE);
-        Log.i(TAG, "onstopSlide speed:" + mLastSpeed + " curSpeed:" + mControlWrapper.getSpeed());
+//        Log.i(TAG, "onstopSlide speed:" + mLastSpeed + " curSpeed:" + mControlWrapper.getSpeed());
         if (mLastSpeed != 0 && isLongPress) {
             isLongPress = false;
             mControlWrapper.setSpeed(mLastSpeed);

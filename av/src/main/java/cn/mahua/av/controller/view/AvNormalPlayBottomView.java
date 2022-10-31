@@ -397,7 +397,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
 //            setSpeed(mCurrentSpeed + "");
 //            mLastSpeed = mCurrentSpeed;
 //        }
-        Log.i("AvNormalPlayBottomView","speed:"+mCurrentSpeed);
+//        Log.i("AvNormalPlayBottomView","speed:"+mCurrentSpeed);
 
     }
 
@@ -440,7 +440,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     }
 
     public void setSpeed(String speed) {
-        Log.e("asdff","speed:"+speed);
+//        Log.e("asdff","speed:"+speed);
         // 转为小写处理
         switch (speed) {
             case SpeedInterface.sp0_50:

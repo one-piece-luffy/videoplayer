@@ -1157,7 +1157,7 @@ public class VideoPlayerController extends AbsVideoPlayerController implements V
     public void updateNetSpeedProgress() {
         //获取网络加载速度
         long tcpSpeed = mVideoPlayer.getTcpSpeed();
-        VideoLogUtils.i("获取网络加载速度++++++++"+tcpSpeed);
+//        VideoLogUtils.i("获取网络加载速度++++++++"+tcpSpeed);
         if (tcpSpeed>0){
             int speed = (int) (tcpSpeed/1024);
             //显示网速
@@ -1188,7 +1188,7 @@ public class VideoPlayerController extends AbsVideoPlayerController implements V
         mTime.setText(new SimpleDateFormat("HH:mm", Locale.CHINA).format(new Date()));
 
         long tcpSpeed = mVideoPlayer.getTcpSpeed();
-        VideoLogUtils.i("获取网络加载速度---------"+tcpSpeed);
+//        VideoLogUtils.i("获取网络加载速度---------"+tcpSpeed);
     }
 
 
