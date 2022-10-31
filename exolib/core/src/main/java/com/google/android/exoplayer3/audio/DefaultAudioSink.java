@@ -792,6 +792,7 @@ public final class DefaultAudioSink implements AudioSink {
 //        listener.onAudioSinkError(
 //            new AudioSink.UnexpectedDiscontinuityException(
 //                presentationTimeUs, expectedPresentationTimeUs));
+        Log.e(TAG,"onAudioSinkError");
         startMediaTimeUsNeedsSync = true;
       }
       if (startMediaTimeUsNeedsSync) {
@@ -846,6 +847,7 @@ public final class DefaultAudioSink implements AudioSink {
       maybeDisableOffload();
       if (listener != null) {
 //        listener.onAudioSinkError(e);
+        e.printStackTrace();
       }
       throw e;
     }
@@ -945,9 +947,10 @@ public final class DefaultAudioSink implements AudioSink {
         maybeDisableOffload();
       }
       WriteException e = new WriteException(error, configuration.inputFormat, isRecoverable);
-//      if (listener != null) {
+      if (listener != null) {
 //        listener.onAudioSinkError(e);
-//      }
+        e.printStackTrace();
+      }
       if (e.isRecoverable) {
         throw e; // Do not delay the exception if it can be recovered at higher level.
       }
