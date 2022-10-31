@@ -148,22 +148,22 @@ public class MainActivity extends AppCompatActivity {
                     mLocalProxyVideoControl.startRequestVideoInfo(mUrl, null, null);
                 }
             }.start();
-            VideoProxyCacheManager.getInstance().addSocketListener(mUrl, new ISocketListener() {
-                @Override
-                public void timeout() {
-                    Log.e("tag","socket red timeout");
-                    if(isFinishing()){
-                        return;
-                    }
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            videoView.seekTo(videoView.getCurrentPosition()+2000);
-                        }
-                    });
-
-                }
-            });
+//            VideoProxyCacheManager.getInstance().addSocketListener(mUrl, new ISocketListener() {
+//                @Override
+//                public void timeout() {
+//                    Log.e("tag","socket red timeout");
+//                    if(isFinishing()){
+//                        return;
+//                    }
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            videoView.seekTo(videoView.getCurrentPosition()+2000);
+//                        }
+//                    });
+//
+//                }
+//            });
         }
 
 
@@ -295,8 +295,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    public void finish() {
+        super.finish();
         if (videoView != null) {
             videoView.release();
         }
@@ -304,5 +304,11 @@ public class MainActivity extends AppCompatActivity {
             mLocalProxyVideoControl.releaseLocalProxyResources();
         }
         VideoInfoParseManager.getInstance().release();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
     }
 }

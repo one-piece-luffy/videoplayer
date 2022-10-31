@@ -326,7 +326,6 @@ public class VideoProxyCacheManager {
     public void startRequestVideoInfo(String videoUrl, Map<String, String> headers) {
         startRequestVideoInfo(videoUrl, headers, new HashMap<>());
     }
-
     /**
      *
      * @param videoUrl    视频url
@@ -363,6 +362,8 @@ public class VideoProxyCacheManager {
                     mM3U8LocalProxyMd5Set.add(md5);
                     //开始发起请求M3U8视频中的ts数据
                     startM3U8Task(m3u8, cacheInfo, headers);
+
+                    StorageUtils.saveVideoCacheInfo(cacheInfo, new File(cacheInfo.getSavePath()));
 
                 }
 

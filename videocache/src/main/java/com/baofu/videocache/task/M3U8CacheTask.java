@@ -200,7 +200,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             seg.setName(segName);
             seg.setFileSize(segFile.length());
             //更新进度
-            notifyCacheProgress();
+//            notifyCacheProgress();
         }
     }
 
