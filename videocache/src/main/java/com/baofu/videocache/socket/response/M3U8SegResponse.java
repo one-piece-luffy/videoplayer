@@ -50,7 +50,7 @@ public class M3U8SegResponse extends BaseResponse {
     private int mSegIndex;      //M3U8 ts对应的索引位置
     private long mSegLength;
     private String mFileName;
-    int MAX_RETRY_COUNT = 1;
+    int MAX_RETRY_COUNT = 2;
     int MAX_RETRY_COUNT_503 = 3;
 
     public M3U8SegResponse(HttpRequest request, String parentUrl, String videoUrl, Map<String, String> headers, long time, String fileName) throws Exception {

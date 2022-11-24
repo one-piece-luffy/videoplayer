@@ -65,6 +65,10 @@ import static com.google.android.exoplayer3.util.Util.castNonNull;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+/**
+ * 播放调秒设置
+ */
+
 /** An {@link ExoPlayer} implementation. */
 /* package */ final class ExoPlayerImpl extends BasePlayer implements ExoPlayer {
 
@@ -1279,9 +1283,10 @@ import static java.lang.Math.min;
       if (ioException!=null&&ioException.getMessage() != null && ioException.getMessage().contains(ExoConstants.ERROR_CANNOT_SYGN)) {
         long position = mplayerForListeners.getCurrentPosition();
         try {
-          mplayerForListeners.seekTo(position + 2000);
+          mplayerForListeners.seekTo(position + 100);
           mplayerForListeners.prepare();
           mplayerForListeners.play();
+          Log.e(TAG,"=============position+100");
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -1291,8 +1296,8 @@ import static java.lang.Math.min;
           //todo
           long position = mplayerForListeners.getCurrentPosition();
           try {
-            Log.e(TAG,"=============position+5000");
-            mplayerForListeners.seekTo(position + 5000);
+            Log.e(TAG,"=============position+100");
+            mplayerForListeners.seekTo(position + 100);
             mplayerForListeners.prepare();
             mplayerForListeners.play();
           } catch (Exception e) {
@@ -1302,10 +1307,10 @@ import static java.lang.Math.min;
         } else {
           long position = mplayerForListeners.getCurrentPosition();
           try {
-            mplayerForListeners.seekTo(position + 10000);
+            mplayerForListeners.seekTo(position + 100);
             mplayerForListeners.prepare();
             mplayerForListeners.play();
-            Log.e(TAG,"=============position+10000");
+            Log.e(TAG,"=============position+100");
           } catch (Exception e) {
             e.printStackTrace();
           }

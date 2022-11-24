@@ -236,7 +236,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                     try {
                         byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
                         if (result != null) {
-                            fileOutputStream = new FileOutputStream(file);
+                            fileOutputStream = new FileOutputStream(file);//todo oom
                             fileOutputStream.write(result);
                         }
                     } catch (Exception e) {
@@ -284,13 +284,13 @@ public class M3U8CacheTask extends VideoCacheTask {
             e.printStackTrace();
 
             ts.setRetryCount(ts.getRetryCount() + 1);
-            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-//                Log.e(TAG, "====retry, exception=" + e.getMessage());
-                downloadFile(ts, file, videoUrl);
-//                Log.e("asdf","重试");
-            }else {
-//                Log.e("asdf","失败");
-            }
+//            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
+////                Log.e(TAG, "====retry, exception=" + e.getMessage());
+//                downloadFile(ts, file, videoUrl);//todo oom
+////                Log.e("asdf","重试");
+//            }else {
+////                Log.e("asdf","失败");
+//            }
         } finally {
             ProxyCacheUtils.close(inputStream);
             ProxyCacheUtils.close(fos);

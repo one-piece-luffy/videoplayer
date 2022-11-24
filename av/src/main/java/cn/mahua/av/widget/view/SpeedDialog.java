@@ -36,14 +36,14 @@ public class SpeedDialog extends Dialog {
         this.speed = speed;
         mContext = context;
         this.listener = listener;
-        playList.add(SpeedInterface.sp4_0);
-        playList.add(SpeedInterface.sp3_0);
-        playList.add(SpeedInterface.sp2_0);
-        playList.add(SpeedInterface.sp1_75);
-        playList.add(SpeedInterface.sp1_50);
-        playList.add(SpeedInterface.sp1_25);
-        playList.add(SpeedInterface.sp1_0);
         playList.add(SpeedInterface.sp0_75);
+        playList.add(SpeedInterface.sp1_0);
+        playList.add(SpeedInterface.sp1_25);
+        playList.add(SpeedInterface.sp1_50);
+        playList.add(SpeedInterface.sp1_75);
+        playList.add(SpeedInterface.sp2_0);
+        playList.add(SpeedInterface.sp3_0);
+        playList.add(SpeedInterface.sp4_0);
     }
 
     @Override

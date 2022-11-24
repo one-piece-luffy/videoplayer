@@ -29,15 +29,15 @@ public class AES128Utils {
         if (file.exists()) {
             file.mkdir();
         }
-        File keyFile = new File(file.getAbsolutePath().toString() + "/encryption.key");
-        File ts =new  File(file.getAbsolutePath().toString() + "/a.ts");
-        File outfile =new File(file.getAbsolutePath().toString() + "/2.ts");
-        byte key[]=readFile(keyFile);
+        File keyFile = new File(file.getAbsolutePath() + "/encryption.key");
+        File ts =new  File(file.getAbsolutePath() + "/a.ts");
+        File outfile =new File(file.getAbsolutePath() + "/2.ts");
+        byte[] key =readFile(keyFile);
         if(ts.exists()){
             byte[] result= dencryption(readFile(ts),key,null);
             if(result==null)
                 return;
-            FileOutputStream fos = null;
+            FileOutputStream fos ;
             try {
                 fos = new FileOutputStream(outfile);
                 fos.write(result);
@@ -76,7 +76,7 @@ public class AES128Utils {
         String transformation = "AES/CBC/PKCS5Padding";
 
 
-        Cipher cipher = null; //解密对象
+        Cipher cipher ; //解密对象
         try {
             cipher = Cipher.getInstance(transformation);
             SecretKeySpec skey = new SecretKeySpec(key, algorithm);
@@ -122,6 +122,9 @@ public class AES128Utils {
             try {
                 if (bis != null) {
                     bis.close();
+                }
+                if (fis != null) {
+                    fis.close();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
