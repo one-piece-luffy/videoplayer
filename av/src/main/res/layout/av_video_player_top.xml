@@ -24,18 +24,7 @@
             android:padding="10dp"
             android:src="@drawable/icon_play_back" />
 
-        <TextClock
-            android:id="@+id/tc_av_localtime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:format12Hour="HH:mm"
-            android:format24Hour="HH:mm"
-            android:gravity="center"
-            android:padding="@dimen/av_tv_padding"
-            android:textColor="@color/white"
-            android:textSize="@dimen/av_tv_size"
-            android:visibility="gone" />
+
 
         <cn.mahua.av.widget.view.MarqueeTextView
             android:id="@+id/tv_title"
@@ -61,6 +50,20 @@
             android:layout_centerVertical="true"
             android:layout_marginRight="16dp"
             android:src="@drawable/battery_level2" />
+        <TextClock
+            android:id="@+id/tc_av_localtime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/iv_battery"
+            android:layout_marginRight="8dp"
+            android:format12Hour="HH:mm"
+            android:format24Hour="HH:mm"
+            android:gravity="center"
+            android:padding="@dimen/av_tv_padding"
+            android:textColor="@color/white"
+            android:textSize="@dimen/av_tv_size"
+            android:visibility="gone" />
 
     </RelativeLayout>
 

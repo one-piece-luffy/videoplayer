@@ -136,7 +136,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
             public void run() {
                 if (!TextUtils.isEmpty(title)){
                     mTvTitle.setText(title);
-                    if(title.length()>10){
+                    if(title.length()>30){
                         mTvTitle.startScroll();
                     }
 
