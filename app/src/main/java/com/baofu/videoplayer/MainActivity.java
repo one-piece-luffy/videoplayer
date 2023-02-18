@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
       String hzw="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";//海贼王
         String zx="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
         String jdhx="https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8";//皆大欢喜
-        String chssn="https://v5.cdtlas.com/20220624/Jt6PQoAX/index.m3u8";//成化十四年
+        String chssn="https://new.yle888.vip/20230123/dqNwmuSs/index.m3u8";//成化十四年
         findViewById(R.id.mr).setOnClickListener(v -> {
             Log.e("asdf","========默认=========");
             Log.e("asdf","========默认=========");

@@ -460,8 +460,9 @@ public class DefaultHttpDataSource extends BaseDataSource implements HttpDataSou
     try {
       return readInternal(buffer, offset, readLength);
     } catch (IOException e) {
-      throw new HttpDataSourceException(
-          e, castNonNull(dataSpec), HttpDataSourceException.TYPE_READ);
+//      throw new HttpDataSourceException(
+//          e, castNonNull(dataSpec), HttpDataSourceException.TYPE_READ);
+      return -1;
     }
   }
 
