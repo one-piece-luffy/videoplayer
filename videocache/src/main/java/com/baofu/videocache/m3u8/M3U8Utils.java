@@ -388,10 +388,13 @@ public class M3U8Utils {
             String tempUrl = hostUrl + longestCommonPrefixStr + line.substring(longestCommonPrefixStr.length());
             return tempUrl;
         }
+        String result=null;
         if (line.startsWith("http")) {
-            return line;
+            result= line;
+        }else {
+            result= baseUriPath + line;
         }
-        return baseUriPath + line;
+        return result.trim();
     }
     private static String getSchema(String url) {
         if (TextUtils.isEmpty(url)) {
