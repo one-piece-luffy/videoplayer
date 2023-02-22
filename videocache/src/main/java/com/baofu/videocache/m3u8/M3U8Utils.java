@@ -343,8 +343,12 @@ public class M3U8Utils {
         return null;
     }
     public static byte[] parseKey(String url){
-        if(TextUtils.isEmpty(url)||!url.startsWith("http"))
+        if (TextUtils.isEmpty(url))
             return null;
+        url = url.trim();
+        if (!url.startsWith("http")) {
+            return null;
+        }
         try {
             Response response= OkHttpUtil.getInstance().requestSync(url,null);
             InputStream inStream = response.body().byteStream();
@@ -377,7 +381,7 @@ public class M3U8Utils {
         String hostUrl = getHostUrl(videoUrl);
         if (line.startsWith("//")) {
             String tempUrl = getSchema(videoUrl) + ":" + line;
-            return tempUrl;
+            return tempUrl.trim();
         }
         if (line.startsWith("/")) {
             String pathStr = getPathStr(videoUrl);
