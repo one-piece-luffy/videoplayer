@@ -386,7 +386,7 @@ public class M3U8Utils {
                 hostUrl = hostUrl.substring(0, hostUrl.length() - 1);
             }
             String tempUrl = hostUrl + longestCommonPrefixStr + line.substring(longestCommonPrefixStr.length());
-            return tempUrl;
+            return tempUrl.trim();
         }
         String result=null;
         if (line.startsWith("http")) {
