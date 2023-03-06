@@ -77,6 +77,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
     OnSpeedChangeListener onSpeedChangeListener;
     OnLongPressListener onLongPressListener;
     ControllerClickListener controllerClickListener;
+    boolean mIsLock;
     public AvGestureView(@NonNull Context context) {
         super(context);
         init(context);
@@ -243,6 +244,9 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
 
     @Override
     public void onLongPress() {
+        if(mIsLock){
+            return;
+        }
         mLastSpeed = mControlWrapper.getSpeed();
         if(onLongPressListener!=null){
             onLongPressListener.onLongPress(true);
@@ -279,7 +283,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
 
     @Override
     public void onLockStateChanged(boolean isLock) {
-
+        mIsLock=isLock;
     }
 
 
