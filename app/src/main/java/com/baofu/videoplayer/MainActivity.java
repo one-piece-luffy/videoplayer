@@ -99,7 +99,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
+
         });
+
         //设置播放器缩略图
         ImageLoader.getInstance().placeholder(R.drawable.a)
                 .url("https://img0.baidu.com/it/u=1519898345,2471979106&fm=26&fmt=auto")
@@ -203,14 +205,14 @@ public class MainActivity extends AppCompatActivity {
              * @param playState                         播放状态，主要是指播放器的各种状态
              */
             @Override
-            public void onPlayStateChanged(int playState) {
+            public void onPlayStateChanged(int playState,String msg) {
                 switch (playState) {
                     case ConstantKeys.CurrentState.STATE_IDLE:
                         break;
                     case ConstantKeys.CurrentState.STATE_PREPARED:
                         break;
                     case ConstantKeys.CurrentState.STATE_ERROR:
-                        Log.e("", "error");
+                        Log.e("", "==error:"+msg);
                         break;
                     case ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING:
                         //设置倍速播放为为上一次的速度

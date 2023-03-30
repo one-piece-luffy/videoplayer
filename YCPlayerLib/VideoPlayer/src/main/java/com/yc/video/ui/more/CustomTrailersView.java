@@ -66,7 +66,7 @@ public class CustomTrailersView extends FrameLayout implements InterControlView,
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
 
     }
 

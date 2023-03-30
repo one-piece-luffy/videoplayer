@@ -215,7 +215,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         switch (playState) {
             case ConstantKeys.CurrentState.STATE_IDLE:
             case ConstantKeys.CurrentState.STATE_START_ABORT:

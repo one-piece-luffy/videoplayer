@@ -56,7 +56,7 @@ public class SimpleStateListener implements OnVideoStateListener {
      * @param playState                         播放状态，主要是指播放器的各种状态
      */
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
 
     }
 

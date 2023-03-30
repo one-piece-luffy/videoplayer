@@ -53,6 +53,6 @@ public interface OnVideoStateListener {
      * 8                开始播放中止
      * @param playState                         播放状态，主要是指播放器的各种状态
      */
-    void onPlayStateChanged(@ConstantKeys.CurrentStateType int playState);
+    void onPlayStateChanged(@ConstantKeys.CurrentStateType int playState,String msg);
     
 }

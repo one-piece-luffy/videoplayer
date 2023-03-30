@@ -133,7 +133,7 @@ public class CustomCompleteView extends FrameLayout implements InterControlView,
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         if (playState == ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING) {
             setVisibility(VISIBLE);
             mIvStopFullscreen.setVisibility(mControlWrapper.isFullScreen() ? VISIBLE : GONE);

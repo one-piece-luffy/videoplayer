@@ -91,6 +91,10 @@ public abstract class GestureVideoController extends BaseVideoController impleme
      */
     private int mCurPlayState;
     /**
+     * 播放状态信息
+     */
+    private String mCurPlayStateMsg;
+    /**
      * 屏幕一半的距离
      */
     private int mHalfScreen;
@@ -164,9 +168,10 @@ public abstract class GestureVideoController extends BaseVideoController impleme
      * @param playState                         播放状态
      */
     @Override
-    public void setPlayState(int playState) {
-        super.setPlayState(playState);
+    public void setPlayState(int playState,String msg) {
+        super.setPlayState(playState,msg);
         mCurPlayState = playState;
+        mCurPlayStateMsg = msg;
     }
 
     private boolean isInPlaybackState() {

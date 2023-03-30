@@ -151,7 +151,7 @@ public class CustomFloatView extends FrameLayout implements InterControlView, Vi
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         switch (playState) {
             case ConstantKeys.CurrentState.STATE_IDLE:
                 mIvStartPlay.setSelected(false);

@@ -337,7 +337,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
         //如果要显示移动网络提示则不继续播放
         if (showNetWarning()) {
             //中止播放
-            setPlayState(ConstantKeys.CurrentState.STATE_START_ABORT);
+            setPlayState(ConstantKeys.CurrentState.STATE_START_ABORT,null);
             return false;
         }
         //监听音频焦点改变
@@ -429,7 +429,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
             //准备开始播放
             mMediaPlayer.prepareAsync();
             //更改播放器的播放状态
-            setPlayState(ConstantKeys.CurrentState.STATE_PREPARING);
+            setPlayState(ConstantKeys.CurrentState.STATE_PREPARING,null);
             //更改播放器播放模式状态
             setPlayerState(isFullScreen() ? ConstantKeys.PlayMode.MODE_FULL_SCREEN :
                     isTinyScreen() ? ConstantKeys.PlayMode.MODE_TINY_WINDOW : ConstantKeys.PlayMode.MODE_NORMAL);
@@ -456,7 +456,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
      */
     protected void startInPlaybackState() {
         mMediaPlayer.start();
-        setPlayState(ConstantKeys.CurrentState.STATE_PLAYING);
+        setPlayState(ConstantKeys.CurrentState.STATE_PLAYING,null);
     }
 
     /**
@@ -466,7 +466,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
     public void pause() {
         if (isInPlaybackState() && mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
-            setPlayState(ConstantKeys.CurrentState.STATE_PAUSED);
+            setPlayState(ConstantKeys.CurrentState.STATE_PAUSED,null);
             if (mAudioFocusHelper != null) {
                 mAudioFocusHelper.abandonFocus();
             }
@@ -480,7 +480,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
     public void resume() {
         if (isInPlaybackState() && !mMediaPlayer.isPlaying()) {
             mMediaPlayer.start();
-            setPlayState(ConstantKeys.CurrentState.STATE_PLAYING);
+            setPlayState(ConstantKeys.CurrentState.STATE_PLAYING,null);
             if (mAudioFocusHelper != null) {
                 mAudioFocusHelper.requestFocus();
             }
@@ -537,7 +537,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
             //重置播放进度
             mCurrentPosition = 0;
             //切换转态
-            setPlayState(ConstantKeys.CurrentState.STATE_IDLE);
+            setPlayState(ConstantKeys.CurrentState.STATE_IDLE,null);
         }
     }
 
@@ -676,18 +676,18 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
         mPlayerContainer.setKeepScreenOn(false);
         if (PlayerUtils.isConnected(mContext)){
             if (type == PlayerConstant.ErrorType.TYPE_UNEXPECTED){
-                setPlayState(ConstantKeys.CurrentState.STATE_ERROR);
+                setPlayState(ConstantKeys.CurrentState.STATE_ERROR,error);
             } else if (type == PlayerConstant.ErrorType.TYPE_PARSE){
-                setPlayState(ConstantKeys.CurrentState.STATE_PARSE_ERROR);
+                setPlayState(ConstantKeys.CurrentState.STATE_PARSE_ERROR,error);
             } else if (type == PlayerConstant.ErrorType.TYPE_SOURCE){
-                setPlayState(ConstantKeys.CurrentState.STATE_ERROR);
+                setPlayState(ConstantKeys.CurrentState.STATE_ERROR,error);
             } else {
-                setPlayState(ConstantKeys.CurrentState.STATE_ERROR);
+                setPlayState(ConstantKeys.CurrentState.STATE_ERROR,error);
             }
         } else {
-            setPlayState(ConstantKeys.CurrentState.STATE_NETWORK_ERROR);
+            setPlayState(ConstantKeys.CurrentState.STATE_NETWORK_ERROR,error);
         }
-        setPlayState(ConstantKeys.CurrentState.STATE_ERROR);
+        setPlayState(ConstantKeys.CurrentState.STATE_ERROR,error);
         VideoPlayerConfig config = VideoViewManager.getConfig();
         if (config!=null && config.mBuriedPointEvent!=null){
             //相当于进入了视频页面
@@ -710,7 +710,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
             //播放完成，清除进度
             mProgressManager.saveProgress(mUrl, 0);
         }
-        setPlayState(ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING);
+        setPlayState(ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING,null);
         VideoPlayerConfig config = VideoViewManager.getConfig();
         if (config!=null && config.mBuriedPointEvent!=null){
             //视频播放完成
@@ -722,13 +722,13 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
     public void onInfo(int what, int extra) {
         switch (what) {
             case PlayerConstant.MEDIA_INFO_BUFFERING_START:
-                setPlayState(ConstantKeys.CurrentState.STATE_BUFFERING_PAUSED);
+                setPlayState(ConstantKeys.CurrentState.STATE_BUFFERING_PAUSED,null);
                 break;
             case PlayerConstant.MEDIA_INFO_BUFFERING_END:
-                setPlayState(ConstantKeys.CurrentState.STATE_COMPLETED);
+                setPlayState(ConstantKeys.CurrentState.STATE_COMPLETED,null);
                 break;
             case PlayerConstant.MEDIA_INFO_VIDEO_RENDERING_START: // 视频开始渲染
-                setPlayState(ConstantKeys.CurrentState.STATE_PLAYING);
+                setPlayState(ConstantKeys.CurrentState.STATE_PLAYING,null);
                 if (mPlayerContainer.getWindowVisibility() != VISIBLE) {
                     pause();
                 }
@@ -745,7 +745,7 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
      */
     @Override
     public void onPrepared() {
-        setPlayState(ConstantKeys.CurrentState.STATE_PREPARED);
+        setPlayState(ConstantKeys.CurrentState.STATE_PREPARED,null);
         if (mCurrentPosition > 0) {
             seekTo(mCurrentPosition);
         }
@@ -1071,15 +1071,15 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
      * 7                播放完成
      * 8                开始播放中止
      */
-    protected void setPlayState(@ConstantKeys.CurrentStateType int playState) {
+    protected void setPlayState(@ConstantKeys.CurrentStateType int playState,String msg) {
         mCurrentPlayState = playState;
         if (mVideoController != null) {
-            mVideoController.setPlayState(playState);
+            mVideoController.setPlayState(playState,msg);
         }
         if (mOnStateChangeListeners != null) {
             for (OnVideoStateListener l : PlayerUtils.getSnapshot(mOnStateChangeListeners)) {
                 if (l != null) {
-                    l.onPlayStateChanged(playState);
+                    l.onPlayStateChanged(playState,msg);
                 }
             }
         }

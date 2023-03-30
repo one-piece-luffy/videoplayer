@@ -196,7 +196,7 @@ public class CustomGestureView extends FrameLayout implements IGestureComponent 
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         if (playState == ConstantKeys.CurrentState.STATE_IDLE
                 || playState == ConstantKeys.CurrentState.STATE_START_ABORT
                 || playState == ConstantKeys.CurrentState.STATE_PREPARING

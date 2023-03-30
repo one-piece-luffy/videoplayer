@@ -69,7 +69,7 @@ public interface InterControlView {
      * 8                开始播放中止
      * @param playState                     播放状态，主要是指播放器的各种状态
      */
-    void onPlayStateChanged(int playState);
+    void onPlayStateChanged(int playState,String message);
 
     /**
      * 播放模式

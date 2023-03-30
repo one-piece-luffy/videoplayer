@@ -119,7 +119,7 @@ public class CustomOncePlayView extends LinearLayout implements InterControlView
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         this.playState = playState;
         if (playState == ConstantKeys.CurrentState.STATE_ONCE_LIVE) {
             //即将开播

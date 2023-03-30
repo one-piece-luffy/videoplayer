@@ -257,9 +257,9 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
      * 8                开始播放中止
      */
     @CallSuper
-    public void setPlayState(@ConstantKeys.CurrentStateType int playState) {
+    public void setPlayState(@ConstantKeys.CurrentStateType int playState,String msg) {
         //设置播放器的状态
-        handlePlayStateChanged(playState);
+        handlePlayStateChanged(playState,msg);
     }
 
     /**
@@ -631,10 +631,10 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
 
     }
 
-    private void handlePlayStateChanged(int playState) {
+    private void handlePlayStateChanged(int playState,String messsage) {
         for (Map.Entry<InterControlView, Boolean> next : mControlComponents.entrySet()) {
             InterControlView component = next.getKey();
-            component.onPlayStateChanged(playState);
+            component.onPlayStateChanged(playState,messsage);
         }
         onPlayStateChanged(playState);
     }

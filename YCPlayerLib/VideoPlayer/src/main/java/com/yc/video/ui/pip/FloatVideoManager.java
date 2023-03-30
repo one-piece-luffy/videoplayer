@@ -69,7 +69,7 @@ public class FloatVideoManager {
         }
         PlayerUtils.removeViewFormParent(mVideoPlayer);
         mVideoPlayer.setController(mFloatController);
-        mFloatController.setPlayState(mVideoPlayer.getCurrentPlayState());
+        mFloatController.setPlayState(mVideoPlayer.getCurrentPlayState(),null);
         mFloatController.setPlayerState(mVideoPlayer.getCurrentPlayerState());
         mFloatView.addView(mVideoPlayer);
         mFloatView.addToWindow();

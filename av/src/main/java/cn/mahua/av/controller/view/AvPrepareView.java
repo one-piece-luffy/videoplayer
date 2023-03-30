@@ -154,7 +154,7 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         switch (playState) {
             case ConstantKeys.CurrentState.STATE_PREPARING:
                 Log.e("asdf","STATE_PREPARING");

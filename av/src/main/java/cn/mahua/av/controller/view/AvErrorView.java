@@ -147,7 +147,7 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         if (playState == ConstantKeys.CurrentState.STATE_ERROR) {
             bringToFront();
             setVisibility(VISIBLE);

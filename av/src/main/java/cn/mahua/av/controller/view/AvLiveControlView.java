@@ -135,7 +135,7 @@ public class AvLiveControlView extends FrameLayout implements InterControlView, 
     }
 
     @Override
-    public void onPlayStateChanged(int playState) {
+    public void onPlayStateChanged(int playState,String msg) {
         switch (playState) {
             case ConstantKeys.CurrentState.STATE_IDLE:
             case ConstantKeys.CurrentState.STATE_START_ABORT:
