@@ -488,4 +488,10 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     public void setRemindSpeed(boolean remindSpeed) {
         this.remindSpeed = remindSpeed;
     }
+
+    public void hideErrorView(){
+        if(mErrorView!=null){
+            mErrorView.setVisibility(View.GONE);
+        }
+    }
 }
