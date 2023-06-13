@@ -3,13 +3,9 @@ apply plugin: 'com.android.library'
 
 
 android {
-    compileSdk 33
-    buildToolsVersion '32.0.0'
     namespace 'cn.mahua.av'
 
     defaultConfig {
-        minSdkVersion 24
-        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -72,3 +68,4 @@ dependencies {
 }
 
 apply from: "$rootDir/gradle/publish.gradle"
+apply from: "$rootDir/gradle/base.gradle"

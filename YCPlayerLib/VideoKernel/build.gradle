@@ -1,18 +1,10 @@
 apply plugin: 'com.android.library'
 apply from: "$rootDir/gradle/publish.gradle"
-group='com.github.one-piece-luffy'
+apply from: "$rootDir/gradle/base.gradle"
 
 android {
-    compileSdk 33
-    buildToolsVersion '32.0.0'
     namespace 'com.yc.kernel'
 
-    defaultConfig {
-        minSdkVersion 24
-        targetSdkVersion 33
-        versionCode 36
-        versionName "3.0.6"
-    }
 
     buildTypes {
         release {
