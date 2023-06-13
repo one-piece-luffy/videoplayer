@@ -18,7 +18,7 @@ afterEvaluate {
 
                 groupId = 'com.github.one-piece-luffy' //groupId 随便取，jitpack不会使用
                 artifactId = 'videoplayer'  //test随便取,jitpack不会使用
-                version = '2.1.12' //随便取，jitpack不会使用
+                version = '2.1.17' //随便取，jitpack不会使用
 
             }
         }
