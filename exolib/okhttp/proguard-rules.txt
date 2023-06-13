@@ -6,3 +6,10 @@
 -dontwarn javax.annotation.**
 -dontwarn org.conscrypt.**
 -keepnames class okhttp3.internal.publicsuffix.PublicSuffixDatabase
+
+
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**
+
+
