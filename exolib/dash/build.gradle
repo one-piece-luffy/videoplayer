@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 apply from: "../common_library_config.gradle"
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: "maven-publish"
 group='com.github.one-piece-luffy'
 
 android {
@@ -21,7 +21,7 @@ android {
             testCoverageEnabled = true
         }
     }
-
+    namespace 'com.google.android.exoplayer3.source.dash'
     sourceSets.test.assets.srcDir '../../testdata/src/test/assets/'
 }
 

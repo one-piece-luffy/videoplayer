@@ -1,17 +1,15 @@
 apply plugin: 'com.android.library'
 
-apply plugin: 'com.github.dcendents.android-maven'
-group='com.github.one-piece-luffy'
 
 
 android {
-    compileSdkVersion 32
-    buildToolsVersion '30.0.3'
-
+    compileSdk 33
+    buildToolsVersion '32.0.0'
+    namespace 'cn.mahua.av'
 
     defaultConfig {
-        minSdkVersion 22
-        targetSdkVersion 32
+        minSdkVersion 24
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -36,11 +34,11 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
 
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.0'
     //播放器
 //    api 'xyz.doikki.android.dkplayer:dkplayer-java:3.3.0'
 //    api 'xyz.doikki.android.dkplayer:dkplayer-ui:3.3.0'
@@ -71,4 +69,31 @@ dependencies {
     api project(':YCPlayerLib:VideoView')
     //视频缓存
     api project(':videocache')
+}
+
+
+apply plugin: "maven-publish"
+
+android {
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId = 'com.github.one-piece-luffy' //groupId 随便取，jitpack不会使用
+                artifactId = 'videoplayer'  //test随便取,jitpack不会使用
+                version = '2.5.18' //随便取，jitpack不会使用
+
+            }
+        }
+    }
 }

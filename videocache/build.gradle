@@ -1,14 +1,14 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: "maven-publish"
 group='com.github.one-piece-luffy'
 
 android {
-    compileSdkVersion 32
-    buildToolsVersion '30.0.3'
-
+    compileSdkVersion 33
+    buildToolsVersion '32.0.0'
+    namespace 'com.baofu.videocache'
     defaultConfig {
-        minSdkVersion 19
-        targetSdkVersion 32
+        minSdkVersion 24
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -29,6 +29,6 @@ android {
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.9.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
 }

@@ -158,11 +158,11 @@ public class TvController extends GestureVideoController implements View.OnClick
     protected void onLockStateChanged(boolean isLocked) {
         if (isLocked) {
             mLockButton.setSelected(true);
-            String string = mContext.getResources().getString(R.string.locked);
+            String string = mContext.getResources().getString(R.string.av_locked);
             BaseToast.showRoundRectToast(string);
         } else {
             mLockButton.setSelected(false);
-            String string = mContext.getResources().getString(R.string.unlocked);
+            String string = mContext.getResources().getString(R.string.av_unlocked);
             BaseToast.showRoundRectToast(string);
         }
     }
@@ -275,7 +275,7 @@ public class TvController extends GestureVideoController implements View.OnClick
     public boolean onBackPressed() {
         if (isLocked()) {
             show();
-            String string = mContext.getResources().getString(R.string.lock_tip);
+            String string = mContext.getResources().getString(R.string.av_lock_tip);
             BaseToast.showRoundRectToast(string);
             return true;
         }

@@ -7,7 +7,6 @@ import android.text.TextUtils;
 
 import com.google.android.exoplayer3.C;
 import com.google.android.exoplayer3.database.ExoDatabaseProvider;
-import com.google.android.exoplayer3.ext.rtmp.RtmpDataSourceFactory;
 import com.google.android.exoplayer3.source.MediaSource;
 import com.google.android.exoplayer3.source.ProgressiveMediaSource;
 import com.google.android.exoplayer3.source.dash.DashMediaSource;
@@ -81,8 +80,8 @@ public final class ExoMediaSourceHelper {
     public MediaSource getMediaSource(String uri, Map<String, String> headers, boolean isCache) {
         Uri contentUri = Uri.parse(uri);
         if ("rtmp".equals(contentUri.getScheme())) {
-            RtmpDataSourceFactory rtmpDataSourceFactory = new RtmpDataSourceFactory(null);
-            return new ProgressiveMediaSource.Factory(rtmpDataSourceFactory).createMediaSource(contentUri);
+//            RtmpDataSourceFactory rtmpDataSourceFactory = new RtmpDataSourceFactory(null);
+//            return new ProgressiveMediaSource.Factory(rtmpDataSourceFactory).createMediaSource(contentUri);
         }
 
         int contentType = inferContentType(uri);

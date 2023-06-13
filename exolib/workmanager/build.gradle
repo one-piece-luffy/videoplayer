@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 apply from: "../common_library_config.gradle"
-apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: "maven-publish"
 group='com.github.one-piece-luffy'
-
+android {
+    namespace 'com.google.android.exoplayer3.ext.workmanager'
+}
 dependencies {
     implementation project(':exolib:core')
     implementation 'androidx.work:work-runtime:2.5.0'

@@ -1,13 +1,18 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 32
-    buildToolsVersion '30.0.3'
+    compileSdk 33
+    buildToolsVersion '32.0.0'
+    namespace 'com.baofu.videoplayer'
+
+    //逃避图片审查
+    aaptOptions.cruncherEnabled = false
+    aaptOptions.useNewCruncher = false
 
     defaultConfig {
         applicationId "com.baofu.videoplayer"
-        minSdkVersion 23
-        targetSdkVersion 32
+        minSdkVersion 24
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -24,16 +29,30 @@ android {
 //        sourceCompatibility JavaVersion.VERSION_1_8
 //        targetCompatibility JavaVersion.VERSION_1_8
 //    }
+
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlin') {
+                details.useVersion '1.8.0'
+            }
+        }
+        //强制使用指定版本，解决依赖冲突
+        resolutionStrategy {
+//            force 'androidx.annotation:annotation:1.8.0'
+        }
+
+//        exclude group: 'com.google.android.gms', module: 'play-services-measurement-impl'
+    }
 }
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'com.google.android.material:material:1.2.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
-    implementation 'com.github.one-piece-luffy:ImageLoader:2.1'
-    implementation 'com.github.one-piece-luffy:base:1.5'
+    implementation 'com.github.one-piece-luffy:ImageLoader:2.5.19'
+    implementation 'com.github.one-piece-luffy:base:1.7.0'
 
 //    implementation 'com.github.one-piece-luffy:videoplayer:1.3.13'
 //    //这个也要加，不加会崩溃

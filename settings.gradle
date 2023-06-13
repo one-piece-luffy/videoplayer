@@ -25,7 +25,7 @@ include ':exolib:leanback'
 include ':exolib:media2'
 include ':exolib:okhttp'
 include ':exolib:opus'
-include ':exolib:rtmp'
+//include ':exolib:rtmp'
 include ':exolib:vp9'
 include ':exolib:workmanager'
 
