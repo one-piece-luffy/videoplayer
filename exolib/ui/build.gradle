@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 apply from: "../common_library_config.gradle"
-apply plugin: "maven-publish"
+apply from: "$rootDir/gradle/publish.gradle"
 group='com.github.one-piece-luffy'
 
 android.buildTypes.debug.testCoverageEnabled true

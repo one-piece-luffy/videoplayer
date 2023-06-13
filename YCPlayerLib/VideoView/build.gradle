@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply from: rootProject.projectDir.absolutePath + "/YCPlayerLib/VideoGradle/video.gradle"
-apply plugin: "maven-publish"
+apply from: "$rootDir/gradle/publish.gradle"
 group='com.github.one-piece-luffy'
 
 
