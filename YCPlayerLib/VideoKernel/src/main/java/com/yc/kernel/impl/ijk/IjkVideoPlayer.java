@@ -31,9 +31,6 @@ import com.yc.kernel.utils.PlayerConstant;
 import com.yc.kernel.utils.VideoLogUtils;
 
 import java.util.Map;
-import tv.danmaku.ijk.media.player.IMediaPlayer;
-import tv.danmaku.ijk.media.player.IjkMediaPlayer;
-import tv.danmaku.ijk.media.player.IjkTimedText;
 
 /**
  * <pre>
@@ -46,7 +43,7 @@ import tv.danmaku.ijk.media.player.IjkTimedText;
  */
 public class IjkVideoPlayer extends AbstractVideoPlayer {
 
-    protected IjkMediaPlayer mMediaPlayer;
+//    protected IjkMediaPlayer mMediaPlayer;
     private int mBufferedPercent;
     private Context mAppContext;
 
@@ -60,12 +57,12 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
 
     @Override
     public void initPlayer() {
-        mMediaPlayer = new IjkMediaPlayer();
-        //native日志
-        IjkMediaPlayer.native_setLogLevel(VideoLogUtils.isIsLog()
-                ? IjkMediaPlayer.IJK_LOG_INFO : IjkMediaPlayer.IJK_LOG_SILENT);
-        setOptions();
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//        mMediaPlayer = new IjkMediaPlayer();
+//        //native日志
+//        IjkMediaPlayer.native_setLogLevel(VideoLogUtils.isIsLog()
+//                ? IjkMediaPlayer.IJK_LOG_INFO : IjkMediaPlayer.IJK_LOG_SILENT);
+//        setOptions();
+//        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         initListener();
     }
 
@@ -121,27 +118,27 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
     private void initListener() {
         // 设置监听，可以查看ijk中的IMediaPlayer源码监听事件
         // 设置视频错误监听器
-        mMediaPlayer.setOnErrorListener(onErrorListener);
-        // 设置视频播放完成监听事件
-        mMediaPlayer.setOnCompletionListener(onCompletionListener);
-        // 设置视频信息监听器
-        mMediaPlayer.setOnInfoListener(onInfoListener);
-        // 设置视频缓冲更新监听事件
-        mMediaPlayer.setOnBufferingUpdateListener(onBufferingUpdateListener);
-        // 设置准备视频播放监听事件
-        mMediaPlayer.setOnPreparedListener(onPreparedListener);
-        // 设置视频大小更改监听器
-        mMediaPlayer.setOnVideoSizeChangedListener(onVideoSizeChangedListener);
-        // 设置视频seek完成监听事件
-        mMediaPlayer.setOnSeekCompleteListener(onSeekCompleteListener);
-        // 设置时间文本监听器
-        mMediaPlayer.setOnTimedTextListener(onTimedTextListener);
-        mMediaPlayer.setOnNativeInvokeListener(new IjkMediaPlayer.OnNativeInvokeListener() {
-            @Override
-            public boolean onNativeInvoke(int i, Bundle bundle) {
-                return true;
-            }
-        });
+//        mMediaPlayer.setOnErrorListener(onErrorListener);
+//        // 设置视频播放完成监听事件
+//        mMediaPlayer.setOnCompletionListener(onCompletionListener);
+//        // 设置视频信息监听器
+//        mMediaPlayer.setOnInfoListener(onInfoListener);
+//        // 设置视频缓冲更新监听事件
+//        mMediaPlayer.setOnBufferingUpdateListener(onBufferingUpdateListener);
+//        // 设置准备视频播放监听事件
+//        mMediaPlayer.setOnPreparedListener(onPreparedListener);
+//        // 设置视频大小更改监听器
+//        mMediaPlayer.setOnVideoSizeChangedListener(onVideoSizeChangedListener);
+//        // 设置视频seek完成监听事件
+//        mMediaPlayer.setOnSeekCompleteListener(onSeekCompleteListener);
+//        // 设置时间文本监听器
+//        mMediaPlayer.setOnTimedTextListener(onTimedTextListener);
+//        mMediaPlayer.setOnNativeInvokeListener(new IjkMediaPlayer.OnNativeInvokeListener() {
+//            @Override
+//            public boolean onNativeInvoke(int i, Bundle bundle) {
+//                return true;
+//            }
+//        });
     }
 
     /**
@@ -162,19 +159,19 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
         try {
             //解析path
             Uri uri = Uri.parse(path);
-            if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(uri.getScheme())) {
-                RawDataSourceProvider rawDataSourceProvider = RawDataSourceProvider.create(mAppContext, uri);
-                mMediaPlayer.setDataSource(rawDataSourceProvider);
-            } else {
-                //处理UA问题
-                if (headers != null) {
-                    String userAgent = headers.get("User-Agent");
-                    if (!TextUtils.isEmpty(userAgent)) {
-                        mMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", userAgent);
-                    }
-                }
-                mMediaPlayer.setDataSource(mAppContext, uri, headers);
-            }
+//            if (ContentResolver.SCHEME_ANDROID_RESOURCE.equals(uri.getScheme())) {
+//                RawDataSourceProvider rawDataSourceProvider = RawDataSourceProvider.create(mAppContext, uri);
+//                mMediaPlayer.setDataSource(rawDataSourceProvider);
+//            } else {
+//                //处理UA问题
+//                if (headers != null) {
+//                    String userAgent = headers.get("User-Agent");
+//                    if (!TextUtils.isEmpty(userAgent)) {
+//                        mMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", userAgent);
+//                    }
+//                }
+//                mMediaPlayer.setDataSource(mAppContext, uri, headers);
+//            }
         } catch (Exception e) {
             mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_PARSE,e.getMessage());
         }
@@ -185,11 +182,11 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void setDataSource(AssetFileDescriptor fd) {
-        try {
-            mMediaPlayer.setDataSource(new RawDataSourceProvider(fd));
-        } catch (Exception e) {
-            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
-        }
+//        try {
+//            mMediaPlayer.setDataSource(new RawDataSourceProvider(fd));
+//        } catch (Exception e) {
+//            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
+//        }
     }
 
     /**
@@ -198,13 +195,13 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void setSurface(Surface surface) {
-        if (surface!=null){
-            try {
-                mMediaPlayer.setSurface(surface);
-            } catch (Exception e) {
-                mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
-            }
-        }
+//        if (surface!=null){
+//            try {
+//                mMediaPlayer.setSurface(surface);
+//            } catch (Exception e) {
+//                mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
+//            }
+//        }
     }
 
     /**
@@ -212,11 +209,11 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void prepareAsync() {
-        try {
-            mMediaPlayer.prepareAsync();
-        } catch (IllegalStateException e) {
-            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
-        }
+//        try {
+//            mMediaPlayer.prepareAsync();
+//        } catch (IllegalStateException e) {
+//            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
+//        }
     }
 
     /**
@@ -224,11 +221,11 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void pause() {
-        try {
-            mMediaPlayer.pause();
-        } catch (IllegalStateException e) {
-            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
-        }
+//        try {
+//            mMediaPlayer.pause();
+//        } catch (IllegalStateException e) {
+//            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
+//        }
     }
 
     /**
@@ -236,11 +233,11 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void start() {
-        try {
-            mMediaPlayer.start();
-        } catch (IllegalStateException e) {
-            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
-        }
+//        try {
+//            mMediaPlayer.start();
+//        } catch (IllegalStateException e) {
+//            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
+//        }
     }
 
     /**
@@ -248,11 +245,11 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void stop() {
-        try {
-            mMediaPlayer.stop();
-        } catch (IllegalStateException e) {
-            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
-        }
+//        try {
+//            mMediaPlayer.stop();
+//        } catch (IllegalStateException e) {
+//            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
+//        }
     }
 
     /**
@@ -260,8 +257,8 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void reset() {
-        mMediaPlayer.reset();
-        mMediaPlayer.setOnVideoSizeChangedListener(onVideoSizeChangedListener);
+//        mMediaPlayer.reset();
+//        mMediaPlayer.setOnVideoSizeChangedListener(onVideoSizeChangedListener);
         setOptions();
     }
 
@@ -270,7 +267,8 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public boolean isPlaying() {
-        return mMediaPlayer.isPlaying();
+//        return mMediaPlayer.isPlaying();
+        return false;
     }
 
 
@@ -279,11 +277,11 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void seekTo(long time) {
-        try {
-            mMediaPlayer.seekTo((int) time);
-        } catch (IllegalStateException e) {
-            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
-        }
+//        try {
+//            mMediaPlayer.seekTo((int) time);
+//        } catch (IllegalStateException e) {
+//            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,e.getMessage());
+//        }
     }
 
     /**
@@ -291,22 +289,22 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void release() {
-        mMediaPlayer.setOnErrorListener(null);
-        mMediaPlayer.setOnCompletionListener(null);
-        mMediaPlayer.setOnInfoListener(null);
-        mMediaPlayer.setOnBufferingUpdateListener(null);
-        mMediaPlayer.setOnPreparedListener(null);
-        mMediaPlayer.setOnVideoSizeChangedListener(null);
-        new Thread() {
-            @Override
-            public void run() {
-                try {
-                    mMediaPlayer.release();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
+//        mMediaPlayer.setOnErrorListener(null);
+//        mMediaPlayer.setOnCompletionListener(null);
+//        mMediaPlayer.setOnInfoListener(null);
+//        mMediaPlayer.setOnBufferingUpdateListener(null);
+//        mMediaPlayer.setOnPreparedListener(null);
+//        mMediaPlayer.setOnVideoSizeChangedListener(null);
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                try {
+//                    mMediaPlayer.release();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }.start();
     }
 
     /**
@@ -314,7 +312,8 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public long getCurrentPosition() {
-        return mMediaPlayer.getCurrentPosition();
+//        return mMediaPlayer.getCurrentPosition();
+        return 0;
     }
 
     /**
@@ -322,7 +321,8 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public long getDuration() {
-        return mMediaPlayer.getDuration();
+//        return mMediaPlayer.getDuration();
+        return 0;
     }
 
     /**
@@ -338,7 +338,7 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void setDisplay(SurfaceHolder holder) {
-        mMediaPlayer.setDisplay(holder);
+//        mMediaPlayer.setDisplay(holder);
     }
 
     /**
@@ -346,7 +346,7 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void setVolume(float v1, float v2) {
-        mMediaPlayer.setVolume(v1, v2);
+//        mMediaPlayer.setVolume(v1, v2);
     }
 
     /**
@@ -354,7 +354,7 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void setLooping(boolean isLooping) {
-        mMediaPlayer.setLooping(isLooping);
+//        mMediaPlayer.setLooping(isLooping);
     }
 
     /**
@@ -362,7 +362,7 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public void setSpeed(float speed) {
-        mMediaPlayer.setSpeed(speed);
+//        mMediaPlayer.setSpeed(speed);
     }
 
     /**
@@ -370,7 +370,8 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public float getSpeed() {
-        return mMediaPlayer.getSpeed(0);
+//        return mMediaPlayer.getSpeed(0);
+        return 0;
     }
 
     /**
@@ -378,7 +379,8 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      */
     @Override
     public long getTcpSpeed() {
-        return mMediaPlayer.getTcpSpeed();
+//        return mMediaPlayer.getTcpSpeed();
+        return 0;
     }
 
     /**
@@ -391,96 +393,96 @@ public class IjkVideoPlayer extends AbstractVideoPlayer {
      * int MEDIA_ERROR_IJK_PLAYER = -10000,//一般是视频源有问题或者数据格式不支持，比如音频不是AAC之类的
      * int MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK = 200;//数据错误没有有效的回收
      */
-    private IMediaPlayer.OnErrorListener onErrorListener = new IMediaPlayer.OnErrorListener() {
-        @Override
-        public boolean onError(IMediaPlayer iMediaPlayer, int framework_err, int impl_err) {
-            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,"监听异常"+ framework_err + ", extra: " + impl_err);
-            VideoLogUtils.d("IjkVideoPlayer----listener---------onError ——> STATE_ERROR ———— what：" + framework_err + ", extra: " + impl_err);
-            return true;
-        }
-    };
-
-    /**
-     * 设置视频播放完成监听事件
-     */
-    private IMediaPlayer.OnCompletionListener onCompletionListener = new IMediaPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion(IMediaPlayer iMediaPlayer) {
-            mPlayerEventListener.onCompletion();
-            VideoLogUtils.d("IjkVideoPlayer----listener---------onCompletion ——> STATE_COMPLETED");
-        }
-    };
-
-
-    /**
-     * 设置视频信息监听器
-     */
-    private IMediaPlayer.OnInfoListener onInfoListener = new IMediaPlayer.OnInfoListener() {
-        @Override
-        public boolean onInfo(IMediaPlayer iMediaPlayer, int what, int extra) {
-            mPlayerEventListener.onInfo(what, extra);
-            VideoLogUtils.d("IjkVideoPlayer----listener---------onInfo ——> ———— what：" + what + ", extra: " + extra);
-            return true;
-        }
-    };
-
-    /**
-     * 设置视频缓冲更新监听事件
-     */
-    private IMediaPlayer.OnBufferingUpdateListener onBufferingUpdateListener = new IMediaPlayer.OnBufferingUpdateListener() {
-        @Override
-        public void onBufferingUpdate(IMediaPlayer iMediaPlayer, int percent) {
-            mBufferedPercent = percent;
-        }
-    };
-
-
-    /**
-     * 设置准备视频播放监听事件
-     */
-    private IMediaPlayer.OnPreparedListener onPreparedListener = new IMediaPlayer.OnPreparedListener() {
-        @Override
-        public void onPrepared(IMediaPlayer iMediaPlayer) {
-            mPlayerEventListener.onPrepared();
-            VideoLogUtils.d("IjkVideoPlayer----listener---------onPrepared ——> STATE_PREPARED");
-        }
-    };
-
-    /**
-     * 设置视频大小更改监听器
-     */
-    private IMediaPlayer.OnVideoSizeChangedListener onVideoSizeChangedListener = new IMediaPlayer.OnVideoSizeChangedListener() {
-        @Override
-        public void onVideoSizeChanged(IMediaPlayer iMediaPlayer, int width, int height,
-                                       int sar_num, int sar_den) {
-            int videoWidth = iMediaPlayer.getVideoWidth();
-            int videoHeight = iMediaPlayer.getVideoHeight();
-            if (videoWidth != 0 && videoHeight != 0) {
-                mPlayerEventListener.onVideoSizeChanged(videoWidth, videoHeight);
-            }
-            VideoLogUtils.d("IjkVideoPlayer----listener---------onVideoSizeChanged ——> WIDTH：" + width + "， HEIGHT：" + height);
-        }
-    };
-
-    /**
-     * 设置时间文本监听器
-     */
-    private IMediaPlayer.OnTimedTextListener onTimedTextListener = new IMediaPlayer.OnTimedTextListener() {
-        @Override
-        public void onTimedText(IMediaPlayer iMediaPlayer, IjkTimedText ijkTimedText) {
-
-        }
-    };
-
-    /**
-     * 设置视频seek完成监听事件
-     */
-    private IMediaPlayer.OnSeekCompleteListener onSeekCompleteListener = new IMediaPlayer.OnSeekCompleteListener() {
-        @Override
-        public void onSeekComplete(IMediaPlayer iMediaPlayer) {
-
-        }
-    };
+//    private IMediaPlayer.OnErrorListener onErrorListener = new IMediaPlayer.OnErrorListener() {
+//        @Override
+//        public boolean onError(IMediaPlayer iMediaPlayer, int framework_err, int impl_err) {
+//            mPlayerEventListener.onError(PlayerConstant.ErrorType.TYPE_UNEXPECTED,"监听异常"+ framework_err + ", extra: " + impl_err);
+//            VideoLogUtils.d("IjkVideoPlayer----listener---------onError ——> STATE_ERROR ———— what：" + framework_err + ", extra: " + impl_err);
+//            return true;
+//        }
+//    };
+//
+//    /**
+//     * 设置视频播放完成监听事件
+//     */
+//    private IMediaPlayer.OnCompletionListener onCompletionListener = new IMediaPlayer.OnCompletionListener() {
+//        @Override
+//        public void onCompletion(IMediaPlayer iMediaPlayer) {
+//            mPlayerEventListener.onCompletion();
+//            VideoLogUtils.d("IjkVideoPlayer----listener---------onCompletion ——> STATE_COMPLETED");
+//        }
+//    };
+//
+//
+//    /**
+//     * 设置视频信息监听器
+//     */
+//    private IMediaPlayer.OnInfoListener onInfoListener = new IMediaPlayer.OnInfoListener() {
+//        @Override
+//        public boolean onInfo(IMediaPlayer iMediaPlayer, int what, int extra) {
+//            mPlayerEventListener.onInfo(what, extra);
+//            VideoLogUtils.d("IjkVideoPlayer----listener---------onInfo ——> ———— what：" + what + ", extra: " + extra);
+//            return true;
+//        }
+//    };
+//
+//    /**
+//     * 设置视频缓冲更新监听事件
+//     */
+//    private IMediaPlayer.OnBufferingUpdateListener onBufferingUpdateListener = new IMediaPlayer.OnBufferingUpdateListener() {
+//        @Override
+//        public void onBufferingUpdate(IMediaPlayer iMediaPlayer, int percent) {
+//            mBufferedPercent = percent;
+//        }
+//    };
+//
+//
+//    /**
+//     * 设置准备视频播放监听事件
+//     */
+//    private IMediaPlayer.OnPreparedListener onPreparedListener = new IMediaPlayer.OnPreparedListener() {
+//        @Override
+//        public void onPrepared(IMediaPlayer iMediaPlayer) {
+//            mPlayerEventListener.onPrepared();
+//            VideoLogUtils.d("IjkVideoPlayer----listener---------onPrepared ——> STATE_PREPARED");
+//        }
+//    };
+//
+//    /**
+//     * 设置视频大小更改监听器
+//     */
+//    private IMediaPlayer.OnVideoSizeChangedListener onVideoSizeChangedListener = new IMediaPlayer.OnVideoSizeChangedListener() {
+//        @Override
+//        public void onVideoSizeChanged(IMediaPlayer iMediaPlayer, int width, int height,
+//                                       int sar_num, int sar_den) {
+//            int videoWidth = iMediaPlayer.getVideoWidth();
+//            int videoHeight = iMediaPlayer.getVideoHeight();
+//            if (videoWidth != 0 && videoHeight != 0) {
+//                mPlayerEventListener.onVideoSizeChanged(videoWidth, videoHeight);
+//            }
+//            VideoLogUtils.d("IjkVideoPlayer----listener---------onVideoSizeChanged ——> WIDTH：" + width + "， HEIGHT：" + height);
+//        }
+//    };
+//
+//    /**
+//     * 设置时间文本监听器
+//     */
+//    private IMediaPlayer.OnTimedTextListener onTimedTextListener = new IMediaPlayer.OnTimedTextListener() {
+//        @Override
+//        public void onTimedText(IMediaPlayer iMediaPlayer, IjkTimedText ijkTimedText) {
+//
+//        }
+//    };
+//
+//    /**
+//     * 设置视频seek完成监听事件
+//     */
+//    private IMediaPlayer.OnSeekCompleteListener onSeekCompleteListener = new IMediaPlayer.OnSeekCompleteListener() {
+//        @Override
+//        public void onSeekComplete(IMediaPlayer iMediaPlayer) {
+//
+//        }
+//    };
 
     @Override
     public void setPlayerEventListener(VideoPlayerListener playerEventListener) {

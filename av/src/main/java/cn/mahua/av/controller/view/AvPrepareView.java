@@ -30,10 +30,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.yc.kernel.utils.VideoLogUtils;
 import com.yc.video.bridge.ControlWrapper;
 import com.yc.video.config.ConstantKeys;
-import com.yc.video.old.controller.AbsVideoPlayerController;
 import com.yc.video.player.VideoViewManager;
 import com.yc.video.ui.view.InterControlView;
 

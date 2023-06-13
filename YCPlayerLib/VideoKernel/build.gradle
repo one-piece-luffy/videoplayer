@@ -23,8 +23,8 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     //这两个是必须要加的，其它的可供选择
-    api 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
-    api 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.4'
+//    api 'tv.danmaku.ijk.media:ijkplayer-java:0.8.8'
+//    api 'tv.danmaku.ijk.media:ijkplayer-armv7a:0.8.8'
     //其他库文件
     //implementation 'tv.danmaku.ijk.media:ijkplayer-armv5:0.8.8'
     //implementation 'tv.danmaku.ijk.media:ijkplayer-arm64:0.8.8'
