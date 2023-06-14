@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply from: "$rootDir/gradle/apply-publish.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 apply from: "$rootDir/gradle/base.gradle"
 
 android {

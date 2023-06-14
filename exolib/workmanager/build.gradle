@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 apply from: "../common_library_config.gradle"
-apply from: "$rootDir/gradle/apply-publish.gradle"
+apply from: "$rootDir/gradle/publish.gradle"
 group='com.github.one-piece-luffy'
 android {
     namespace 'com.google.android.exoplayer3.ext.workmanager'

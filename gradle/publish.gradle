@@ -17,7 +17,7 @@ afterEvaluate {
                 from components.release
 
                 groupId = 'com.github.one-piece-luffy' //groupId 随便取，jitpack不会使用
-                artifactId = 'videoplayer'  //test随便取,jitpack不会使用
+                artifactId = PROJ_ARTIFACTID  //test随便取,jitpack不会使用
                 version = '2.1.21' //随便取，jitpack不会使用
 
             }
