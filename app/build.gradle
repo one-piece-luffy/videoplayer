@@ -51,7 +51,7 @@ dependencies {
     implementation 'com.github.one-piece-luffy:ImageLoader:2.5.19'
     implementation 'com.github.one-piece-luffy:base:1.7.2'
 
-//    implementation 'com.github.one-piece-luffy:videoplayer:1.3.13'
+//    implementation 'com.github.one-piece-luffy:videoplayer:2.1.18'
 //    //这个也要加，不加会崩溃
 //    api("com.google.guava:guava:31.0-android"){
 //        // Exclude dependencies that are only used by Guava at compile time
@@ -64,8 +64,6 @@ dependencies {
 //    }
 
     implementation project(path: ':av')
-//    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.3'
 
-//    implementation 'com.github.JeffMony:JeffVideoCache:1.0.0'
 
 }
