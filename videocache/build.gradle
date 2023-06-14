@@ -4,9 +4,6 @@ apply from: "$rootDir/gradle/base.gradle"
 
 android {
     namespace 'com.baofu.videocache'
-    defaultConfig {
-        consumerProguardFiles "consumer-rules.pro"
-    }
 
     buildTypes {
         release {
