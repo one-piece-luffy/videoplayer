@@ -72,6 +72,12 @@ public class MainActivity extends AppCompatActivity {
                 videoView.replay(false);
             }
         });
+        controller.addErrorViewItem("fix", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                videoView.replay(false);
+            }
+        });
         controller.setControllerClickListener(new ControllerClickListener() {
             @Override
             public void onClick(View view) {
