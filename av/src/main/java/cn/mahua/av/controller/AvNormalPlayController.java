@@ -31,6 +31,7 @@ import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.listener.OnSpeedClickListener;
 import cn.mahua.av.play.ControllerClickListener;
 import cn.mahua.av.utils.AvSharePreference;
+import cn.mahua.av.widget.view.SortVodView;
 
 public class AvNormalPlayController extends GestureVideoController implements View.OnClickListener {
     public AvNormalPlayController(Context context) {
@@ -416,9 +417,6 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         if (mAvCompleteView != null) {
             mAvCompleteView.setControllerClickListener(controllerClickListener);
         }
-        if (mErrorView != null) {
-            mErrorView.setControllerClickListener(controllerClickListener);
-        }
         if (gestureControlView != null) {
             gestureControlView.setControllerClickListener(controllerClickListener);
         }
@@ -438,6 +436,15 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     public void addTools(View view) {
         if (mAvBottomView != null) {
             mAvBottomView.addTools(view);
+        }
+    }
+    /**
+     * 添加自定义Error view
+     *
+     */
+    public void addErrorViewItem(String text, OnClickListener onClickListener) {
+        if (mErrorView != null) {
+            mErrorView.addTools(text,onClickListener);
         }
     }
 

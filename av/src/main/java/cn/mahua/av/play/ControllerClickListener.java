@@ -6,7 +6,5 @@ public interface ControllerClickListener {
     void onClick(View view);
     void share();
     void next();
-    void tryFix();
-    void changeSource();
     void onUserSeek(long position);
 }

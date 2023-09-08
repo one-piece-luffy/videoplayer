@@ -55,12 +55,11 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
     private float mDownX;
     private float mDownY;
     private TextView mTvMessage;
-    private TextView mTvRetry;
-    private TextView mTvErrorChangeSource;
-    private TextView mTvErrorTryFix;
     private ImageView mIvStopFullscreen;
 
     private ControlWrapper mControlWrapper;
+
+    private LinearLayout mLinearLayout;
 
     public AvErrorView(Context context) {
         super(context);
@@ -90,36 +89,18 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
 
     private void initFindViewById(View view) {
         mTvMessage = view.findViewById(R.id.tv_message);
-        mTvRetry = view.findViewById(R.id.tv_retry);
         mIvStopFullscreen = view.findViewById(R.id.iv_stop_fullscreen);
-        mTvErrorChangeSource = view.findViewById(R.id.tv_error_change_source);
-        mTvErrorTryFix = view.findViewById(R.id.tv_error_try_fix);
+        mLinearLayout = view.findViewById(R.id.linearLayout);
     }
 
     private void initListener() {
-        mTvRetry.setOnClickListener(this);
         mIvStopFullscreen.setOnClickListener(this);
-        mTvErrorChangeSource.setOnClickListener(this);
-        mTvErrorTryFix.setOnClickListener(this);
     }
 
 
     @Override
     public void onClick(View v) {
-        if (v == mTvRetry){
-            setVisibility(GONE);
-            mControlWrapper.replay(false);
-        } else  if (v == mTvErrorChangeSource){
-            setVisibility(GONE);
-            if(controllerClickListener!=null){
-                controllerClickListener.changeSource();
-            }
-        } else  if (v == mTvErrorTryFix){
-            setVisibility(GONE);
-            if(controllerClickListener!=null){
-                controllerClickListener.tryFix();
-            }
-        } else if (v == mIvStopFullscreen){
+       if (v == mIvStopFullscreen){
             //点击返回键
             if (mControlWrapper.isFullScreen()) {
                 Activity activity = PlayerUtils.scanForActivity(mContext);
@@ -148,23 +129,12 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
 
     @Override
     public void onPlayStateChanged(int playState,String msg) {
-        if (playState == ConstantKeys.CurrentState.STATE_ERROR) {
+        if (playState == ConstantKeys.CurrentState.STATE_ERROR||playState == ConstantKeys.CurrentState.STATE_NETWORK_ERROR||playState == ConstantKeys.CurrentState.STATE_PARSE_ERROR) {
             bringToFront();
             setVisibility(VISIBLE);
             mIvStopFullscreen.setVisibility(mControlWrapper.isFullScreen() ? VISIBLE : GONE);
-            mTvMessage.setText("视频播放异常");
-        } if (playState == ConstantKeys.CurrentState.STATE_NETWORK_ERROR) {
-            bringToFront();
-            setVisibility(VISIBLE);
-            mIvStopFullscreen.setVisibility(mControlWrapper.isFullScreen() ? VISIBLE : GONE);
-            mTvMessage.setText("无网络，请检查网络设置");
-        } if (playState == ConstantKeys.CurrentState.STATE_PARSE_ERROR) {
-            bringToFront();
-            setVisibility(VISIBLE);
-            mIvStopFullscreen.setVisibility(mControlWrapper.isFullScreen() ? VISIBLE : GONE);
-            //mTvMessage.setText("视频解析异常");
-            mTvMessage.setText("视频加载错误");
-        } else if (playState == ConstantKeys.CurrentState.STATE_IDLE) {
+            mTvMessage.setText(getContext().getString(R.string.error_message));
+        }  else if (playState == ConstantKeys.CurrentState.STATE_IDLE) {
             setVisibility(GONE);
         } else if (playState == ConstantKeys.CurrentState.STATE_ONCE_LIVE) {
             setVisibility(GONE);
@@ -207,9 +177,13 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
         return super.dispatchTouchEvent(ev);
     }
 
-    protected ControllerClickListener controllerClickListener;
-
-    public void setControllerClickListener(ControllerClickListener controllerClickListener) {
-        this.controllerClickListener = controllerClickListener;
+    public void addTools(String text,OnClickListener clickListener) {
+        if (mLinearLayout != null && text != null) {
+            View view=  LayoutInflater.from(getContext()).inflate(R.layout.av_error_item,null);
+            TextView textView=view.findViewById(R.id.text);
+            textView.setText(text);
+            view.setOnClickListener(clickListener);
+            mLinearLayout.addView(view);
+        }
     }
 }

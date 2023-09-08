@@ -5,7 +5,7 @@
     <string name="unlocked">Locked</string>
     <string name="locked">Unlocked</string>
     <string name="continue_play">Play</string>
-    <string name="error_message">There is a small problem. Please try again later</string>
+    <string name="error_message">There is a small problem.</string>
     <string name="replay">Replay</string>
     <string name="share">Share</string>
     <string name="retry">Retry</string>

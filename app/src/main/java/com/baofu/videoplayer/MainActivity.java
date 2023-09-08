@@ -65,6 +65,13 @@ public class MainActivity extends AppCompatActivity {
         controller.hideNextBtn();
         //添加自定义工具
         controller.addTools(view);
+
+        controller.addErrorViewItem("retry", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                videoView.replay(false);
+            }
+        });
         controller.setControllerClickListener(new ControllerClickListener() {
             @Override
             public void onClick(View view) {
@@ -79,16 +86,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void next() {
                 CommonUtils.showToast("next");
-            }
-
-            @Override
-            public void tryFix() {
-                CommonUtils.showToast("try fix");
-            }
-
-            @Override
-            public void changeSource() {
-                CommonUtils.showToast("changeSource");
             }
 
 
