@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@+id/rvSelectWorks"
         app:layout_constraintStart_toStartOf="parent"
-        android:text="播放速度"
+        android:text="@string/tv_speed"
         android:textStyle="bold"
         android:textColor="#fff"
         android:textSize="18dp"

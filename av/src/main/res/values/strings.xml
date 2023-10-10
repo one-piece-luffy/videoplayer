@@ -43,4 +43,5 @@
     <string name="av_guide_right_desc">Slide on the right</string>
     <string name="change_source">Change source</string>
     <string name="try_fix">Try fix</string>
+    <string name="tv_speed">Speed</string>
 </resources>
