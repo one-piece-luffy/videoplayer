@@ -93,7 +93,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     //固定为竖屏模式
     boolean orientationPortrait;
 
-    OnVisibilityChangedListener onVisibilityChangedListener;
+
 
     int[] mScaleTypeArray = new int[]{
             SCREEN_SCALE_DEFAULT,
@@ -232,9 +232,7 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
 
     @Override
     public void onVisibilityChanged(boolean isVisible, Animation anim) {
-        if (onVisibilityChangedListener != null) {
-            onVisibilityChangedListener.onVisibilityChanged(isVisible);
-        }
+  
         if (isVisible) {
             bringToFront();
             mLlBottomContainer.setVisibility(VISIBLE);
@@ -565,7 +563,5 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         this.orientationPortrait = orientationPortrait;
     }
 
-    public void setOnVisibilityChangedListener(OnVisibilityChangedListener listener){
-        onVisibilityChangedListener=listener;
-    }
+
 }

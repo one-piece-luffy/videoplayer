@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         controller.enableChangeVolume(true);
         //滑动调节亮度
         controller.enableChangeBrightness(true);
-        controller.set
+        controller.setOnVisibilityChangedListener(null);
         //设置控制器
         videoView.setController(controller);
 

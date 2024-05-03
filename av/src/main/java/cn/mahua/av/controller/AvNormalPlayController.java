@@ -29,6 +29,7 @@ import cn.mahua.av.controller.view.AvTitleView;
 import cn.mahua.av.listener.OnLongPressListener;
 import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.listener.OnSpeedClickListener;
+import cn.mahua.av.listener.OnVisibilityChangedListener;
 import cn.mahua.av.play.ControllerClickListener;
 import cn.mahua.av.utils.AvSharePreference;
 import cn.mahua.av.widget.view.SortVodView;
@@ -70,6 +71,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     //记住播放速度
     boolean remindSpeed = true;
 
+    OnVisibilityChangedListener onVisibilityChangedListener;
 
     @Override
     protected int getLayoutId() {
@@ -232,6 +234,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
 
     @Override
     protected void onVisibilityChanged(boolean isVisible, Animation anim) {
+        if (onVisibilityChangedListener != null) {
+            onVisibilityChangedListener.onVisibilityChanged(isVisible);
+        }
         if (mControlWrapper.isFullScreen()) {
             if (isVisible) {
                 if (mLockButton.getVisibility() == GONE) {
@@ -510,5 +515,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         if(mAvBottomView!=null){
             mAvBottomView.setOrientationPortrait(true);
         }
+    }
+
+    public void setOnVisibilityChangedListener(OnVisibilityChangedListener listener){
+        onVisibilityChangedListener=listener;
     }
 }
