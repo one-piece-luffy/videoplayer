@@ -67,9 +67,17 @@ public abstract class GestureVideoController extends BaseVideoController impleme
      */
     private boolean mChangeBrightness;
     /**
+     * 是否可以改变亮度
+     */
+    private boolean mEnableChangeBrightness = true;
+    /**
      * 是否改变音量
      */
     private boolean mChangeVolume;
+    /**
+     * 是否可以改变音量
+     */
+    private boolean mEnableChangeVolume = true;
     /**
      * 是否可以改变位置
      */
@@ -280,7 +288,7 @@ public abstract class GestureVideoController extends BaseVideoController impleme
                 mChangePosition = mCanChangePosition;
             }
 
-            if (mChangePosition || mChangeBrightness || mChangeVolume) {
+            if (mChangePosition || (mChangeBrightness && mEnableChangeBrightness) || (mChangeVolume && mEnableChangeVolume)) {
                 for (Map.Entry<InterControlView, Boolean> next : mControlComponents.entrySet()) {
                     InterControlView component = next.getKey();
                     if (component instanceof IGestureComponent) {
@@ -292,9 +300,9 @@ public abstract class GestureVideoController extends BaseVideoController impleme
         }
         if (mChangePosition) {
             slideToChangePosition(deltaX);
-        } else if (mChangeBrightness) {
+        } else if (mChangeBrightness&&mEnableChangeBrightness) {
             slideToChangeBrightness(deltaY);
-        } else if (mChangeVolume) {
+        } else if (mChangeVolume && mEnableChangeVolume) {
             slideToChangeVolume(deltaY);
         }
         return true;
@@ -484,5 +492,13 @@ public abstract class GestureVideoController extends BaseVideoController impleme
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
         return false;
+    }
+
+    public void enableChangeBrightness(boolean enableChangeBrightness) {
+        this.mEnableChangeBrightness = enableChangeBrightness;
+    }
+
+    public void enableChangeVolume(boolean enableChangeVolume) {
+        this.mEnableChangeVolume = enableChangeVolume;
     }
 }

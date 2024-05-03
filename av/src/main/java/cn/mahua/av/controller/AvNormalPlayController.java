@@ -501,4 +501,14 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             mErrorView.setVisibility(View.GONE);
         }
     }
+
+    /**
+     * 设置为竖屏全屏模式，无法横屏
+     * @param orientationPortrait
+     */
+    public void setOrientationPortrait(boolean orientationPortrait) {
+        if(mAvBottomView!=null){
+            mAvBottomView.setOrientationPortrait(true);
+        }
+    }
 }

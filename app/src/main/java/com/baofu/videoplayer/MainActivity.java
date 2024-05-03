@@ -113,6 +113,13 @@ public class MainActivity extends AppCompatActivity {
         //是否展示底部进度条
         controller.showBottomProgress(true);
         controller.showShare(true);
+        //固定为竖屏模式
+        controller.setOrientationPortrait(true);
+        //滑动调节音量
+        controller.enableChangeVolume(true);
+        //滑动调节亮度
+        controller.enableChangeBrightness(true);
+        controller.set
         //设置控制器
         videoView.setController(controller);
 

@@ -45,6 +45,7 @@ import com.yc.video.ui.view.InterControlView;
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.listener.OnSpeedClickListener;
+import cn.mahua.av.listener.OnVisibilityChangedListener;
 import cn.mahua.av.play.ControllerClickListener;
 import cn.mahua.av.utils.AvSharePreference;
 import cn.mahua.av.widget.view.SpeedDialog;
@@ -88,6 +89,11 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     int mCurrentScaleType = SCREEN_SCALE_DEFAULT;
     float mLastSpeed;
     float mCurrentSpeed;
+
+    //固定为竖屏模式
+    boolean orientationPortrait;
+
+    OnVisibilityChangedListener onVisibilityChangedListener;
 
     int[] mScaleTypeArray = new int[]{
             SCREEN_SCALE_DEFAULT,
@@ -226,6 +232,9 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
 
     @Override
     public void onVisibilityChanged(boolean isVisible, Animation anim) {
+        if (onVisibilityChangedListener != null) {
+            onVisibilityChangedListener.onVisibilityChanged(isVisible);
+        }
         if (isVisible) {
             bringToFront();
             mLlBottomContainer.setVisibility(VISIBLE);
@@ -249,10 +258,17 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         }
         if (getVisibility() == VISIBLE) {
             boolean isLand = ((Activity) getContext()).getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+
             if (mControlWrapper.isFullScreen() || isLand) {
                 mBottomToolsLayout.setVisibility(VISIBLE);
             } else {
-                mBottomToolsLayout.setVisibility(GONE);
+                if (orientationPortrait) {
+                    mBottomToolsLayout.setVisibility(VISIBLE);
+                    iv_fullscreen.setVisibility(GONE);
+                } else {
+                    mBottomToolsLayout.setVisibility(GONE);
+                    iv_fullscreen.setVisibility(VISIBLE);
+                }
             }
         }
     }
@@ -309,7 +325,14 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         switch (playerState) {
             case ConstantKeys.PlayMode.MODE_NORMAL:
                 iv_fullscreen.setSelected(false);
-                mBottomToolsLayout.setVisibility(GONE);
+                if (orientationPortrait) {
+                    mBottomToolsLayout.setVisibility(VISIBLE);
+                    iv_fullscreen.setVisibility(GONE);
+                } else {
+                    mBottomToolsLayout.setVisibility(GONE);
+                    iv_fullscreen.setVisibility(VISIBLE);
+                }
+
                 break;
             case ConstantKeys.PlayMode.MODE_FULL_SCREEN:
                 iv_fullscreen.setSelected(true);
@@ -534,5 +557,15 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
         }
     }
 
+    /**
+     * 设置为竖屏全屏模式，无法横屏
+     * @param orientationPortrait
+     */
+    public void setOrientationPortrait(boolean orientationPortrait) {
+        this.orientationPortrait = orientationPortrait;
+    }
 
+    public void setOnVisibilityChangedListener(OnVisibilityChangedListener listener){
+        onVisibilityChangedListener=listener;
+    }
 }
