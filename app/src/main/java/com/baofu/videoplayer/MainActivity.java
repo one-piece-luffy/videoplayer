@@ -17,6 +17,7 @@ import com.baofu.videocache.VideoProxyCacheManager;
 import com.baofu.videocache.control.LocalProxyVideoControl;
 import com.baofu.videocache.listener.ISocketListener;
 import com.baofu.videocache.utils.ProxyCacheUtils;
+import com.baofu.videoplayer.utils.Appconstants;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
 import com.yc.video.player.VideoPlayer;
@@ -247,44 +248,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init(){
-        String mr="http://vfx.mtime.cn/Video/2019/03/19/mp4/190319222227698228.mp4";
-        String jsc="https://sod11.btycsw.com/20220302/Zc8fl2aW/index.m3u8";//镜双城//
-      String hzw="https://sod12.btycsw.com/20220718/cjOe7ZMf/index.m3u8";//海贼王
-        String zx="https://v4.dious.cc/20220428/mPYHg8Sl/index.m3u8";//赘婿
-        String jdhx="https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8";//皆大欢喜
-        String chssn="https://new.wanhuatongb2b.net/20230215/jhc1inyn/index.m3u8";//成化十四年
-        findViewById(R.id.mr).setOnClickListener(v -> {
-            Log.e("asdf","========默认=========");
-            Log.e("asdf","========默认=========");
-            mUrl=mr;
+
+        findViewById(R.id.fr).setOnClickListener(v -> {
+            Log.e("asdf","========凡人=========");
+            mUrl= Appconstants.fanren;
             play();
         });
         findViewById(R.id.jsc).setOnClickListener(v -> {
             Log.e("asdf","========镜双城=========");
             Log.e("asdf","========镜双城=========");
-            mUrl=jsc;
+            mUrl=Appconstants.jsc;
             play();
         });
         findViewById(R.id.hzw).setOnClickListener(v -> {
             Log.e("asdf","========海贼王=========");
             Log.e("asdf","========海贼王=========");
-            mUrl=hzw;
+            mUrl=Appconstants.hzw;
             play();
         });
-        findViewById(R.id.zx).setOnClickListener(v -> {
-            Log.e("asdf","========赘婿==========");
-            Log.e("asdf","========赘婿==========");
-            mUrl=zx;
+        findViewById(R.id.hjh).setOnClickListener(v -> {
+            Log.e("asdf","========画江湖==========");
+            Log.e("asdf","========画江湖==========");
+            mUrl=Appconstants.huajianghu;
             play();
         });
-        findViewById(R.id.jdhx).setOnClickListener(v -> {
+        findViewById(R.id.shixiong).setOnClickListener(v -> {
             Log.e("asdf","========皆大欢喜==========");
-            mUrl=jdhx;
-            play();
-        });
-        findViewById(R.id.chssn).setOnClickListener(v -> {
-            Log.e("asdf","========成化十四年==========");
-            mUrl=chssn;
+            mUrl=Appconstants.shixiong;
             play();
         });
     }

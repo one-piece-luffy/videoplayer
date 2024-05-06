@@ -19,5 +19,12 @@ public class SplashActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        findViewById(R.id.tvList).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(SplashActivity.this, ViewPagerActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 }

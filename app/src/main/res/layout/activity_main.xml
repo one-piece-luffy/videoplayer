@@ -25,10 +25,10 @@
             android:orientation="horizontal"
             >
             <Button
-                android:id="@+id/mr"
+                android:id="@+id/fr"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="默认"
+                android:text="凡人"
                 android:layout_marginStart="5dp"
                 />
             <Button
@@ -46,10 +46,10 @@
                 android:layout_marginStart="5dp"
                 />
             <Button
-                android:id="@+id/zx"
+                android:id="@+id/hjh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="赘婿"
+                android:text="画江湖"
                 android:layout_marginStart="5dp"
                 />
         </LinearLayout>
@@ -59,17 +59,10 @@
             android:orientation="horizontal"
             >
             <Button
-                android:id="@+id/jdhx"
+                android:id="@+id/shixiong"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="皆大欢喜"
-                android:layout_marginStart="5dp"
-                />
-            <Button
-                android:id="@+id/chssn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="成化十四年"
+                android:text="师兄啊师兄"
                 android:layout_marginStart="5dp"
                 />
         </LinearLayout>
