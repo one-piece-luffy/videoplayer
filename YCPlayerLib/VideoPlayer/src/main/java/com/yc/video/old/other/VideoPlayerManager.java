@@ -16,6 +16,8 @@ limitations under the License.
 package com.yc.video.old.other;
 
 
+import android.util.Log;
+
 import com.yc.video.player.VideoPlayer;
 
 /**
@@ -109,6 +111,7 @@ public final class VideoPlayerManager {
      */
     public void releaseVideoPlayer() {
         if (mVideoPlayer != null) {
+            Log.e("asdf","video release");
             mVideoPlayer.release();
             mVideoPlayer = null;
         }

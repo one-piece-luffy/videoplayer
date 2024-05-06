@@ -209,7 +209,7 @@ public class PlayerFragement extends Fragment {
 //        }
         binding.videoView.setUrl(link);
         Log.e("asdff","start play");
-//        VideoPlayerManager.instance().setCurrentVideoPlayer(binding.videoView);
+        VideoPlayerManager.instance().setCurrentVideoPlayer(binding.videoView);
         //开始播放
         binding.videoView.start();
 //            dataBinding.videoView.postDelayed(() -> dataBinding.videoView.start(), 300);
