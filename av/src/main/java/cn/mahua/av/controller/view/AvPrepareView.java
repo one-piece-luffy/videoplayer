@@ -155,11 +155,9 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
     public void onPlayStateChanged(int playState,String msg) {
         switch (playState) {
             case ConstantKeys.CurrentState.STATE_PREPARING:
-                Log.e("asdf","STATE_PREPARING");
                 showLoading();
                 break;
             case ConstantKeys.CurrentState.STATE_BUFFERING_PAUSED:
-                Log.e("asdf","STATE_BUFFERING_PAUSED");
                 setVisibility(VISIBLE);
                 mIvStartPlay.setVisibility(View.GONE);
                 mFlNetWarning.setVisibility(GONE);
@@ -175,12 +173,10 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
             case ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING:
             case ConstantKeys.CurrentState.STATE_ONCE_LIVE:
             case ConstantKeys.CurrentState.STATE_PREPARED:
-                Log.e("asdf","STATE_PLAYING:"+playState);
                 setVisibility(GONE);
                 cancelUpdateNetSpeedTimer();
                 break;
             case ConstantKeys.CurrentState.STATE_IDLE:
-                Log.e("asdf","STATE_IDLE");
                 setVisibility(VISIBLE);
                 bringToFront();
                 cancelUpdateNetSpeedTimer();
@@ -190,7 +186,6 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                 mIvThumb.setVisibility(View.VISIBLE);
                 break;
             case ConstantKeys.CurrentState.STATE_START_ABORT:
-                Log.e("asdf","STATE_START_ABORT");
                 setVisibility(VISIBLE);
                 mFlNetWarning.setVisibility(VISIBLE);
                 mFlNetWarning.bringToFront();

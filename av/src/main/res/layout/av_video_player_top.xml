@@ -32,7 +32,6 @@
             android:layout_height="wrap_content"
             android:layout_toLeftOf="@+id/tc_av_localtime"
             android:layout_toRightOf="@+id/iv_back"
-            android:maxEms="10"
             android:padding="10dp"
             android:layout_centerVertical="true"
             android:textColor="@color/white"
@@ -62,7 +61,7 @@
             android:gravity="center"
             android:padding="@dimen/av_tv_padding"
             android:textColor="@color/white"
-            android:textSize="@dimen/av_tv_size"
+            android:textSize="14dp"
             android:visibility="gone" />
 
     </RelativeLayout>
