@@ -49,6 +49,9 @@ public class LocalProxyVideoControl {
     }
 
     public void startRequestVideoInfo(String videoUrl, Map<String, String> headers, Map<String, Object> extraParams) {
+        if(mVideoUrl==null){
+            return;
+        }
         mVideoUrl = videoUrl;
         VideoProxyCacheManager.getInstance().addCacheListener(videoUrl, mListener);
         VideoProxyCacheManager.getInstance().setPlayingUrlMd5(ProxyCacheUtils.computeMD5(videoUrl));
@@ -57,15 +60,24 @@ public class LocalProxyVideoControl {
 
     public void pauseLocalProxyTask() {
         LogUtils.i(TAG, "pauseLocalProxyTask");
+        if(mVideoUrl==null){
+            return;
+        }
         VideoProxyCacheManager.getInstance().pauseCacheTask(mVideoUrl);
     }
 
     public void resumeLocalProxyTask() {
         LogUtils.i(TAG, "resumeLocalProxyTask");
+        if(mVideoUrl==null){
+            return;
+        }
         VideoProxyCacheManager.getInstance().resumeCacheTask(mVideoUrl);
     }
 
     public void seekToCachePosition(long position,long totalDuration) {
+        if(mVideoUrl==null){
+            return;
+        }
         if (totalDuration > 0) {
             float percent = position * 1.0f / totalDuration;
             VideoProxyCacheManager.getInstance().seekToCacheTaskFromClient(mVideoUrl, percent);
@@ -73,6 +85,9 @@ public class LocalProxyVideoControl {
     }
 
     public void releaseLocalProxyResources() {
+        if(mVideoUrl==null){
+            return;
+        }
         VideoProxyCacheManager.getInstance().stopCacheTask(mVideoUrl);   //停止视频缓存任务
         VideoProxyCacheManager.getInstance().releaseProxyReleases(mVideoUrl);
     }

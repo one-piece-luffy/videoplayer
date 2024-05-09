@@ -1,5 +1,7 @@
 package com.baofu.videocache.proxy;
 
+import android.util.Log;
+
 import com.baofu.videocache.socket.SocketProcessTask;
 import com.baofu.videocache.utils.LogUtils;
 import com.baofu.videocache.utils.ProxyCacheUtils;
@@ -31,6 +33,7 @@ public class LocalProxyVideoServer {
             InetAddress address = InetAddress.getByName(ProxyCacheUtils.LOCAL_PROXY_HOST);
             mLocalServer = new ServerSocket(0, 8, address);
             mPort = mLocalServer.getLocalPort();
+            Log.e("asdf","==========++++++++++++=========port:"+mPort);
             ProxyCacheUtils.getConfig().setPort(mPort);
             ProxyCacheUtils.setLocalPort(mPort);
             CountDownLatch startSignal = new CountDownLatch(1);

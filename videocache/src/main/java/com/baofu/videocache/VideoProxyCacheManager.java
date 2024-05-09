@@ -123,6 +123,7 @@ public class VideoProxyCacheManager {
     public static class Builder {
 
         private long mExpireTime = 7 * 24 * 60 * 60 * 1000L;
+        //缓存大小
         private long mMaxCacheSize = 2 * 1024 * 1024 * 1024L;
         private String mFilePath;
         private int mReadTimeOut = 30 * 1000;

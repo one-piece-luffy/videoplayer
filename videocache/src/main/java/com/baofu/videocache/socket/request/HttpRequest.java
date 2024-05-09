@@ -60,12 +60,10 @@ public class HttpRequest {
         int read;
         mInputStream.mark(StorageUtils.DEFAULT_BUFFER_SIZE);
         try {
-            Log.e("asdf","客户端1 start============:");
             read = mInputStream.read(buf, 0, StorageUtils.DEFAULT_BUFFER_SIZE);
-            Log.e("asdf","read:"+read);
-            if(read>=0){
-                Log.e("asdf","客户端1：" + new String(buf, 0, read, Charset.defaultCharset()));
-            }
+//            if(read>=0){
+//                Log.e("asdf","客户端1：" + new String(buf, 0, read, Charset.defaultCharset()));
+//            }
         } catch (SSLException e) {
             ProxyCacheUtils.close(mInputStream);
             throw e;

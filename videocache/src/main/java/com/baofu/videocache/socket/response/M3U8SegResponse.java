@@ -100,8 +100,8 @@ public class M3U8SegResponse extends BaseResponse {
 
     @Override
     public void sendBody(Socket socket, OutputStream outputStream, long pending) throws Exception {
-        Log.e(TAG, "开始解析ts：" + mFileName);
-        Log.e(TAG, "ts exits：" + mSegFile.exists());
+        Log.i(TAG, "开始解析ts：" + mFileName);
+        Log.i(TAG, "ts exits：" + mSegFile.exists());
         if (mSegFile.exists()) {
 //            sendBody2(socket,outputStream);
             sendBody(outputStream, new FileInputStream(mSegFile));
@@ -109,7 +109,7 @@ public class M3U8SegResponse extends BaseResponse {
         }
 
         if (mFileName.startsWith(ProxyCacheUtils.INIT_SEGMENT_PREFIX)) {
-            Log.e(TAG, "ts startsWith INIT_SEGMENT_PREFIX");
+            Log.i(TAG, "ts startsWith INIT_SEGMENT_PREFIX");
             while (!mSegFile.exists()) {
                 downloadFile(mSegUrl, mSegFile);
                 if (mSegLength > 0 && mSegLength == mSegFile.length()) {
@@ -119,14 +119,14 @@ public class M3U8SegResponse extends BaseResponse {
         } else {
 
 //            boolean isM3U8SegCompleted = VideoProxyCacheManager.getInstance().isM3U8SegCompleted(mM3U8Md5, mSegIndex, mSegFile.getAbsolutePath());
-//            Log.e(TAG,"ts已经下载："+isM3U8SegCompleted);
+//            Log.i(TAG,"ts已经下载："+isM3U8SegCompleted);
 //            while (!isM3U8SegCompleted) {
 //                downloadFile(mSegUrl, mSegFile);
 //                isM3U8SegCompleted = VideoProxyCacheManager.getInstance().isM3U8SegCompleted(mM3U8Md5, mSegIndex, mSegFile.getAbsolutePath());
-//                Log.e(TAG,"isM3U8SegCompleted："+isM3U8SegCompleted);
+//                Log.i(TAG,"isM3U8SegCompleted："+isM3U8SegCompleted);
 //                if (mSegLength > 0 && mSegLength == mSegFile.length()) {
 //
-//                    Log.e(TAG,"break");
+//                    Log.i(TAG,"break");
 //
 //                    break;
 //                }
@@ -150,7 +150,7 @@ public class M3U8SegResponse extends BaseResponse {
             byte[] buffer = new byte[bufferedSize];
             long offset = 0;
             boolean shouldSendResponse = shouldSendResponse(socket, mM3U8Md5);
-            Log.e(TAG, "isM3U8SegCompleted：" + shouldSendResponse);
+            Log.i(TAG, "isM3U8SegCompleted：" + shouldSendResponse);
             while (shouldSendResponse) {
                 randomAccessFile.seek(offset);
                 int readLength;
@@ -174,18 +174,18 @@ public class M3U8SegResponse extends BaseResponse {
         byte[] buff = new byte[(int) buffer_size];
         int read ;
         if (mInputStream == null) {
-            Log.e(TAG, "inputstream is null");
+            Log.i(TAG, "inputstream is null");
             return;
         }
         while ((read = mInputStream.read(buff)) != -1) {
             outputStream.write(buff, 0, read);
-//            Log.e(TAG,"write buff");
+//            Log.i(TAG,"write buff");
         }
-        Log.e(TAG, "write finish");
+        Log.i(TAG, "write finish");
     }
 
     private void downloadSegFile(String url, File file) throws Exception {
-//        Log.e(TAG, "开始下载ts 方法二：" + url + " file:" + file.getAbsolutePath());
+//        Log.i(TAG, "开始下载ts 方法二：" + url + " file:" + file.getAbsolutePath());
         HttpURLConnection connection = null;
         InputStream inputStream = null;
         try {
@@ -196,7 +196,7 @@ public class M3U8SegResponse extends BaseResponse {
                 mSegLength = connection.getContentLength();
                 saveSegFile(inputStream, file);
             }
-//            Log.e(TAG, "ts下载完成");
+//            Log.i(TAG, "ts下载完成");
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -219,9 +219,9 @@ public class M3U8SegResponse extends BaseResponse {
         M3U8 m3u8 = VideoInfoParseManager.getInstance().m3u8;
         M3U8Seg ts = null;
         if (m3u8 == null) {
-            Log.e(TAG, "m3u8 is null：" + videoUrl);
+            Log.i(TAG, "m3u8 is null：" + videoUrl);
         }else {
-//            Log.e(TAG, "m3u8 list：" + m3u8.getSegList().size());
+//            Log.i(TAG, "m3u8 list：" + m3u8.getSegList().size());
             for (int i = 0; i < m3u8.getSegList().size(); i++) {
                 M3U8Seg m3U8Seg = m3u8.getSegList().get(i);
                 if (m3U8Seg.getUrl().equals(videoUrl)) {
@@ -232,11 +232,11 @@ public class M3U8SegResponse extends BaseResponse {
         }
 
         if (ts == null) {
-//            Log.e(TAG, "ts is null：" + videoUrl);
+//            Log.i(TAG, "ts is null：" + videoUrl);
             ts=new M3U8Seg();
             ts.setUrl(videoUrl);
         }
-//        Log.e(TAG, "开始下载ts 方法一：" + videoUrl + " file:" + file.getAbsolutePath());
+//        Log.i(TAG, "开始下载ts 方法一：" + videoUrl + " file:" + file.getAbsolutePath());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
@@ -269,7 +269,7 @@ public class M3U8SegResponse extends BaseResponse {
                     fos = new FileOutputStream(tsInitSegmentFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
-//                    Log.e(TAG, "解密ts");
+//                    Log.i(TAG, "解密ts");
                     FileOutputStream fileOutputStream = null;
                     try {
                         byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
@@ -296,7 +296,7 @@ public class M3U8SegResponse extends BaseResponse {
                     contentLength = file.length();
                 }
                 ts.setContentLength(contentLength);
-//                Log.e(TAG, "ts下载完成");
+//                Log.i(TAG, "ts下载完成");
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503 || responseCode == HttpUtils.RESPONSE_429) {
@@ -304,11 +304,11 @@ public class M3U8SegResponse extends BaseResponse {
                         //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
                         int ran = 4000 + (int) (Math.random() * 20000);
                         Thread.sleep(ran);
-                        Log.e(TAG, "sleep:" + ran);
+                        Log.i(TAG, "sleep:" + ran);
                         downloadFile(videoUrl, file);
                     }
                 } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-//                    Log.e(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+//                    Log.i(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
 
                     downloadFile(videoUrl, file);
                 }
