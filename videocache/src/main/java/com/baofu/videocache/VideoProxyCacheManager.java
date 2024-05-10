@@ -514,6 +514,9 @@ public class VideoProxyCacheManager {
      * 暂停缓存任务, 一般是主线程操作
      */
     public void pauseCacheTask(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             cacheTask.pauseCacheTask();
@@ -521,6 +524,9 @@ public class VideoProxyCacheManager {
     }
 
     public void stopCacheTask(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             cacheTask.stopCacheTask();
@@ -532,6 +538,9 @@ public class VideoProxyCacheManager {
      * 恢复缓存任务,一般是主线程操作
      */
     public void resumeCacheTask(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             cacheTask.resumeCacheTask();
@@ -543,6 +552,9 @@ public class VideoProxyCacheManager {
      * 纯粹客户端的操作, 一般是主线程操作
      */
     public void seekToCacheTaskFromClient(String url, float percent) {
+        if (TextUtils.isEmpty(url)) {
+            return;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             //当前seek到什么position在客户端不知道
@@ -618,12 +630,15 @@ public class VideoProxyCacheManager {
         }
 
         final boolean seekByServer = shouldSeek;
-        VideoProxyThreadUtils.runOnUiThread(() -> {
-            VideoCacheTask cacheTask = mCacheTaskMap.get(url);
-            if (cacheTask != null && seekByServer) {
-                cacheTask.seekToCacheTaskFromServer(startPosition);
-            }
-        });
+        if (!TextUtils.isEmpty(url)) {
+            VideoProxyThreadUtils.runOnUiThread(() -> {
+
+                VideoCacheTask cacheTask = mCacheTaskMap.get(url);
+                if (cacheTask != null && seekByServer) {
+                    cacheTask.seekToCacheTaskFromServer(startPosition);
+                }
+            });
+        }
     }
 
     /**
@@ -639,12 +654,14 @@ public class VideoProxyCacheManager {
             }
         }
         final boolean seekByServer = shouldSeek;
-        VideoProxyThreadUtils.runOnUiThread(() -> {
-            VideoCacheTask cacheTask = mCacheTaskMap.get(url);
-            if (cacheTask != null && seekByServer) {
-                cacheTask.seekToCacheTaskFromServer(segIndex);
-            }
-        });
+        if (!TextUtils.isEmpty(url)) {
+            VideoProxyThreadUtils.runOnUiThread(() -> {
+                VideoCacheTask cacheTask = mCacheTaskMap.get(url);
+                if (cacheTask != null && seekByServer) {
+                    cacheTask.seekToCacheTaskFromServer(segIndex);
+                }
+            });
+        }
     }
 
     /**
@@ -655,10 +672,13 @@ public class VideoProxyCacheManager {
             //说明也没有seek 操作
             return true;
         }
-        VideoCacheTask cacheTask = mCacheTaskMap.get(url);
-        if (cacheTask != null) {
-            return cacheTask.isMp4PositionSegExisted(startPosition);
+        if (!TextUtils.isEmpty(url)) {
+            VideoCacheTask cacheTask = mCacheTaskMap.get(url);
+            if (cacheTask != null) {
+                return cacheTask.isMp4PositionSegExisted(startPosition);
+            }
         }
+
         return true;
     }
 
@@ -666,6 +686,9 @@ public class VideoProxyCacheManager {
      * 当前MP4文件是否下载完全
      */
     public boolean isMp4Completed(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             return cacheTask.isMp4Completed();
@@ -677,6 +700,9 @@ public class VideoProxyCacheManager {
      * 从position开始,之后的数据都缓存完全了.
      */
     public boolean isMp4CompletedFromPosition(String url, long position) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             return cacheTask.isMp4CompletedFromPosition(position);
@@ -688,6 +714,9 @@ public class VideoProxyCacheManager {
      * 当前position数据是否可以write到socket中
      */
     public boolean shouldWriteResponseData(String url, long position) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             return cacheTask.isMp4PositionSegExisted(position);
@@ -696,6 +725,9 @@ public class VideoProxyCacheManager {
     }
 
     public long getMp4CachedPosition(String url, long position) {
+        if (TextUtils.isEmpty(url)) {
+            return 0L;
+        }
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null) {
             return cacheTask.getMp4CachedPosition(position);

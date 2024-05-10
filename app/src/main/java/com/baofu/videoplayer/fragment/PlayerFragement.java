@@ -1,5 +1,6 @@
 package com.baofu.videoplayer.fragment;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -14,8 +15,10 @@ import androidx.fragment.app.Fragment;
 
 import com.baofu.base.utils.CommonUtils;
 import com.baofu.videocache.control.LocalProxyVideoControl;
+import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.databinding.FragmentPlayerBinding;
+import com.baofu.videoplayer.utils.LocalProxyVideoInstance;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.old.other.VideoPlayerManager;
 import com.yc.video.player.OnVideoStateListener;
@@ -30,7 +33,6 @@ import cn.mahua.av.play.ControllerClickListener;
 public class PlayerFragement extends Fragment {
     FragmentPlayerBinding binding;
 
-    LocalProxyVideoControl mLocalProxyVideoControl;
     public String mUrl;
     public int mPosition;
     boolean isFirst=true;
@@ -110,9 +112,7 @@ public class PlayerFragement extends Fragment {
 
             @Override
             public void onUserSeek(long position) {
-                if (mLocalProxyVideoControl != null) {
-                    mLocalProxyVideoControl.seekToCachePosition(position, binding.videoView.getDuration());
-                }
+                LocalProxyVideoInstance.getInstance().seekto(position,binding.videoView.getDuration());
             }
         });
         binding.videoView.addOnStateChangeListener(new OnVideoStateListener() {
@@ -175,9 +175,7 @@ public class PlayerFragement extends Fragment {
         }
 
 
-        if (mLocalProxyVideoControl != null) {
-            mLocalProxyVideoControl.pauseLocalProxyTask();
-        }
+        LocalProxyVideoInstance.getInstance().release();
         try {
             binding.videoView.release();
         } catch (Exception e) {
@@ -190,23 +188,20 @@ public class PlayerFragement extends Fragment {
         );
 
         String link = mUrl;
-//        if (url.contains("m3u8") &&ProxyCacheUtils.getConfig() != null && ProxyCacheUtils.getConfig().getFilePath() != null) {
-//            //开启视频缓存
-//            ProxyCacheUtils.getConfig().setUseOkHttp(true);
-//            link = ProxyCacheUtils.getProxyUrl(Uri.parse(url).toString(), header, null);
-//            header.put("type", "m3u8");
-//            new Thread(){
-//                @Override
-//                public void run() {
-//                    super.run();
-//                    //开始缓存
-//                    if (mLocalProxyVideoControl == null) {
-//                        mLocalProxyVideoControl = new LocalProxyVideoControl();
-//                    }
-//                    mLocalProxyVideoControl.startRequestVideoInfo(url, header, null);
-//                }
-//            }.start();
-//        }
+        if (mUrl.contains("m3u8") &&ProxyCacheUtils.getConfig() != null && ProxyCacheUtils.getConfig().getFilePath() != null) {
+            //开启视频缓存
+            ProxyCacheUtils.getConfig().setUseOkHttp(true);
+            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), header, null);
+            header.put("type", "m3u8");
+            new Thread(){
+                @Override
+                public void run() {
+                    super.run();
+                    //开始缓存
+                    LocalProxyVideoInstance.getInstance().start(mUrl,header,null);
+                }
+            }.start();
+        }
         binding.videoView.setUrl(link);
         Log.e("asdff","start play");
         VideoPlayerManager.instance().setCurrentVideoPlayer(binding.videoView);
@@ -224,6 +219,7 @@ public class PlayerFragement extends Fragment {
             play();
         }
         binding.videoView.resume();
+        LocalProxyVideoInstance.getInstance().resume();
         Log.e("asdff","onresume:"+mPosition);
     }
 
@@ -237,6 +233,7 @@ public class PlayerFragement extends Fragment {
     public void onPause() {
         super.onPause();
         binding.videoView.pause();
+        LocalProxyVideoInstance.getInstance().pause();
     }
 
     @Override
@@ -244,6 +241,7 @@ public class PlayerFragement extends Fragment {
         super.onDestroy();
         binding.videoView.release();
         Log.e("asdff","onDestroy");
+        LocalProxyVideoInstance.getInstance().release();
     }
 
     @Override

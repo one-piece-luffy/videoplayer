@@ -49,7 +49,7 @@ public class LocalProxyVideoControl {
     }
 
     public void startRequestVideoInfo(String videoUrl, Map<String, String> headers, Map<String, Object> extraParams) {
-        if(mVideoUrl==null){
+        if(videoUrl==null){
             return;
         }
         mVideoUrl = videoUrl;
