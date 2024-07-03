@@ -32,10 +32,17 @@ public class M3U8Response extends BaseResponse {
     private String mMd5;
     private File mFile;
 
-    public M3U8Response(HttpRequest request, String videoUrl, Map<String, String> headers, long time) {
+    public M3U8Response(HttpRequest request, String videoUrl,String name, Map<String, String> headers, long time) {
         super(request, videoUrl, headers, time);
         mMd5 = ProxyCacheUtils.computeMD5(videoUrl);
-        mFile = new File(mCachePath, mMd5 + File.separator + mMd5 + StorageUtils.PROXY_M3U8_SUFFIX);
+        String fileName = null;
+        if (TextUtils.isEmpty(name)) {
+            fileName = mMd5 + File.separator + mMd5 + StorageUtils.PROXY_M3U8_SUFFIX;
+
+        } else {
+            fileName = name + File.separator + name + StorageUtils.PROXY_M3U8_SUFFIX;
+        }
+        mFile = new File(mCachePath, fileName);
         mResponseState = ResponseState.OK;
     }
 
@@ -46,6 +53,7 @@ public class M3U8Response extends BaseResponse {
         }
         Object lock = VideoLockManager.getInstance().getLock(mMd5);
         int waitTime = WAIT_TIME;
+        Log.e(TAG,"=========mFile:"+mFile.getAbsolutePath());
         Log.e(TAG,"=========等待解析网络m3u8");
         /**
          * 1.如果文件不存在或者proxy M3U8文件没有生成
@@ -56,6 +64,7 @@ public class M3U8Response extends BaseResponse {
                 Log.e(TAG,"=========VideoCacheException");
                 throw new VideoCacheException("M3U8 is live type");
             }
+//            Log.e(TAG,"=========mFile exist:"+mFile.exists()+"  proxy ready:"+VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5));
             synchronized (lock) {
                 lock.wait(waitTime);
             }

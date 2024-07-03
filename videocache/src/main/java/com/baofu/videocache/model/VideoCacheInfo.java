@@ -20,6 +20,7 @@ public class VideoCacheInfo implements Serializable {
     private float mSpeed;                          //缓存速度
     private Map<Integer, Long> mTsLengthMap;       //key表示ts的索引，value表示索引分片的content-length
     private LinkedHashMap<Long, Long> mVideoSegMap;//视频分片的保存结构
+    public String name;
 
     /**
      * mVideoSegMap
@@ -28,8 +29,9 @@ public class VideoCacheInfo implements Serializable {
      * 一定要按照顺序来存储
      */
 
-    public VideoCacheInfo(String url) {
+    public VideoCacheInfo(String url,String name) {
         mVideoUrl = url;
+        this.name=name;
     }
 
     public String getVideoUrl() {

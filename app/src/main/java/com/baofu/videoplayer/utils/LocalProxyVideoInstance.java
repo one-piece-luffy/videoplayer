@@ -53,11 +53,11 @@ public class LocalProxyVideoInstance {
         DefaultExecutor.execute(() -> localProxyVideoControl.releaseLocalProxyResources());
     }
 
-    public void start(String url, Map<String, String> header, Map<String, Object> param) {
+    public void start(String url,String name, Map<String, String> header, Map<String, Object> param) {
         if (localProxyVideoControl == null) {
             init();
         }
-        DefaultExecutor.execute(() -> localProxyVideoControl.startRequestVideoInfo(url, header, param));
+        DefaultExecutor.execute(() -> localProxyVideoControl.startRequestVideoInfo(url, name,header, param));
     }
 
     public void seekto(long position, long totalDuration) {

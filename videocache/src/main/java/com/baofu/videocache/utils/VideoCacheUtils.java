@@ -1,39 +1,22 @@
 package com.baofu.videocache.utils;
 
 
-import static android.os.Environment.DIRECTORY_DOWNLOADS;
-import static android.os.Environment.DIRECTORY_MOVIES;
-import static android.os.Environment.DIRECTORY_MUSIC;
-import static android.os.Environment.DIRECTORY_PICTURES;
-
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.media.MediaScannerConnection;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.StatFs;
-import android.provider.MediaStore;
 import android.text.TextUtils;
 
-import androidx.annotation.RequiresApi;
+import com.baofu.videocache.model.VideoCacheInfo;
 
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class VideoDownloadUtils {
+public class VideoCacheUtils {
 
     private static final String TAG = "VideoDownloadUtils";
     public static final int DEFAULT_BUFFER_SIZE = 8 * 1024;
@@ -171,5 +154,90 @@ public class VideoDownloadUtils {
         SimpleDateFormat sdf = new SimpleDateFormat("yyMMdd_HHmmss");//设置日期格式
         Date now = new Date();
         return sdf.format(now);
+    }
+
+    public static String getFileName(VideoCacheInfo cacheInfo) {
+
+        String fileName;
+        if (!TextUtils.isEmpty(cacheInfo.name)) {
+            fileName = cacheInfo.name;
+
+        } else if (!TextUtils.isEmpty(cacheInfo.getMd5())) {
+            fileName = cacheInfo.getMd5();
+        } else {
+            fileName = ProxyCacheUtils.computeMD5(cacheInfo.getVideoUrl());
+        }
+        if (TextUtils.isEmpty(fileName) || "0".equals(fileName)) {
+            UUID uuid = UUID.randomUUID();
+            fileName = uuid.toString();
+        }
+        if (!TextUtils.isEmpty(fileName) && fileName.length() > 35) {
+            fileName = fileName.substring(0, 35);
+        }
+        if (TextUtils.isEmpty(fileName) || "0".equals(fileName)) {
+            String arr = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            Random random = new Random();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 3; i++) {
+                sb.append(arr.charAt(random.nextInt(arr.length())));
+            }
+            fileName = sb.toString() + System.currentTimeMillis();
+
+
+        }
+
+        return fileName;
+    }
+    public static String getFileName(String name,String url) {
+
+        String fileName;
+        if (!TextUtils.isEmpty(name)) {
+            fileName = filterFileName(name);
+
+        }  else {
+            fileName = ProxyCacheUtils.computeMD5(url);
+        }
+        if (TextUtils.isEmpty(fileName) || "0".equals(fileName)) {
+            UUID uuid = UUID.randomUUID();
+            fileName = uuid.toString();
+        }
+        if (!TextUtils.isEmpty(fileName) && fileName.length() > 35) {
+            fileName = fileName.substring(0, 35);
+        }
+        if (TextUtils.isEmpty(fileName) || "0".equals(fileName)) {
+            String arr = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            Random random = new Random();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 3; i++) {
+                sb.append(arr.charAt(random.nextInt(arr.length())));
+            }
+            fileName = sb.toString() + System.currentTimeMillis();
+
+
+        }
+
+        return fileName;
+    }
+
+    /**
+     * 过滤一些不合法的文件名
+     */
+    public static String filterFileName(String fileName){
+        if(!TextUtils.isEmpty(fileName)){
+            String specialChars = "/:<>?|'\"*\\";
+
+            // 遍历文件名中的每个字符，检查是否为特殊字符
+            for (int i = 0; i < fileName.length(); i++) {
+                char c = fileName.charAt(i);
+                if (specialChars.indexOf(c) != -1) {
+                    // 如果找到特殊字符，则将其替换为下划线 "_"
+                    fileName = fileName.replace(String.valueOf(c), "_");
+                }
+            }
+            fileName = fileName.trim();
+        }
+
+        return fileName;
+
     }
 }

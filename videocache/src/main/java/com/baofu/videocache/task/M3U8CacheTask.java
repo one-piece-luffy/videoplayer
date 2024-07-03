@@ -2,6 +2,7 @@ package com.baofu.videocache.task;
 
 import android.util.Log;
 
+import com.baofu.videocache.common.VideoCacheConstants;
 import com.baofu.videocache.m3u8.M3U8;
 import com.baofu.videocache.m3u8.M3U8Seg;
 import com.baofu.videocache.model.VideoCacheInfo;
@@ -55,12 +56,14 @@ public class M3U8CacheTask extends VideoCacheTask {
     @Override
     public void startCacheTask() {
         if (isTaskRunning()) {
+            Log.e(TAG,"startCacheTask isTaskRunning");
             return;
         }
         notifyOnTaskStart();
         initM3U8TsInfo();
         int seekIndex = mCachedSegCount > 1 && mCachedSegCount <= mTotalSegCount ? mCachedSegCount - 1 : mCachedSegCount;
         startRequestVideoRange(seekIndex);
+        Log.e(TAG,"startCacheTask");
     }
 
     private void initM3U8TsInfo() {
@@ -213,7 +216,9 @@ public class M3U8CacheTask extends VideoCacheTask {
         FileChannel foutc = null;
         Response response=null;
         try {
-
+            if(mHeaders!=null&&mHeaders.containsKey(VideoCacheConstants.NAME)){
+                mHeaders.remove(VideoCacheConstants.NAME);
+            }
             response = OkHttpUtil.getInstance().requestSync(videoUrl,mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
@@ -258,7 +263,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                     contentLength = file.length();
                 }
                 ts.setContentLength(contentLength);
-//                Log.e(TAG,"队列ts下载完成");
+                Log.e(TAG,"队列ts下载完成");
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {

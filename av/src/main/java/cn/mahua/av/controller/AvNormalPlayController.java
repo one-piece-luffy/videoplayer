@@ -513,7 +513,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
      */
     public void setOrientationPortrait(boolean orientationPortrait) {
         if(mAvBottomView!=null){
-            mAvBottomView.setOrientationPortrait(true);
+            mAvBottomView.setOrientationPortrait(orientationPortrait);
         }
     }
 

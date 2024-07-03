@@ -3,6 +3,7 @@ package com.baofu.videocache.socket;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.baofu.videocache.common.VideoCacheConstants;
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.socket.request.HttpRequest;
 import com.baofu.videocache.socket.response.BaseResponse;
@@ -71,9 +72,14 @@ public class SocketProcessTask implements Runnable {
 
                     Map<String, String> headers = ProxyCacheUtils.str2Map(videoHeaders);
                     LogUtils.d(TAG, videoUrl + "\n" + videoTypeInfo + "\n" + videoHeaders);
-
+                    String name=null;
+                    Log.e(TAG,"name:"+headers.get(VideoCacheConstants.NAME));
+                    if(headers.containsKey("VideoCacheConstants.NAME")){
+                        name=headers.get(VideoCacheConstants.NAME);
+                        headers.remove(VideoCacheConstants.NAME);
+                    }
                     if (TextUtils.equals(ProxyCacheUtils.M3U8, videoTypeInfo)) {
-                        response = new M3U8Response(request, videoUrl, headers, currentTime);
+                        response = new M3U8Response(request, videoUrl,name, headers, currentTime);
                     } else if (TextUtils.equals(ProxyCacheUtils.NON_M3U8, videoTypeInfo)) {
                         response = new Mp4Response(request, videoUrl, headers, currentTime);
                     } else {
@@ -81,7 +87,7 @@ public class SocketProcessTask implements Runnable {
                         HttpURLConnection connection = HttpUtils.getConnection(videoUrl, headers);
                         String contentType = connection.getContentType();
                         if (ProxyCacheUtils.isM3U8Mimetype(contentType)) {
-                            response = new M3U8Response(request, videoUrl, headers, currentTime);
+                            response = new M3U8Response(request, videoUrl, name,headers, currentTime);
                         } else {
                             response = new Mp4Response(request, videoUrl, headers, currentTime);
                         }

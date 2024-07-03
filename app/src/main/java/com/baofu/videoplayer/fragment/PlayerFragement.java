@@ -198,7 +198,7 @@ public class PlayerFragement extends Fragment {
                 public void run() {
                     super.run();
                     //开始缓存
-                    LocalProxyVideoInstance.getInstance().start(mUrl,header,null);
+                    LocalProxyVideoInstance.getInstance().start(mUrl,"列表",header,null);
                 }
             }.start();
         }

@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.baofu.videocache.common.VideoCacheConstants;
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.common.VideoType;
 import com.baofu.videocache.common.VideoParams;
@@ -14,9 +15,9 @@ import com.baofu.videocache.m3u8.M3U8Utils;
 import com.baofu.videocache.model.VideoCacheInfo;
 import com.baofu.videocache.okhttp.OkHttpManager;
 import com.baofu.videocache.utils.HttpUtils;
-import com.baofu.videocache.utils.LogUtils;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.baofu.videocache.utils.StorageUtils;
+import com.baofu.videocache.utils.VideoCacheUtils;
 import com.baofu.videocache.utils.VideoParamsUtils;
 import com.baofu.videocache.utils.VideoProxyThreadUtils;
 
@@ -182,8 +183,11 @@ public class VideoInfoParseManager {
      * @param cacheInfo
      */
     private void parseNetworkM3U8Info(VideoCacheInfo cacheInfo) {
-        Log.e(TAG,"parseNetworkM3U8Info ");
+        Log.e(TAG,"==parseNetworkM3U8Info ");
         try {
+            if(mHeaders!=null&&mHeaders.containsKey(VideoCacheConstants.NAME)){
+                mHeaders.remove(VideoCacheConstants.NAME);
+            }
             m3u8 = M3U8Utils.parseNetworkM3U8Info(cacheInfo.getVideoUrl(), cacheInfo.getVideoUrl(), mHeaders, 0);
             Log.e(TAG,"开始创建m3u8文件 ");
 //            if (m3u8.isIsLive()) {
@@ -194,7 +198,7 @@ public class VideoInfoParseManager {
                 cacheInfo.setTotalTs(m3u8.getSegCount());
                 // 1.将M3U8结构保存到本地
                 VideoProxyThreadUtils.submitRunnableTask(() -> {
-                    File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
+                    File localM3U8File = new File(cacheInfo.getSavePath(), VideoCacheUtils.getFileName(cacheInfo) + StorageUtils.LOCAL_M3U8_SUFFIX);
                     try {
                         M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
                     } catch (Exception e) {
@@ -202,7 +206,7 @@ public class VideoInfoParseManager {
                     }
                 });
 
-                File proxyM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.PROXY_M3U8_SUFFIX);
+                File proxyM3U8File = new File(cacheInfo.getSavePath(), VideoCacheUtils.getFileName(cacheInfo) + StorageUtils.PROXY_M3U8_SUFFIX);
                 if (proxyM3U8File.exists() && cacheInfo.getLocalPort() == ProxyCacheUtils.getLocalPort()) {
                     //说明本地代理文件存在，连端口号都一样的，不用做任何改变
 
@@ -222,19 +226,19 @@ public class VideoInfoParseManager {
     }
 
     public void parseProxyM3U8Info(VideoCacheInfo cacheInfo, Map<String, String> headers, VideoInfoParsedListener listener) {
-        Log.e(TAG,"parseProxyM3U8Info");
+        Log.e(TAG,"===parseProxyM3U8Info");
         mHeaders = headers;
         mListener = listener;
-        File proxyM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.PROXY_M3U8_SUFFIX);
+        File proxyM3U8File = new File(cacheInfo.getSavePath(), VideoCacheUtils.getFileName(cacheInfo) + StorageUtils.PROXY_M3U8_SUFFIX);
         if (!proxyM3U8File.exists()) {
-            Log.e(TAG,"m3u8  exit true");
+            Log.e(TAG,"==m3u8  exit false");
             parseNetworkM3U8Info(cacheInfo);
         } else {
-            Log.e(TAG,"m3u8 exit false");
+            Log.e(TAG,"==m3u8 exit true");
             VideoProxyThreadUtils.submitRunnableTask(() -> {
                 boolean result = M3U8Utils.updateM3U8TsPortInfo(proxyM3U8File, ProxyCacheUtils.getLocalPort());
                 if (result) {
-                    File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
+                    File localM3U8File = new File(cacheInfo.getSavePath(), VideoCacheUtils.getFileName(cacheInfo) + StorageUtils.LOCAL_M3U8_SUFFIX);
                     try {
                         M3U8 m3u8 = M3U8Utils.parseLocalM3U8Info(localM3U8File, cacheInfo.getVideoUrl());
                         VideoInfoParseManager.getInstance().m3u8=m3u8;

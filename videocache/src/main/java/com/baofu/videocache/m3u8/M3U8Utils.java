@@ -3,13 +3,14 @@ package com.baofu.videocache.m3u8;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.baofu.videocache.common.VideoCacheConstants;
 import com.baofu.videocache.common.VideoCacheException;
 import com.baofu.videocache.utils.HttpUtils;
 import com.baofu.videocache.utils.LogUtils;
 import com.baofu.videocache.utils.OkHttpUtil;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.baofu.videocache.utils.UrlUtils;
-import com.baofu.videocache.utils.VideoDownloadUtils;
+import com.baofu.videocache.utils.VideoCacheUtils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -46,6 +47,9 @@ public class M3U8Utils {
      * @throws IOException
      */
     public static M3U8 parseNetworkM3U8Info(String parentUrl, String videoUrl, Map<String, String> headers, int retryCount) throws IOException {
+        if(headers!=null&&headers.containsKey(VideoCacheConstants.NAME)){
+            headers.remove(VideoCacheConstants.NAME);
+        }
         BufferedReader bufferedReader = null;
         Response response=null;
         try {
@@ -54,8 +58,9 @@ public class M3U8Utils {
 
             response = OkHttpUtil.getInstance().requestSync(videoUrl,headers);
             int responseCode =response.code();
-            Log.e(TAG, "parseNetworkM3U8Info responseCode=" + responseCode);
+            Log.e(TAG, "==parseNetworkM3U8Info responseCode=" + responseCode);
             if (responseCode == HttpUtils.RESPONSE_503 && retryCount < HttpUtils.MAX_RETRY_COUNT) {
+                Log.e(TAG, "==parseNetworkM3U8Info responseCode=" + responseCode);
                 return parseNetworkM3U8Info(parentUrl, videoUrl, headers, retryCount + 1);
             }
             bufferedReader = new BufferedReader(new InputStreamReader(response.body().byteStream()));
@@ -147,7 +152,7 @@ public class M3U8Utils {
                 // It has '#EXT-X-STREAM-INF' tag;
                 if (hasStreamInfo) {
                     String tempUrl = UrlUtils.getM3U8MasterUrl(videoUrl, line);
-
+                    Log.e(TAG, "==parseNetworkM3U8Info hasStreamInfo："+tempUrl );
                     return parseNetworkM3U8Info(parentUrl,getM3U8AbsoluteUrl(videoUrl, line), headers, retryCount+1);
                 }
                 if (Math.abs(tsDuration) < 0.001f) {
@@ -197,6 +202,7 @@ public class M3U8Utils {
             m3u8.setSequence(sequence);
             //去掉这个，不然有的m3u8无法下载  https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8
 //            m3u8.setIsLive(!hasEndList);
+            Log.e(TAG, "m3u8解析完毕");
             return m3u8;
         } catch (IOException e) {
             e.printStackTrace();
@@ -323,6 +329,7 @@ public class M3U8Utils {
             m3u8.setTargetDuration(targetDuration);
             m3u8.setVersion(version);
             m3u8.setSequence(sequence);
+            Log.e(TAG, "local m3u8解析完毕");
             return m3u8;
         } catch (IOException e) {
             e.printStackTrace();
@@ -551,7 +558,7 @@ public class M3U8Utils {
                         while ((line = bufferedReader.readLine()) != null) {
                             textBuilder.append(line);
                         }
-                        boolean isMessyStr = VideoDownloadUtils.isMessyCode(textBuilder.toString());
+                        boolean isMessyStr = VideoCacheUtils.isMessyCode(textBuilder.toString());
                         m3u8Ts.mIsMessyKey=isMessyStr;
                         File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
                         FileOutputStream outputStream = new FileOutputStream(keyFile);
@@ -613,7 +620,7 @@ public class M3U8Utils {
                         while ((line = bufferedReader.readLine()) != null) {
                             textBuilder.append(line);
                         }
-                        m3u8Ts.mIsMessyKey=VideoDownloadUtils.isMessyCode(textBuilder.toString());
+                        m3u8Ts.mIsMessyKey= VideoCacheUtils.isMessyCode(textBuilder.toString());
                         File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
                         FileOutputStream outputStream = new FileOutputStream(keyFile);
                         outputStream.write(textBuilder.toString().getBytes());

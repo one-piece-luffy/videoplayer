@@ -14,6 +14,7 @@ import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.baofu.videocache.VideoInfoParseManager;
 import com.baofu.videocache.VideoProxyCacheManager;
+import com.baofu.videocache.common.VideoCacheConstants;
 import com.baofu.videocache.control.LocalProxyVideoControl;
 import com.baofu.videocache.listener.ISocketListener;
 import com.baofu.videocache.utils.ProxyCacheUtils;
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     String mUrl;
     //倍速播放速度
     String speed;
+    String name;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         controller.showBottomProgress(true);
         controller.showShare(true);
         //固定为竖屏模式
-        controller.setOrientationPortrait(true);
+        controller.setOrientationPortrait(false);
         //滑动调节音量
         controller.enableChangeVolume(true);
         //滑动调节亮度
@@ -132,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
         //直接显示加载框
 //        controller.showPreviewLoading();
     }
-    private void play(){
+    private void play(String name){
 
         videoView.release();
         if(mLocalProxyVideoControl!=null){
@@ -151,14 +153,16 @@ public class MainActivity extends AppCompatActivity {
             header.put("type","m3u8");
             //开启视频缓存
             ProxyCacheUtils.getConfig().setUseOkHttp(true);
-            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), null, null);
+            Map<String,String> proxyHeader=new HashMap<>();
+            proxyHeader.put(VideoCacheConstants.NAME,name);
+            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), proxyHeader, null);
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
                     //开始缓存
                     mLocalProxyVideoControl = new LocalProxyVideoControl();
-                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, null, null);
+                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,proxyHeader, null);
                 }
             }.start();
 //            VideoProxyCacheManager.getInstance().addSocketListener(mUrl, new ISocketListener() {
@@ -252,30 +256,35 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.fr).setOnClickListener(v -> {
             Log.e("asdf","========凡人=========");
             mUrl= Appconstants.fanren;
-            play();
+            name="凡人";
+            play(name);
         });
         findViewById(R.id.jsc).setOnClickListener(v -> {
             Log.e("asdf","========镜双城=========");
             Log.e("asdf","========镜双城=========");
             mUrl=Appconstants.jsc;
-            play();
+            name="镜双城";
+            play(name);
         });
         findViewById(R.id.hzw).setOnClickListener(v -> {
             Log.e("asdf","========海贼王=========");
             Log.e("asdf","========海贼王=========");
             mUrl=Appconstants.hzw;
-            play();
+            name="海贼王";
+            play(name);
         });
         findViewById(R.id.hjh).setOnClickListener(v -> {
             Log.e("asdf","========画江湖==========");
             Log.e("asdf","========画江湖==========");
             mUrl=Appconstants.huajianghu;
-            play();
+            name="画江湖";
+            play(name);
         });
         findViewById(R.id.shixiong).setOnClickListener(v -> {
             Log.e("asdf","========皆大欢喜==========");
             mUrl=Appconstants.shixiong;
-            play();
+            name="皆大欢喜";
+            play(name);
         });
     }
     @Override

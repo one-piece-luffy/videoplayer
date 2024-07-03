@@ -30,10 +30,10 @@ import com.baofu.videocache.task.VideoCacheTask;
 import com.baofu.videocache.utils.LogUtils;
 import com.baofu.videocache.utils.ProxyCacheUtils;
 import com.baofu.videocache.utils.StorageUtils;
+import com.baofu.videocache.utils.VideoCacheUtils;
 import com.baofu.videocache.utils.VideoProxyThreadUtils;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -311,22 +311,7 @@ public class VideoProxyCacheManager {
         removeVideoSeekInfo(md5);
     }
 
-    /**
-     *
-     * @param videoUrl  视频url
-     */
-    public void startRequestVideoInfo(String videoUrl) {
-        startRequestVideoInfo(videoUrl, new HashMap<>());
-    }
 
-    /**
-     *
-     * @param videoUrl 视频url
-     * @param headers  请求的头部信息
-     */
-    public void startRequestVideoInfo(String videoUrl, Map<String, String> headers) {
-        startRequestVideoInfo(videoUrl, headers, new HashMap<>());
-    }
     /**
      *
      * @param videoUrl    视频url
@@ -334,10 +319,11 @@ public class VideoProxyCacheManager {
      * @param extraParams 额外参数，这个map很有用，例如我已经知道当前请求视频的类型和长度，都可以在extraParams中设置,
      *                    详情见VideoParams
      */
-    public void startRequestVideoInfo(String videoUrl, Map<String, String> headers, Map<String, Object> extraParams) {
+    public void startRequestVideoInfo(String videoUrl, String name,Map<String, String> headers, Map<String, Object> extraParams) {
         StorageManager.getInstance().initCacheInfo();
         String md5 = ProxyCacheUtils.computeMD5(videoUrl);
-        File saveDir = new File(ProxyCacheUtils.getConfig().getFilePath(), md5);
+        String fileName= VideoCacheUtils.getFileName(name,videoUrl);
+        File saveDir = new File(ProxyCacheUtils.getConfig().getFilePath(), fileName);
         if (!saveDir.exists()) {
             boolean mk=saveDir.mkdir();
             Log.e(TAG,"创建目录:"+mk+" "+ saveDir.getAbsolutePath());
@@ -345,11 +331,11 @@ public class VideoProxyCacheManager {
             Log.e(TAG,"目录已存在:"+ saveDir.getAbsolutePath());
         }
         VideoCacheInfo videoCacheInfo = StorageUtils.readVideoCacheInfo(saveDir);
-        Log.e(TAG, "startRequestVideoInfo " + videoCacheInfo);
+        Log.e(TAG, "===startRequestVideoInfo " + videoCacheInfo);
         if (videoCacheInfo == null) {
             Log.e(TAG,"videoCacheInfo is null");
             //之前没有缓存信息
-            videoCacheInfo = new VideoCacheInfo(videoUrl);
+            videoCacheInfo = new VideoCacheInfo(videoUrl,name);
             videoCacheInfo.setMd5(md5);
             videoCacheInfo.setSavePath(saveDir.getAbsolutePath());
 
@@ -405,6 +391,7 @@ public class VideoProxyCacheManager {
                     public void onM3U8ParsedFinished(M3U8 m3u8, VideoCacheInfo cacheInfo) {
                         notifyLocalProxyLock(lock);
                         mM3U8LocalProxyMd5Set.add(md5);
+                        Log.e(TAG,"onM3U8ParsedFinished");
                         //开始发起请求M3U8视频中的ts数据
                         startM3U8Task(m3u8, cacheInfo, headers);
                     }
@@ -467,7 +454,7 @@ public class VideoProxyCacheManager {
                 cacheInfo.setSpeed(speed);
                 mCacheInfoMap.put(cacheInfo.getVideoUrl(), cacheInfo);
                 mProxyHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_PROGRESS, cacheInfo).sendToTarget();
-                Log.i(TAG,"onTaskProgress");
+                Log.e(TAG,"onTaskProgress:"+percent);
             }
 
             @Override
@@ -478,7 +465,7 @@ public class VideoProxyCacheManager {
                 cacheInfo.setSpeed(speed);
                 cacheInfo.setTsLengthMap(tsLengthMap);
                 mCacheInfoMap.put(cacheInfo.getVideoUrl(), cacheInfo);
-                Log.i(TAG,"onM3U8TaskProgress");
+                Log.e(TAG,"onM3U8TaskProgress:"+percent);
                 mProxyHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_PROGRESS, cacheInfo).sendToTarget();
             }
 
