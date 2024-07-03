@@ -281,9 +281,9 @@ public class MainActivity extends AppCompatActivity {
             play(name);
         });
         findViewById(R.id.shixiong).setOnClickListener(v -> {
-            Log.e("asdf","========皆大欢喜==========");
+            Log.e("asdf","========师兄啊师兄==========");
             mUrl=Appconstants.shixiong;
-            name="皆大欢喜";
+            name="师兄啊师兄";
             play(name);
         });
     }
