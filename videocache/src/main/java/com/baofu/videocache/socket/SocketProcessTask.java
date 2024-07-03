@@ -74,7 +74,7 @@ public class SocketProcessTask implements Runnable {
                     LogUtils.d(TAG, videoUrl + "\n" + videoTypeInfo + "\n" + videoHeaders);
                     String name=null;
                     Log.e(TAG,"name:"+headers.get(VideoCacheConstants.NAME));
-                    if(headers.containsKey("VideoCacheConstants.NAME")){
+                    if(headers.containsKey(VideoCacheConstants.NAME)){
                         name=headers.get(VideoCacheConstants.NAME);
                         headers.remove(VideoCacheConstants.NAME);
                     }
