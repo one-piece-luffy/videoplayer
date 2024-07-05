@@ -181,7 +181,7 @@ public class HttpRequest {
             String uri = st.nextToken();
             String url = uri.substring(1);
             url = ProxyCacheUtils.decodeUriWithBase64(url);
-            Log.e("asdf","socke url:"+url);
+            Log.i("asdf","socke url:"+url);
             // If there's another token, its protocol version,
             // followed by HTTP headers.
             // NOTE: this now forces header names lower case since they are
