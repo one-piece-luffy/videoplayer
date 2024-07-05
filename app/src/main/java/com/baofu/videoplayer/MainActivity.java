@@ -154,7 +154,10 @@ public class MainActivity extends AppCompatActivity {
             //开启视频缓存
             ProxyCacheUtils.getConfig().setUseOkHttp(true);
             Map<String,String> proxyHeader=new HashMap<>();
-            proxyHeader.put(VideoCacheConstants.NAME,name);
+            if (!TextUtils.isEmpty(name)) {
+                proxyHeader.put(VideoCacheConstants.NAME,name);
+            }
+
             link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), proxyHeader, null);
             new Thread() {
                 @Override
