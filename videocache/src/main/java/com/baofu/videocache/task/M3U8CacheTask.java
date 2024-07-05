@@ -263,7 +263,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                     contentLength = file.length();
                 }
                 ts.setContentLength(contentLength);
-                Log.e(TAG,"队列ts下载完成");
+                Log.d(TAG,"队列ts下载完成");
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {
