@@ -31,6 +31,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextClock;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -62,6 +63,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
     private MarqueeTextView mTvTitle;
     private ImageView mIvBattery;
     private TextClock mTvSysTime;
+    private TextView tvBattery;
     boolean hideTitle;
 
     private BatteryReceiver mBatteryReceiver;
@@ -90,7 +92,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
         initFindViewById(view);
         initListener();
         //电量
-        mBatteryReceiver = new BatteryReceiver(mIvBattery);
+        mBatteryReceiver = new BatteryReceiver(mIvBattery,tvBattery);
     }
 
     private void initFindViewById(View view) {
@@ -99,6 +101,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
         mTvTitle = view.findViewById(R.id.tv_title);
         mIvBattery = view.findViewById(R.id.iv_battery);
         mTvSysTime = view.findViewById(R.id.tc_av_localtime);
+        tvBattery = view.findViewById(R.id.tvBattery);
 
     }
 
@@ -200,10 +203,12 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
             if (mControlWrapper.isFullScreen()||isLand) {
                 //显示电量
                 mIvBattery.setVisibility(VISIBLE);
+                tvBattery.setVisibility(VISIBLE);
                 mTvSysTime.setVisibility(VISIBLE);
             } else {
                 //不显示电量
                 mIvBattery.setVisibility(GONE);
+                tvBattery.setVisibility(GONE);
                 mTvSysTime.setVisibility(GONE);
             }
             if(hideTitle){
@@ -277,9 +282,11 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
     private static class BatteryReceiver extends BroadcastReceiver {
 
         private ImageView pow;
+        private TextView tvPow;
 
-        public BatteryReceiver(ImageView pow) {
+        public BatteryReceiver(ImageView pow,TextView tvPow) {
             this.pow = pow;
+            this.tvPow=tvPow;
         }
 
         @Override
@@ -290,6 +297,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
             int total = extras.getInt("scale");// 获得总电量
             int percent = current * 100 / total  ;
             pow.getDrawable().setLevel(percent);
+            tvPow.setText(percent+"%");
 
 
         }
