@@ -22,6 +22,7 @@
             android:layout_marginStart="12dp"
             android:contentDescription="@string/iv"
             android:padding="10dp"
+            android:visibility="gone"
             android:src="@drawable/icon_play_back" />
 
 
@@ -48,6 +49,7 @@
             android:layout_toLeftOf="@+id/tvBattery"
             android:layout_centerVertical="true"
             android:layout_marginRight="8dp"
+            android:visibility="invisible"
             android:src="@drawable/battery_level2" />
         <TextClock
             android:id="@+id/tc_av_localtime"
@@ -67,6 +69,7 @@
             android:id="@+id/tvBattery"
             android:textColor="@color/white"
             android:textSize="14dp"
+            android:visibility="invisible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="16dp"

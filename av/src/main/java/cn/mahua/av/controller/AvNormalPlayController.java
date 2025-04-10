@@ -507,6 +507,11 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         }
     }
 
+    public void hideBack() {
+        if (titleView != null) {
+            titleView.hideBack(true);
+        }
+    }
     /**
      * 设置为竖屏全屏模式，无法横屏
      * @param orientationPortrait

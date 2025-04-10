@@ -65,6 +65,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
     private TextClock mTvSysTime;
     private TextView tvBattery;
     boolean hideTitle;
+    boolean hideBack;
 
     private BatteryReceiver mBatteryReceiver;
     private boolean mIsRegister;//是否注册BatteryReceiver
@@ -130,6 +131,13 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
         this.hideTitle = hideTitle;
         if(hideTitle){
             mTvTitle.setVisibility(GONE);
+        }
+    }
+
+    public void hideBack(boolean hideBack) {
+        this.hideBack = hideBack;
+        if(hideBack){
+            mIvBack.setVisibility(GONE);
         }
     }
 
@@ -211,10 +219,16 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
                 tvBattery.setVisibility(GONE);
                 mTvSysTime.setVisibility(GONE);
             }
-            if(hideTitle){
+
+            if (hideTitle) {
                 mTvTitle.setVisibility(GONE);
-            }else {
+            } else {
                 mTvTitle.setVisibility(VISIBLE);
+            }
+            if (hideBack) {
+                mIvBack.setVisibility(GONE);
+            } else {
+                mIvBack.setVisibility(VISIBLE);
             }
         }
     }

@@ -80,6 +80,7 @@ public class PlayerFragement extends Fragment {
         controller.setOrientationPortrait(true);
         controller.enableChangeBrightness(false);
         controller.enableChangeVolume(false);
+        controller.hideBack();
         //设置控制器
         binding.videoView.setController(controller);
         controller.addErrorViewItem("重试", new View.OnClickListener() {
