@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.jeffmony.videocache.VideoInfoParseManager;
-import com.jeffmony.videocache.common.VideoCacheConstants;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.baofu.videoplayer.utils.Appconstants;
@@ -151,19 +150,15 @@ public class MainActivity extends AppCompatActivity {
             header.put("type","m3u8");
             //开启视频缓存
             ProxyCacheUtils.getConfig().setUseOkHttp(true);
-            Map<String,String> proxyHeader=new HashMap<>();
-            if (!TextUtils.isEmpty(name)) {
-                proxyHeader.put(VideoCacheConstants.NAME,name);
-            }
 
-            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), proxyHeader, null);
+            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), null, null);
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
                     //开始缓存
                     mLocalProxyVideoControl = new LocalProxyVideoControl();
-                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,proxyHeader, null);
+                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,null, null);
                 }
             }.start();
 //            VideoProxyCacheManager.getInstance().addSocketListener(mUrl, new ISocketListener() {
@@ -315,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
         if(mLocalProxyVideoControl!=null){
             mLocalProxyVideoControl.releaseLocalProxyResources();
         }
-        VideoInfoParseManager.getInstance().release();
     }
 
     @Override

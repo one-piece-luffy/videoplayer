@@ -1,5 +1,6 @@
 package com.jeffmony.videocache.task;
 
+
 import androidx.annotation.NonNull;
 
 import com.jeffmony.videocache.StorageManager;
@@ -11,14 +12,14 @@ import com.jeffmony.videocache.utils.VideoProxyThreadUtils;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public abstract class VideoCacheTask {
 
     protected VideoCacheInfo mCacheInfo;
     protected Map<String, String> mHeaders;
     protected IVideoCacheTaskListener mListener;
-    protected ExecutorService mTaskExecutor;
+    protected ThreadPoolExecutor mTaskExecutor;
 
     protected volatile long mCachedSize;      //当前缓存大小
     protected volatile long mLastCachedSize;  //上一次缓存大小
@@ -27,6 +28,10 @@ public abstract class VideoCacheTask {
     protected float mPercent = 0.0f;
     protected float mSpeed = 0.0f;
     protected File mSaveDir;
+
+    protected volatile boolean isStart = false;
+
+    protected boolean hasFinish = false;
 
     public VideoCacheTask(VideoCacheInfo cacheInfo, Map<String, String> headers) {
         mCacheInfo = cacheInfo;
@@ -40,6 +45,10 @@ public abstract class VideoCacheTask {
         if (!mSaveDir.exists()) {
             mSaveDir.mkdir();
         }
+    }
+
+    public boolean isStart() {
+        return isStart;
     }
 
     public void setTaskListener(@NonNull IVideoCacheTaskListener listener) {
@@ -56,7 +65,10 @@ public abstract class VideoCacheTask {
 
     public abstract void seekToCacheTaskFromServer(long startPosition);   //来自服务端的seek操作,针对非M3U8视频
 
+    @Deprecated
     public abstract void seekToCacheTaskFromServer(int segIndex);         //来自服务端的seek操作,针对M3U8视频
+
+    public abstract void seekToCacheTaskFromServer(int segIndex, long time);  //来自服务端的seek操作,针对M3U8视频
 
     public abstract void resumeCacheTask();
 
@@ -70,6 +82,10 @@ public abstract class VideoCacheTask {
     }
 
     protected void notifyOnTaskCompleted() {
+        if (hasFinish) {
+            return;
+        }
+        hasFinish = true;
         StorageManager.getInstance().checkCache(mSaveDir.getAbsolutePath());
         mListener.onTaskCompleted(mTotalSize);
     }
@@ -105,6 +121,13 @@ public abstract class VideoCacheTask {
      * @return
      */
     public long getMp4CachedPosition(long position) { return -1L; }
+
+    protected void setThreadPoolArgument(int corePoolSize, int maxPoolSize) {
+        if (isTaskRunning()) {
+            mTaskExecutor.setCorePoolSize(corePoolSize);
+            mTaskExecutor.setMaximumPoolSize(maxPoolSize);
+        }
+    }
 
     protected void saveVideoInfo() {
         VideoProxyThreadUtils.submitRunnableTask(() -> StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir));

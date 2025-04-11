@@ -1,8 +1,9 @@
 package com.jeffmony.videocache.task;
 
+import android.text.TextUtils;
 import android.util.Log;
 
-import com.jeffmony.videocache.common.VideoCacheConstants;
+import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.m3u8.M3U8;
 import com.jeffmony.videocache.m3u8.M3U8Seg;
 import com.jeffmony.videocache.model.VideoCacheInfo;
@@ -11,18 +12,24 @@ import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.OkHttpUtil;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
+import com.jeffmony.videocache.utils.StorageUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Response;
 
@@ -30,7 +37,12 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     private static final String TAG = "M3U8CacheTask";
 
-    private static final int THREAD_POOL_COUNT = 4;
+    private static final String TEMP_POSTFIX = ".download";
+
+    private static final int THREAD_POOL_COUNT = 6;
+    private static final int CONTINUOUS_SUCCESS_TS_THRESHOLD = 6;
+    private volatile int mM3U8DownloadPoolCount;
+    private volatile int mContinuousSuccessSegCount;   //连续请求分片成功的个数
 
     private int mCachedSegCount;
     private int mTotalSegCount;
@@ -46,24 +58,19 @@ public class M3U8CacheTask extends VideoCacheTask {
         this.mM3U8=m3u8;
         mTotalSegCount = cacheInfo.getTotalTs();
         mCachedSegCount = cacheInfo.getCachedTs();
-        mSegLengthMap = cacheInfo.getTsLengthMap();
-        if (mSegLengthMap == null) {
-            mSegLengthMap = new HashMap<>();
-        }
         mHeaders.put("Connection", "close");
     }
 
     @Override
     public void startCacheTask() {
         if (isTaskRunning()) {
-            Log.e(TAG,"startCacheTask isTaskRunning");
             return;
         }
         notifyOnTaskStart();
         initM3U8TsInfo();
         int seekIndex = mCachedSegCount > 1 && mCachedSegCount <= mTotalSegCount ? mCachedSegCount - 1 : mCachedSegCount;
+        //todo 这里的逻辑有问题，假如第一次播放视频，seek进度条，没完成缓存就退出；那么下次再进入播放时，计算的下载起点是不靠谱的；必须要获取到当前播放请求index
         startRequestVideoRange(seekIndex);
-        Log.e(TAG,"startCacheTask");
     }
 
     private void initM3U8TsInfo() {
@@ -74,7 +81,6 @@ public class M3U8CacheTask extends VideoCacheTask {
             File tempTsFile = new File(mSaveDir, ts.getSegName());
             if (tempTsFile.exists() && tempTsFile.length() > 0) {
                 ts.setFileSize(tempTsFile.length());
-                mSegLengthMap.put(index, tempTsFile.length());
                 tempCachedSize += tempTsFile.length();
                 tempCachedTs++;
             } else {
@@ -137,21 +143,23 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void seekToCacheTaskFromServer(int segIndex) {
-//        Log.e(TAG, "================seek segIndex="+segIndex);
+        LogUtils.i(TAG, "seekToCacheTaskFromServer segIndex="+segIndex);
         pauseCacheTask();
         startRequestVideoRange(segIndex);
     }
 
+    @Override
+    public void seekToCacheTaskFromServer(int segIndex, long time) {
+
+    }
+
     private void startRequestVideoRange(int curTs) {
-//        Log.e(TAG,"startRequest m3u8");
         if (mCacheInfo.isCompleted()) {
             notifyOnTaskCompleted();
-            Log.e(TAG,"m3u8 isCompleted");
             return;
         }
         if (isTaskRunning()) {
             //已经存在的任务不需要重新创建了
-            Log.e(TAG,"task m3u8 is running");
             return;
         }
         try {
@@ -163,24 +171,24 @@ public class M3U8CacheTask extends VideoCacheTask {
         }
 
         mTaskExecutor = null;
-        mTaskExecutor = Executors.newFixedThreadPool(THREAD_POOL_COUNT);
-        for (int index = curTs; index < mSegList.size(); index++) {
-           final int temp=index;
+        mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
+                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.DiscardOldestPolicy());
+        for (int index = curTs; index < mTotalSegCount; index++) {
+            final M3U8Seg seg = mSegList.get(index);
             mTaskExecutor.execute(() -> {
                 try {
-                    final M3U8Seg seg = mSegList.get(temp);
                     startDownloadSegTask(seg);
                 } catch (Exception e) {
-                    e.printStackTrace();
-//                    Log.e(TAG, "M3U8 ts video download failed, exception=" + e);
+                    LogUtils.w(TAG, "M3U8 ts video download failed, exception=" + e);
                     notifyOnTaskFailed(e);
                 }
             });
         }
     }
 
-    private void startDownloadSegTask(M3U8Seg seg)  {
-//       Log.e(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
+    private void startDownloadSegTask(M3U8Seg seg) throws Exception {
+        LogUtils.i(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
             File initSegmentFile = new File(mSaveDir, initSegmentName);
@@ -199,11 +207,9 @@ public class M3U8CacheTask extends VideoCacheTask {
         //确保当前文件下载完整
         if (segFile.exists() && segFile.length() == seg.getContentLength()) {
             //只有这样的情况下才能保证当前的ts文件真正被下载下来了
-            mSegLengthMap.put(seg.getSegIndex(), segFile.length());
-            seg.setName(segName);
             seg.setFileSize(segFile.length());
             //更新进度
-//            notifyCacheProgress();
+            notifyCacheProgress();
         }
     }
 
@@ -216,9 +222,6 @@ public class M3U8CacheTask extends VideoCacheTask {
         FileChannel foutc = null;
         Response response=null;
         try {
-            if(mHeaders!=null&&mHeaders.containsKey(VideoCacheConstants.NAME)){
-                mHeaders.remove(VideoCacheConstants.NAME);
-            }
             response = OkHttpUtil.getInstance().requestSync(videoUrl,mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
@@ -309,22 +312,20 @@ public class M3U8CacheTask extends VideoCacheTask {
 
 
     private void notifyCacheProgress() {
-        Log.i(TAG,"notifyCacheProgress");
         updateM3U8TsInfo();
         if (mCachedSegCount > mTotalSegCount) {
             mCachedSegCount = mTotalSegCount;
         }
         mCacheInfo.setCachedTs(mCachedSegCount);
-        mCacheInfo.setTsLengthMap(mSegLengthMap);
         mCacheInfo.setCachedSize(mCachedSize);
         float percent = mCachedSegCount * 1.0f * 100 / mTotalSegCount;
 
         if (!ProxyCacheUtils.isFloatEqual(percent, mPercent)) {
             long nowTime = System.currentTimeMillis();
             if (mCachedSize > mLastCachedSize && nowTime > mLastInvokeTime) {
-                mSpeed = (mCachedSize - mLastCachedSize) * 1000 * 1.0f / (nowTime - mLastInvokeTime);
+                mSpeed = (mCachedSize - mLastCachedSize) * 1000 * 1.0f / (nowTime - mLastInvokeTime); //byte/s
             }
-            mListener.onM3U8TaskProgress(percent, mCachedSize, mSpeed, mSegLengthMap);
+            mListener.onM3U8TaskProgress(percent, mCachedSize, mSpeed);
             mPercent = percent;
             mCacheInfo.setPercent(percent);
             mCacheInfo.setSpeed(mSpeed);
@@ -358,7 +359,6 @@ public class M3U8CacheTask extends VideoCacheTask {
             File tempTsFile = new File(mSaveDir, ts.getSegName());
             if (tempTsFile.exists() && tempTsFile.length() > 0) {
                 ts.setFileSize(tempTsFile.length());
-                mSegLengthMap.put(index, tempTsFile.length());
                 tempCachedSize += tempTsFile.length();
                 tempCachedTs++;
             }

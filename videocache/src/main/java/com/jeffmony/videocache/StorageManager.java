@@ -6,7 +6,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.text.TextUtils;
-import android.util.Log;
+
 
 import androidx.annotation.NonNull;
 
@@ -14,8 +14,11 @@ import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -29,7 +32,7 @@ public class StorageManager {
     private static volatile StorageManager sInstance = null;
 
     private HandlerThread mCacheCleanThread;
-    private VideoCacheCleanHandler mCacheCleanHandler;
+    private final VideoCacheCleanHandler mCacheCleanHandler;
 
     private String mRootFilePath;
     private long mMaxCacheSize;
@@ -72,7 +75,7 @@ public class StorageManager {
     /**
      * 缓存文件的基本信息
      */
-    private static class CacheFileInfo {
+    private static class CacheFileInfo implements Comparable<CacheFileInfo>{
         public String mFilePath;
         public long mLastModified;
         public long mSize;
@@ -96,8 +99,18 @@ public class StorageManager {
             return Objects.hash(mFilePath);
         }
 
+        @Override
         public String toString() {
-            return "CacheFileInfo";
+            return "CacheFileInfo{" +
+                    "mFilePath='" + mFilePath + '\'' +
+                    ", mLastModified=" + mLastModified +
+                    ", mSize=" + mSize +
+                    '}';
+        }
+
+        @Override
+        public int compareTo(CacheFileInfo o) {
+            return Long.compare(this.mLastModified, o.mLastModified);
         }
     }
 
@@ -115,7 +128,6 @@ public class StorageManager {
     public void initCacheConfig(String rootFilePath, long maxCacheSize, long expiredTime) {
         mRootFilePath = rootFilePath;
         mMaxCacheSize = maxCacheSize;
-//        Log.e(TAG,"mMaxCacheSize:"+mMaxCacheSize);
         mExpiredTime = expiredTime;
 
         mMaxRemainingSize = (long) (0.8f * mMaxCacheSize);
@@ -138,7 +150,11 @@ public class StorageManager {
 
         File[] files = rootFile.listFiles();
         if (files == null) return;
-        for (File itemFile : files) {
+        List<File> result = Arrays.asList(files);
+        Collections.sort(result, (o1, o2) -> {
+            return Long.compare(o1.lastModified(), o2.lastModified());
+        });
+        for (File itemFile : result) {
             CacheFileInfo cacheFileInfo = new CacheFileInfo(itemFile.getAbsolutePath(), itemFile.lastModified(), StorageUtils.getTotalSize(itemFile));
             addCache(cacheFileInfo.mFilePath, cacheFileInfo);
         }
@@ -157,11 +173,7 @@ public class StorageManager {
         }
     }
 
-    /**
-     * 超过缓存的容量限制进行删除
-     */
     private void trimCacheData() {
-        Log.e(TAG,"mCurrentSize:"+mCurrentSize+" mMaxCacheSize:"+mMaxCacheSize);
         if (mCurrentSize > mMaxCacheSize) {
             Iterator<Map.Entry<String, CacheFileInfo>> iterator = mLruCache.entrySet().iterator();
             if (!iterator.hasNext()) return;
@@ -170,19 +182,21 @@ public class StorageManager {
                 Map.Entry<String, CacheFileInfo> item = iterator.next();
 
                 //最多保留一个,不能删除正在播放的视频
-                if (!iterator.hasNext()) break;
-
                 String filePath = item.getKey();
-                CacheFileInfo cacheFileInfo = item.getValue();
-
-                File file = new File(filePath);
-                Log.e(TAG,"超过容量限制进行删除："+filePath);
-                boolean deleted = StorageUtils.deleteFile(file);
-                if (deleted) {
-                    mCurrentSize -= cacheFileInfo.mSize;
-                    //不会存在多线程的操作情况
-                    iterator.remove();
+                if (!TextUtils.isEmpty(VideoProxyCacheManager.getInstance().getPlayingUrlMd5())
+                        && filePath.contains(VideoProxyCacheManager.getInstance().getPlayingUrlMd5())) {
+                    LogUtils.i(TAG, "trimCacheData ignore playing video");
+                } else {
+                    CacheFileInfo cacheFileInfo = item.getValue();
+                    File file = new File(filePath);
+                    boolean deleted = StorageUtils.deleteFile(file);
+                    if (deleted) {
+                        mCurrentSize -= cacheFileInfo.mSize;
+                        //不会存在多线程的操作情况
+                        iterator.remove();
+                    }
                 }
+                if (!iterator.hasNext()) break;
             }
         }
     }
@@ -199,7 +213,6 @@ public class StorageManager {
     }
 
     private void checkCacheInternal(String filePath) {
-        Log.e(TAG,"checkCacheInternal");
         if (TextUtils.isEmpty(filePath)) return;
         File file = new File(filePath);
         if (!file.exists()) return;

@@ -1,7 +1,11 @@
 package com.jeffmony.videocache.utils;
 
 import android.content.Context;
-import android.util.Log;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.os.storage.StorageManager;
 
 import com.jeffmony.videocache.model.VideoCacheInfo;
 
@@ -11,6 +15,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author jeffmony
@@ -30,6 +37,24 @@ public class StorageUtils {
 
     private static final Object sInfoFileLock = new Object();
 
+    /**
+     * 获取目标存储的可用空间(去掉预留空间后)
+     * @param storagePath 目标路径，一般是{@link Environment#getDataDirectory()}
+     * @return 0或者正值
+     */
+    public static long getAllocatableBytes(File storagePath) {
+        StorageManager storageManager = (StorageManager) ProxyCacheUtils.getConfig().getContext().getSystemService(Context.STORAGE_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                return storageManager.getAllocatableBytes(storageManager.getUuidForPath(storagePath));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        long temp = storagePath.getUsableSpace(); // - mStorageManager.getStorageLowBytes(storagePath);
+        return temp >= 0 ? temp : 0;
+    }
+
     public static File getVideoFileDir(Context context) {
         return new File(context.getExternalFilesDir("Video"), "jeffmony");
     }
@@ -38,18 +63,17 @@ public class StorageUtils {
         LogUtils.i(TAG, "readVideoCacheInfo : dir=" + dir.getAbsolutePath());
         File file = new File(dir, INFO_FILE);
         if (!file.exists()) {
-            Log.e(TAG,"readProxyCacheInfo failed, file not exist.");
+            LogUtils.i(TAG,"readProxyCacheInfo failed, file not exist.");
             return null;
         }
         ObjectInputStream fis = null;
         try {
             synchronized (sInfoFileLock) {
                 fis = new ObjectInputStream(new FileInputStream(file));
-                VideoCacheInfo info = (VideoCacheInfo) fis.readObject();
-                return info;
+                return (VideoCacheInfo) fis.readObject();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            LogUtils.w(TAG,"readVideoCacheInfo failed, exception=" + e.getMessage());
         } finally {
             ProxyCacheUtils.close(fis);
         }
@@ -57,7 +81,6 @@ public class StorageUtils {
     }
 
     public static void saveVideoCacheInfo(VideoCacheInfo info, File dir) {
-
         File file = new File(dir, INFO_FILE);
         ObjectOutputStream fos = null;
         try {
@@ -97,11 +120,25 @@ public class StorageUtils {
     }
 
     private static void delete(File file) throws IOException {
-        if (file.isFile() && file.exists()) {
-            boolean isDeleted = file.delete();
-            if (!isDeleted) {
-                throw new IOException(String.format("File %s cannot be deleted", file.getAbsolutePath()));
+        try {
+            if (file.isFile() &&file.exists()) {
+                Path path = null;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    path = Paths.get(file.getAbsolutePath());
+                    try {
+                        Files.delete(path);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    boolean result = file.delete();
+                    if (!result) {
+                        file.deleteOnExit();
+                    }
+                }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -112,11 +149,8 @@ public class StorageUtils {
             for (File f : files) {
                 if (!f.delete()) return false;
             }
-
-            return file.delete();
-        } else {
-            return file.delete();
         }
+        return file.delete();
     }
 
     /**

@@ -1,19 +1,19 @@
 package com.jeffmony.videocache.socket;
 
+import android.os.Build;
+import android.os.SystemClock;
 import android.text.TextUtils;
-import android.util.Log;
 
-import com.jeffmony.videocache.common.VideoCacheConstants;
+import com.jeffmony.videocache.common.SourceCreator;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.socket.request.HttpRequest;
 import com.jeffmony.videocache.socket.response.BaseResponse;
-import com.jeffmony.videocache.socket.response.M3U8Response;
-import com.jeffmony.videocache.socket.response.M3U8SegResponse;
-import com.jeffmony.videocache.socket.response.Mp4Response;
 import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
+import com.jeffmony.videocache.utils.Pinger;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -24,16 +24,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SocketProcessTask implements Runnable {
 
     private static final String TAG  = "SocketProcessTask";
-    private static AtomicInteger sRequestCountAtomic = new AtomicInteger(0);
+    private static final AtomicInteger sRequestCountAtomic = new AtomicInteger(0);
     private final Socket mSocket;
+
+    private final SourceCreator mSourceCreator;
+
+    private final long mSocketTaskCreateTime = SystemClock.uptimeMillis();
 
     public SocketProcessTask(Socket socket) {
         mSocket = socket;
+        mSourceCreator = ProxyCacheUtils.getConfig().getSourceCreator();
     }
 
     @Override
     public void run() {
-
         sRequestCountAtomic.addAndGet(1);
         LogUtils.i(TAG, "sRequestCountAtomic : " + sRequestCountAtomic.get());
         OutputStream outputStream = null;
@@ -43,19 +47,21 @@ public class SocketProcessTask implements Runnable {
             inputStream = mSocket.getInputStream();
             HttpRequest request = new HttpRequest(inputStream, mSocket.getInetAddress());
             while(!mSocket.isClosed()) {
-//                try {
-                    request.parseRequest();
-//                }catch (Exception e){
-//                    e.printStackTrace();
-//                }
-
+                request.parseRequest();
                 BaseResponse response;
                 String url = request.getUri();
                 url = url.substring(1);
+                LogUtils.d(TAG, "request url=" + url);
+                if (Pinger.isPingRequest(url)) {
+                    Pinger.responseToPing(mSocket);
+                    break;
+                }
                 url = ProxyCacheUtils.decodeUriWithBase64(url);
-//                Log.e(TAG, "request url=" + url);
-
-                long currentTime = System.currentTimeMillis();
+                LogUtils.d(TAG, "decode request url=" + url);
+                //m3u8里的ts视频请求:Range header=null
+                LogUtils.d(TAG, "Range header=" + request.getRangeString());
+                //最新的请求可以获得回应，旧的关闭；意味着播放器内部只能一个socket在请求数据
+                long currentTime = mSocketTaskCreateTime; //System.currentTimeMillis();
                 ProxyCacheUtils.setSocketTime(currentTime);
                 if (url.contains(ProxyCacheUtils.VIDEO_PROXY_SPLIT_STR)) {
                     String[] videoInfoArr = url.split(ProxyCacheUtils.VIDEO_PROXY_SPLIT_STR);
@@ -68,24 +74,19 @@ public class SocketProcessTask implements Runnable {
 
                     Map<String, String> headers = ProxyCacheUtils.str2Map(videoHeaders);
                     LogUtils.d(TAG, videoUrl + "\n" + videoTypeInfo + "\n" + videoHeaders);
-                    String name = null;
-                    Log.e(TAG, "name:" + headers.get(VideoCacheConstants.NAME));
-                    if (headers.containsKey(VideoCacheConstants.NAME)) {
-                        name = headers.get(VideoCacheConstants.NAME);
-                        headers.remove(VideoCacheConstants.NAME);
-                    }
+
                     if (TextUtils.equals(ProxyCacheUtils.M3U8, videoTypeInfo)) {
-                        response = new M3U8Response(request, videoUrl,name, headers, currentTime);
+                        response = mSourceCreator.createM3U8Response(request, videoUrl, headers, currentTime);
                     } else if (TextUtils.equals(ProxyCacheUtils.NON_M3U8, videoTypeInfo)) {
-                        response = new Mp4Response(request, videoUrl, headers, currentTime);
+                        response = mSourceCreator.createMp4Response(request, videoUrl, headers, currentTime);
                     } else {
                         //无法从已知的信息判定视频信息，需要重新请求
                         HttpURLConnection connection = HttpUtils.getConnection(videoUrl, headers);
                         String contentType = connection.getContentType();
                         if (ProxyCacheUtils.isM3U8Mimetype(contentType)) {
-                            response = new M3U8Response(request, videoUrl, name,headers, currentTime);
+                            response = mSourceCreator.createM3U8Response(request, videoUrl, headers, currentTime);
                         } else {
-                            response = new Mp4Response(request, videoUrl, headers, currentTime);
+                            response = mSourceCreator.createMp4Response(request, videoUrl, headers, currentTime);
                         }
                     }
                     response.sendResponse(mSocket, outputStream);
@@ -100,25 +101,34 @@ public class SocketProcessTask implements Runnable {
                     String fileName = videoInfoArr[2];
                     String videoHeaders = videoInfoArr[3];
                     Map<String, String> headers = ProxyCacheUtils.str2Map(videoHeaders);
-                    LogUtils.d(TAG, parentUrl + "\n" + videoUrl + "\n" + fileName + "\n" + videoHeaders);
-                    response = new M3U8SegResponse(request, parentUrl, videoUrl, headers, currentTime, fileName);
+                    LogUtils.d(TAG,  "ts request: parentUrl:" + parentUrl + "\nvideoUrl:" + videoUrl + "\nfileName:" + fileName + "\nvideoHeaders:" + videoHeaders);
+                    response = mSourceCreator.createM3U8SegResponse(request, parentUrl, videoUrl, headers, currentTime, fileName);
                     response.sendResponse(mSocket, outputStream);
                 } else {
-//                    Log.e("asdf","error url:"+url);
                     throw new VideoCacheException("Local Socket Error url");
                 }
-
+                break;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG,"socket request failed, exception=" + e);
+            LogUtils.w(TAG,"socket request failed, exception=" + e);
         } finally {
             ProxyCacheUtils.close(outputStream);
             ProxyCacheUtils.close(inputStream);
-            ProxyCacheUtils.close(mSocket);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                ProxyCacheUtils.close(mSocket);
+            } else {
+                if (mSocket != null) {
+                    try {
+                        mSocket.close();
+                    } catch (IOException e) {
+                        LogUtils.e(TAG,"close " + mSocket + " failed, exception = " + e);
+                    }
+                }
+            }
             int count = sRequestCountAtomic.decrementAndGet();
-//            Log.e(TAG, "finally Socket solve count = " + count);
+            LogUtils.i(TAG, "finally Socket solve count = " + count);
         }
     }
 }

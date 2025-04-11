@@ -159,10 +159,7 @@ public class VideoCacheUtils {
     public static String getFileName(VideoCacheInfo cacheInfo) {
 
         String fileName;
-        if (!TextUtils.isEmpty(cacheInfo.name)) {
-            fileName = cacheInfo.name;
-
-        } else if (!TextUtils.isEmpty(cacheInfo.getMd5())) {
+        if (!TextUtils.isEmpty(cacheInfo.getMd5())) {
             fileName = cacheInfo.getMd5();
         } else {
             fileName = ProxyCacheUtils.computeMD5(cacheInfo.getVideoUrl());

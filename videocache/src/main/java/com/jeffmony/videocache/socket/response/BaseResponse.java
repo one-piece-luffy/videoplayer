@@ -36,6 +36,8 @@ public abstract class BaseResponse {
     protected static final int WAIT_TIME = 50;
     protected static final int MAX_WAIT_TIME = 2 * 1000;
 
+    protected static final int TIME_OUT = 60 * 1000; //60s
+
     protected final HttpRequest mRequest;
     protected final String mCachePath;
     protected final String mVideoUrl;
@@ -68,7 +70,7 @@ public abstract class BaseResponse {
             if (TextUtils.isEmpty(mProtocolVersion)) {
                 pw.append("HTTP/1.1 ");
             } else {
-                pw.append(mProtocolVersion + " ");
+                pw.append(mProtocolVersion).append(" ");
             }
             pw.append(mResponseState.getDescription()).append(" \r\n");
             if (!TextUtils.isEmpty(mMimeType)) {
@@ -91,7 +93,6 @@ public abstract class BaseResponse {
             sendBodyWithCorrectTransferAndEncoding(socket, outputStream);
             outputStream.flush();
         } catch (Exception e) {
-            e.printStackTrace();
             throw new VideoCacheException("send response failed: ", e);
         }
     }
@@ -113,6 +114,6 @@ public abstract class BaseResponse {
     }
 
     protected int getDelayTime(int waitTime) {
-        return waitTime > MAX_WAIT_TIME ? MAX_WAIT_TIME : waitTime;
+        return Math.min(waitTime, MAX_WAIT_TIME);
     }
 }

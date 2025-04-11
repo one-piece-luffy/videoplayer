@@ -3,7 +3,6 @@ package com.jeffmony.videocache.m3u8;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.jeffmony.videocache.common.VideoCacheConstants;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
@@ -47,9 +46,6 @@ public class M3U8Utils {
      * @throws IOException
      */
     public static M3U8 parseNetworkM3U8Info(String parentUrl, String videoUrl, Map<String, String> headers, int retryCount) throws IOException {
-        if(headers!=null&&headers.containsKey(VideoCacheConstants.NAME)){
-            headers.remove(VideoCacheConstants.NAME);
-        }
         BufferedReader bufferedReader = null;
         Response response=null;
         try {

@@ -8,6 +8,7 @@ import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.socket.request.HttpRequest;
 import com.jeffmony.videocache.socket.request.ResponseState;
+import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
 
@@ -28,20 +29,13 @@ public class M3U8Response extends BaseResponse {
 
     private static final String TAG = "M3U8Response";
 
-    private String mMd5;
-    private File mFile;
+    private final String mMd5;
+    private final File mFile;
 
-    public M3U8Response(HttpRequest request, String videoUrl,String name, Map<String, String> headers, long time) {
+    public M3U8Response(HttpRequest request, String videoUrl, Map<String, String> headers, long time) {
         super(request, videoUrl, headers, time);
         mMd5 = ProxyCacheUtils.computeMD5(videoUrl);
-        String fileName = null;
-        if (TextUtils.isEmpty(name)) {
-            fileName = mMd5 + File.separator + mMd5 + StorageUtils.PROXY_M3U8_SUFFIX;
-
-        } else {
-            fileName = name + File.separator + name + StorageUtils.PROXY_M3U8_SUFFIX;
-        }
-        mFile = new File(mCachePath, fileName);
+        mFile = new File(mCachePath, mMd5 + File.separator + mMd5 + StorageUtils.PROXY_M3U8_SUFFIX);
         mResponseState = ResponseState.OK;
     }
 
@@ -52,39 +46,36 @@ public class M3U8Response extends BaseResponse {
         }
         Object lock = VideoLockManager.getInstance().getLock(mMd5);
         int waitTime = WAIT_TIME;
-        Log.e(TAG,"=========mFile:"+mFile.getAbsolutePath());
-        Log.e(TAG,"=========等待解析网络m3u8");
+        long wait = 0;
+
         /**
          * 1.如果文件不存在或者proxy M3U8文件没有生成
          * 2.当前M3U8不能是直播
          */
-        while(!mFile.exists() || !VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5)) {
+        while((!mFile.exists() || !VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5)) && wait < TIME_OUT) {
             if (VideoProxyCacheManager.getInstance().isM3U8LiveType(mMd5)) {
                 Log.e(TAG,"=========VideoCacheException");
                 throw new VideoCacheException("M3U8 is live type");
             }
-//            Log.e(TAG,"=========mFile exist:"+mFile.exists()+"  proxy ready:"+VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5));
             synchronized (lock) {
                 lock.wait(waitTime);
             }
-
+            wait += WAIT_TIME;
         }
-        Log.e(TAG,"==========M3U8 proxy file start read");
+        if (!mFile.exists() || !VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5)) {
+            LogUtils.e(TAG, "timeout");
+            return;
+        }
         RandomAccessFile randomAccessFile = null;
 
         try {
             randomAccessFile = new RandomAccessFile(mFile, "r");
-            if (randomAccessFile == null) {
-                Log.e(TAG,"M3U8 proxy file not found");
-                throw new VideoCacheException("M3U8 proxy file not found, this=" + this);
-            }
 
             int bufferedSize = StorageUtils.DEFAULT_BUFFER_SIZE;
             byte[] buffer = new byte[bufferedSize];
             long available = randomAccessFile.length();
             long offset = 0;
-            Log.e(TAG,"=========sendBody");
-            //todo
+
             while (shouldSendResponse(socket, mMd5)) {
                 if (available == 0) {
                     synchronized (lock) {
@@ -95,7 +86,6 @@ public class M3U8Response extends BaseResponse {
                     if (waitTime < MAX_WAIT_TIME) {
                         waitTime *= 2;
                     }
-                    Log.e(TAG,"Send M3U8 video info end, available=0");
                 } else {
                     randomAccessFile.seek(offset);
                     int readLength;
@@ -104,7 +94,7 @@ public class M3U8Response extends BaseResponse {
                         outputStream.write(buffer, 0, readLength);
                         randomAccessFile.seek(offset);
                     }
-                    Log.e(TAG,"Send M3U8 video info end, this="+this);
+                    LogUtils.i(TAG, "Send M3U8 video info end, this="+this);
                     break;
                 }
             }

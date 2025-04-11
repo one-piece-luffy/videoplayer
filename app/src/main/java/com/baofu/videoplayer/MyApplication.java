@@ -39,7 +39,7 @@ public class MyApplication extends BaseApplication {
             saveFile.mkdir();
         }
         //边下边播配置
-        VideoProxyCacheManager.Builder builder = new VideoProxyCacheManager.Builder().
+        VideoProxyCacheManager.Builder builder = new VideoProxyCacheManager.Builder(this).
                 setFilePath(saveFile.getAbsolutePath()).    //缓存存储位置
                 setConnTimeOut(60 * 1000).                  //网络连接超时
                 setReadTimeOut(60 * 1000).                  //网络读超时

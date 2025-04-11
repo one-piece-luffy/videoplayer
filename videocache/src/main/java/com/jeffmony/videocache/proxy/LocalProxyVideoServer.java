@@ -1,7 +1,5 @@
 package com.jeffmony.videocache.proxy;
 
-import android.util.Log;
-
 import com.jeffmony.videocache.socket.SocketProcessTask;
 import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
@@ -26,14 +24,12 @@ public class LocalProxyVideoServer {
 
     private ServerSocket mLocalServer;
     private Thread mRequestThread;
-    private int mPort;
 
     public LocalProxyVideoServer() {
         try {
             InetAddress address = InetAddress.getByName(ProxyCacheUtils.LOCAL_PROXY_HOST);
             mLocalServer = new ServerSocket(0, 8, address);
-            mPort = mLocalServer.getLocalPort();
-            Log.e("asdf","==========++++++++++++=========port:"+mPort);
+            int mPort = mLocalServer.getLocalPort();
             ProxyCacheUtils.getConfig().setPort(mPort);
             ProxyCacheUtils.setLocalPort(mPort);
             CountDownLatch startSignal = new CountDownLatch(1);
@@ -50,7 +46,7 @@ public class LocalProxyVideoServer {
 
     private class WaitSocketRequestsTask implements Runnable {
 
-        private CountDownLatch mLatch;
+        private final CountDownLatch mLatch;
 
         public WaitSocketRequestsTask(CountDownLatch latch) {
             mLatch = latch;

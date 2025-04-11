@@ -1,7 +1,5 @@
 package com.jeffmony.videocache.socket.request;
 
-import android.util.Log;
-
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
@@ -48,7 +46,6 @@ public class HttpRequest {
     }
 
     public void parseRequest() throws Exception {
-        boolean error=false;
         byte[] buf = new byte[StorageUtils.DEFAULT_BUFFER_SIZE];
         int splitByteIndex = 0;
         int readLength = 0;
@@ -57,32 +54,13 @@ public class HttpRequest {
         mInputStream.mark(StorageUtils.DEFAULT_BUFFER_SIZE);
         try {
             read = mInputStream.read(buf, 0, StorageUtils.DEFAULT_BUFFER_SIZE);
-//            if(read>=0){
-//                Log.e("asdf","客户端1：" + new String(buf, 0, read, Charset.defaultCharset()));
-//            }
         } catch (SSLException e) {
             ProxyCacheUtils.close(mInputStream);
             throw e;
         } catch (IOException e) {
-            e.printStackTrace();
             ProxyCacheUtils.close(mInputStream);
-//            String url = mUri.substring(1);
-//            url = ProxyCacheUtils.decodeUriWithBase64(url);
-//            Log.e("asdf","socke url1:"+url);
-//
-////            ISocketListener listener=VideoProxyCacheManager.getInstance().mSocketListenerMap.get(arr);
-////            if(listener!=null){
-////                listener.timeout();
-////            }
             throw new SocketException("Socket Shutdown");
-//            String a="    type: m3u8\n" +
-//                    "    User-Agent: Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10\n" +
-//                    "    Accept-Encoding: gzip\n" +
-//                    "    Connection: Keep-Alive";
-//            buf=a.getBytes(StandardCharsets.UTF_8);
-//            read=0;
         } catch (Exception e) {
-            e.printStackTrace();
             ProxyCacheUtils.close(mInputStream);
             throw new VideoCacheException("Other exception");
         }
@@ -123,9 +101,8 @@ public class HttpRequest {
             mMethod=Method.GET;
 //            throw new VideoCacheException("BAD REQUEST: Syntax error. HTTP verb " + extraInfo.get("method") + " unhandled.");
         }
-        if(!error){
-            mUri = extraInfo.get("uri");
-        }
+
+        mUri = extraInfo.get("uri");
 
         String connection = this.mHeaders.get("connection");
         mKeepAlive = "HTTP/1.1".equals(mProtocolVersion) && (connection == null || !connection.matches("(?i).*close.*"));
@@ -158,7 +135,6 @@ public class HttpRequest {
         try {
             // Read the request line
             String readLine = headerReader.readLine();
-
             if (readLine == null) {
                 return;
             }
@@ -175,9 +151,7 @@ public class HttpRequest {
             }
 
             String uri = st.nextToken();
-            String url = uri.substring(1);
-            url = ProxyCacheUtils.decodeUriWithBase64(url);
-            Log.i("asdf","socke url:"+url);
+
             // If there's another token, its protocol version,
             // followed by HTTP headers.
             // NOTE: this now forces header names lower case since they are

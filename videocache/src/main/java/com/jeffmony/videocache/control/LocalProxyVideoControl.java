@@ -1,5 +1,7 @@
 package com.jeffmony.videocache.control;
 
+import android.util.Log;
+
 import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.jeffmony.videocache.common.VideoParams;
 import com.jeffmony.videocache.listener.IVideoCacheListener;
@@ -28,12 +30,14 @@ public class LocalProxyVideoControl {
         }
 
         @Override
-        public void onCacheError(VideoCacheInfo cacheInfo, int errorCode) {
-
+        public void onCacheError(VideoCacheInfo cacheInfo, String msg, int errorCode) {
+            Log.e(TAG, "onCacheError: " + msg);
         }
 
         @Override
-        public void onCacheForbidden(VideoCacheInfo cacheInfo) { }
+        public void onCacheForbidden(VideoCacheInfo cacheInfo) {
+            Log.e(TAG, "onCacheForbidden: " + cacheInfo);
+        }
 
         @Override
         public void onCacheFinished(VideoCacheInfo cacheInfo) {
@@ -53,7 +57,7 @@ public class LocalProxyVideoControl {
         mVideoUrl = videoUrl;
         VideoProxyCacheManager.getInstance().addCacheListener(videoUrl, mListener);
         VideoProxyCacheManager.getInstance().setPlayingUrlMd5(ProxyCacheUtils.computeMD5(videoUrl));
-        VideoProxyCacheManager.getInstance().startRequestVideoInfo(videoUrl, videoName,headers, extraParams);
+        VideoProxyCacheManager.getInstance().startRequestVideoInfo(videoUrl, headers, extraParams);
     }
 
     public void pauseLocalProxyTask() {
