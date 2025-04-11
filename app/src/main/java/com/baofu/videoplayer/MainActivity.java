@@ -12,12 +12,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
-import com.baofu.videocache.VideoInfoParseManager;
-import com.baofu.videocache.VideoProxyCacheManager;
-import com.baofu.videocache.common.VideoCacheConstants;
-import com.baofu.videocache.control.LocalProxyVideoControl;
-import com.baofu.videocache.listener.ISocketListener;
-import com.baofu.videocache.utils.ProxyCacheUtils;
+import com.jeffmony.videocache.VideoInfoParseManager;
+import com.jeffmony.videocache.common.VideoCacheConstants;
+import com.jeffmony.videocache.control.LocalProxyVideoControl;
+import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.baofu.videoplayer.utils.Appconstants;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;

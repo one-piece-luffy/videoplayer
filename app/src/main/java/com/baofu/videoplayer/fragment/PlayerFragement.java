@@ -14,15 +14,13 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.baofu.base.utils.CommonUtils;
-import com.baofu.videocache.control.LocalProxyVideoControl;
-import com.baofu.videocache.utils.ProxyCacheUtils;
+import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.databinding.FragmentPlayerBinding;
 import com.baofu.videoplayer.utils.LocalProxyVideoInstance;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.old.other.VideoPlayerManager;
 import com.yc.video.player.OnVideoStateListener;
-import com.yc.video.player.VideoPlayer;
 
 import java.util.HashMap;
 import java.util.Map;

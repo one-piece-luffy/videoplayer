@@ -1,15 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 33
-    buildToolsVersion '32.0.0'
+    compileSdk 35
     namespace 'com.baofu.videoplayer'
 
 
     defaultConfig {
         applicationId "com.baofu.videoplayer"
         minSdkVersion 24
-        targetSdkVersion 33
+        targetSdkVersion 35
         versionCode 1
         versionName "1.0"
 
@@ -47,12 +46,12 @@ android {
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
 
-    implementation 'com.github.one-piece-luffy:ImageLoader:2.5.19'
-    implementation 'com.github.one-piece-luffy:base:1.7.2'
+    implementation 'com.github.one-piece-luffy:ImageLoader:2.5.23'
+    implementation 'com.github.one-piece-luffy:base:1.7.9'
 
 //    implementation 'com.github.one-piece-luffy:videoplayer:2.1.22'
     //这个也要加，不加会崩溃

@@ -1,8 +1,6 @@
 package com.baofu.videoplayer.utils;
 
-import android.util.Log;
-
-import com.baofu.videocache.control.LocalProxyVideoControl;
+import com.jeffmony.videocache.control.LocalProxyVideoControl;
 
 import java.util.Map;
 

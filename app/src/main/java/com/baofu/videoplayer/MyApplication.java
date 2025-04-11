@@ -2,7 +2,7 @@ package com.baofu.videoplayer;
 
 import com.baofu.base.BaseApplication;
 import com.baofu.base.utils.CrashHandler;
-import com.baofu.videocache.VideoProxyCacheManager;
+import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.yc.kernel.utils.PlayerConstant;
 import com.yc.kernel.utils.PlayerFactoryUtils;
 import com.yc.video.config.VideoPlayerConfig;
