@@ -312,6 +312,13 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
             int percent = current * 100 / total  ;
             pow.getDrawable().setLevel(percent);
             tvPow.setText(percent+"%");
+            if (percent < 20) {
+                tvPow.setTextColor(0xffff0000);
+            } else if (percent < 30) {
+                tvPow.setTextColor(0xffffaf0f);
+            } else {
+                tvPow.setTextColor(0xffffffff);
+            }
 
 
         }

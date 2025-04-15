@@ -12,6 +12,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleEventObserver;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.baofu.base.utils.CommonUtils;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
@@ -61,6 +64,23 @@ public class PlayerFragement extends Fragment {
             mPosition = getArguments().getInt("position");
         }
         initPlayer();
+
+        getLifecycle().addObserver(new LifecycleEventObserver() {
+            @Override
+            public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
+//                Log.e("asdf","event:"+event+" isVisible:"+isVisible()+" position:"+mPosition);
+//                if (event == Lifecycle.Event.ON_RESUME && isVisible()) {
+//                    // Fragment 可见
+//                    Log.e("asdf","ON_RESUME && isVisible()"+mPosition);
+//                } else if (event == Lifecycle.Event.ON_PAUSE) {
+//                    // Fragment 不可见
+//                    Log.e("asdf","ON_PAUSE "+mPosition);
+//                } else if (event == Lifecycle.Event.ON_RESUME&&!isVisible()) {
+//                    // Fragment 不可见
+//                    Log.e("asdf","ON_RESUME && !isVisible()"+mPosition);
+//                }
+            }
+        });
     }
 
 
@@ -138,6 +158,7 @@ public class PlayerFragement extends Fragment {
                         break;
                     }
                     case ConstantKeys.CurrentState.STATE_PAUSED: {
+                        Log.e("asdf","pause");
                         break;
                     }
                     case ConstantKeys.CurrentState.STATE_PLAYING: {
@@ -148,6 +169,7 @@ public class PlayerFragement extends Fragment {
 //                        videoPrepared = true;
 //                        dismissLoadingDialog();
 //                        handler.removeCallbacks(runnable);
+                        Log.e("asdf","error");
                         break;
                     }
                     case ConstantKeys.CurrentState.STATE_BUFFERING_PAUSED: {
@@ -160,6 +182,15 @@ public class PlayerFragement extends Fragment {
                         //缓冲结束
 //                        int position = urlIndex + 1;
 //                        changeSelect(position);
+                        break;
+                    }
+                    case ConstantKeys.CurrentState.STATE_START_ABORT: {
+                        Log.e("asdf","abort");
+                        break;
+                    }
+                    case ConstantKeys.CurrentState.STATE_IDLE: {
+                        Log.e("asdf","idle");
+
                         break;
                     }
                 }
@@ -213,14 +244,19 @@ public class PlayerFragement extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(isFirst){
-            isFirst=false;
+        Log.e("asdff","status:"+binding.videoView.getCurrentPlayState());
+       if(binding.videoView.getCurrentPlayState()==ConstantKeys.CurrentState.STATE_IDLE){
             play();
+        }else {
+            binding.videoView.resume();
+            LocalProxyVideoInstance.getInstance().resume();
+
         }
-        binding.videoView.resume();
-        LocalProxyVideoInstance.getInstance().resume();
+
         Log.e("asdff","onresume:"+mPosition);
     }
+
+
 
     @Override
     public void onHiddenChanged(boolean hidden) {
@@ -231,6 +267,7 @@ public class PlayerFragement extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        Log.e("asdff","onPause:"+mPosition);
         binding.videoView.pause();
         LocalProxyVideoInstance.getInstance().pause();
     }
