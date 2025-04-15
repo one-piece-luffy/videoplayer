@@ -10,6 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Videoplayer">
         <activity
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|smallestScreenSize"
             android:name=".ViewPagerActivity"
             android:exported="false" />
         <activity

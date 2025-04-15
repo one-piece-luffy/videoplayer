@@ -262,10 +262,10 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
             } else {
                 if (orientationPortrait) {
                     mBottomToolsLayout.setVisibility(VISIBLE);
-                    iv_fullscreen.setVisibility(GONE);
+//                    iv_fullscreen.setVisibility(GONE);
                 } else {
                     mBottomToolsLayout.setVisibility(GONE);
-                    iv_fullscreen.setVisibility(VISIBLE);
+//                    iv_fullscreen.setVisibility(VISIBLE);
                 }
             }
         }
@@ -325,10 +325,10 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                 iv_fullscreen.setSelected(false);
                 if (orientationPortrait) {
                     mBottomToolsLayout.setVisibility(VISIBLE);
-                    iv_fullscreen.setVisibility(GONE);
+//                    iv_fullscreen.setVisibility(GONE);
                 } else {
                     mBottomToolsLayout.setVisibility(GONE);
-                    iv_fullscreen.setVisibility(VISIBLE);
+//                    iv_fullscreen.setVisibility(VISIBLE);
                 }
 
                 break;
@@ -561,6 +561,11 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
      */
     public void setOrientationPortrait(boolean orientationPortrait) {
         this.orientationPortrait = orientationPortrait;
+    }
+    public void hideFullScreenBtn(){
+        if(iv_fullscreen!=null){
+            iv_fullscreen.setVisibility(View.GONE);
+        }
     }
 
 

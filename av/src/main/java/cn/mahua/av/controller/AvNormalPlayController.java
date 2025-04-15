@@ -525,4 +525,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     public void setOnVisibilityChangedListener(OnVisibilityChangedListener listener){
         onVisibilityChangedListener=listener;
     }
+    public void hideFullScreenBtn(){
+        if(mAvBottomView!=null){
+            mAvBottomView.hideFullScreenBtn();
+        }
+    }
 }
