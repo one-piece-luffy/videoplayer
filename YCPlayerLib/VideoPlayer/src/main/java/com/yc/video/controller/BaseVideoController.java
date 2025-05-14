@@ -56,7 +56,7 @@ import java.util.Map;
  *     desc  : 控制器基类
  *     revise: 此类集成各种事件的处理逻辑，包括
  *             1.播放器状态改变: {@link #handlePlayerStateChanged(int)}
- *             2.播放状态改变: {@link #handlePlayStateChanged(int)}
+ *             2.播放状态改变: {@link # handlePlayStateChanged(int)}
  *             3.控制视图的显示和隐藏: {@link #handleVisibilityChanged(boolean, Animation)}
  *             4.播放进度改变: {@link #handleSetProgress(int, int)}
  *             5.锁定状态改变: {@link #handleLockStateChanged(boolean)}
@@ -507,7 +507,7 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
         if (!PlayerUtils.isActivityLiving(mActivity)) {
             return false;
         }
-        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        mActivity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         mControlWrapper.stopFullScreen();
         return true;
     }
@@ -555,7 +555,7 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
 
             int o = mActivity.getRequestedOrientation();
             //手动切换横竖屏
-            if (o == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT && lastOrientation == 90) return;
+            if (PlayerUtils.isPortraitOrientation(orientation) && lastOrientation == 90) return;
             if (mOrientation == 90) return;
             //90度，用户右侧横屏拿着手机
             mOrientation = 90;
@@ -563,7 +563,7 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
         } else if (orientation > 260 && orientation < 280) {
             int o = mActivity.getRequestedOrientation();
             //手动切换横竖屏
-            if (o == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT && lastOrientation == 270) return;
+            if (PlayerUtils.isPortraitOrientation(orientation) && lastOrientation == 270) return;
             if (mOrientation == 270) return;
             //270度，用户左侧横屏拿着手机
             mOrientation = 270;
@@ -580,7 +580,7 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
         //没有开启设备方向监听的情况
         if (!mEnableOrientation) return;
 
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         mControlWrapper.stopFullScreen();
     }
 
@@ -693,16 +693,16 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
                     //取消监听
                     mOrientationHelper.disable();
                 }
-                if (hasCutout()) {
-                    StatesCutoutUtils.adaptCutoutAboveAndroidP(getContext(), false);
-                }
+//                if (hasCutout()) {
+//                    StatesCutoutUtils.adaptCutoutAboveAndroidP(getContext(), false);
+//                }
                 break;
             case ConstantKeys.PlayMode.MODE_FULL_SCREEN:
                 //在全屏时强制监听设备方向
                 mOrientationHelper.enable();
-                if (hasCutout()) {
-                    StatesCutoutUtils.adaptCutoutAboveAndroidP(getContext(), true);
-                }
+//                if (hasCutout()) {
+//                    StatesCutoutUtils.adaptCutoutAboveAndroidP(getContext(), true);
+//                }
                 break;
             case ConstantKeys.PlayMode.MODE_TINY_WINDOW:
                 //小窗口取消重力感应监听

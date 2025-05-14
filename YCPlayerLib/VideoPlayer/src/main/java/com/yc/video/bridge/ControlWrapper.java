@@ -191,7 +191,7 @@ public class ControlWrapper implements InterVideoPlayer, InterVideoController {
         if (activity == null || activity.isFinishing())
             return;
         if (isFullScreen()) {
-            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
             stopFullScreen();
         } else {
             activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -222,7 +222,7 @@ public class ControlWrapper implements InterVideoPlayer, InterVideoController {
         if (isFullScreen()) {
             stopFullScreen();
             if (width > height) {
-               activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+               activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
             }
         } else {
             startFullScreen();

@@ -271,7 +271,7 @@ public class BasisVideoController extends GestureVideoController implements View
             int orientation = mActivity.getRequestedOrientation();
             int dp24 = PlayerUtils.dp2px(getContext(), 24);
             int cutoutHeight = getCutoutHeight();
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            if (PlayerUtils.isPortraitOrientation(orientation)) {
                 FrameLayout.LayoutParams lblp = (FrameLayout.LayoutParams) mLockButton.getLayoutParams();
                 lblp.setMargins(dp24, 0, dp24, 0);
             } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {

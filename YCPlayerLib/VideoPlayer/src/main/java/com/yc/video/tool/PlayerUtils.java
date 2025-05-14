@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
@@ -583,4 +584,10 @@ public final class PlayerUtils {
         return String.format("playerState: %s", playerStateString);
     }
 
+    /**
+     * 是否是竖屏
+     */
+    public static boolean isPortraitOrientation(int orientation) {
+        return orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT || orientation == ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    }
 }

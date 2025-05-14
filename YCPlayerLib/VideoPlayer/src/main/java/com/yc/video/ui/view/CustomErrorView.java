@@ -106,7 +106,7 @@ public class CustomErrorView extends LinearLayout implements InterControlView, V
             if (mControlWrapper.isFullScreen()) {
                 Activity activity = PlayerUtils.scanForActivity(mContext);
                 if (activity != null && !activity.isFinishing()) {
-                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                     mControlWrapper.stopFullScreen();
                 }
             }

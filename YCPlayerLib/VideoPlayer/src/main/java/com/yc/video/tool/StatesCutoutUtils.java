@@ -130,18 +130,18 @@ public final class StatesCutoutUtils {
     /**
      * 适配刘海屏，针对Android P以上系统
      */
-    public static void adaptCutoutAboveAndroidP(Context context, boolean isAdapt) {
-        Activity activity = PlayerUtils.scanForActivity(context);
-        if (activity == null) return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
-            if (isAdapt) {
-                lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-            } else {
-                lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;
-            }
-            activity.getWindow().setAttributes(lp);
-        }
-    }
+//    public static void adaptCutoutAboveAndroidP(Context context, boolean isAdapt) {
+//        Activity activity = PlayerUtils.scanForActivity(context);
+//        if (activity == null) return;
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+//            WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
+//            if (isAdapt) {
+//                lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+//            } else {
+//                lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;
+//            }
+//            activity.getWindow().setAttributes(lp);
+//        }
+//    }
 
 }

@@ -284,7 +284,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             int orientation = mActivity.getRequestedOrientation();
             int dp24 = PlayerUtils.dp2px(getContext(), 24);
             int cutoutHeight = getCutoutHeight();
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            if (PlayerUtils.isPortraitOrientation(orientation)) {
                 LayoutParams lblp = (LayoutParams) mLockButton.getLayoutParams();
                 lblp.setMargins(dp24, 0, dp24, 0);
             } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {

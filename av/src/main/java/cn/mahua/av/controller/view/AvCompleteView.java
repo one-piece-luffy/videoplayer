@@ -118,7 +118,7 @@ public class AvCompleteView extends FrameLayout implements InterControlView, Vie
             if (mControlWrapper.isFullScreen()) {
                 Activity activity = PlayerUtils.scanForActivity(mContext);
                 if (activity != null && !activity.isFinishing()) {
-                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                     mControlWrapper.stopFullScreen();
                 }
             }
@@ -164,7 +164,7 @@ public class AvCompleteView extends FrameLayout implements InterControlView, Vie
             int orientation = activity.getRequestedOrientation();
             int cutoutHeight = mControlWrapper.getCutoutHeight();
             LinearLayout.LayoutParams sflp = (LinearLayout.LayoutParams) mIvStopFullscreen.getLayoutParams();
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            if (PlayerUtils.isPortraitOrientation(orientation)) {
                 sflp.setMargins(0, 0, 0, 0);
             } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
                 sflp.setMargins(cutoutHeight, 0, 0, 0);

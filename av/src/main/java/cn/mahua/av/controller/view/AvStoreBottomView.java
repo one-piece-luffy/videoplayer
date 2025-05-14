@@ -227,7 +227,7 @@ public class AvStoreBottomView extends FrameLayout implements InterControlView,
         if (activity != null && mControlWrapper.hasCutout()) {
             int orientation = activity.getRequestedOrientation();
             int cutoutHeight = mControlWrapper.getCutoutHeight();
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            if (PlayerUtils.isPortraitOrientation(orientation)) {
                 mLlBottomContainer.setPadding(0, 0, 0, 0);
                 mPbBottomProgress.setPadding(0, 0, 0, 0);
             } else if (orientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {

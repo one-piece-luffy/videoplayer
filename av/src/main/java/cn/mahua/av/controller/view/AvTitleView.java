@@ -116,7 +116,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
             //点击返回键
             Activity activity = PlayerUtils.scanForActivity(getContext());
             if (activity != null && mControlWrapper.isFullScreen()) {
-                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 mControlWrapper.stopFullScreen();
                 return;
             }
@@ -262,7 +262,7 @@ public class AvTitleView extends FrameLayout implements InterControlView, View.O
             int orientation = activity.getRequestedOrientation();
             int cutoutHeight = mControlWrapper.getCutoutHeight();
             //设置屏幕的变化是，标题的值。后期有需要在暴露给开发者设置
-            if (orientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            if (PlayerUtils.isPortraitOrientation(orientation)) {
                 //切换成竖屏的时候调用
                 mLlTitleContainer.setPadding(PlayerUtils.dp2px(mContext,12),
                         PlayerUtils.dp2px(mContext,10), PlayerUtils.dp2px(mContext,12), 0);
