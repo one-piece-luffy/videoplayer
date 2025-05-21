@@ -7,6 +7,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 
 
 import androidx.annotation.NonNull;
@@ -85,6 +86,7 @@ public class VideoProxyCacheManager {
         mListener = new IVideoInfoParsedListener() {
             @Override
             public void onM3U8ParsedFinished(VideoRequest videoRequest, M3U8 m3u8, VideoCacheInfo cacheInfo) {
+                Log.e(TAG,"onM3U8ParsedFinished:开始下载");
                 //开始发起请求M3U8视频中的ts数据
                 startM3U8Task(m3u8, cacheInfo, videoRequest.getHeaders());
                 //下载任务准备好才通知可以回复

@@ -2,6 +2,7 @@ package com.jeffmony.videocache;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.WorkerThread;
 
@@ -185,19 +186,20 @@ public class VideoInfoParseManager {
 //                    videoRequest.getVideoInfoParsedListener().onM3U8ParsedFailed(new VideoCacheException("insufficient space:Need:" + m3u8.getEstimateSize() + ",availableSpace:" + availableSpace), cacheInfo);
 //                    return;
 //                }
+                Log.e(TAG,"开始创建m3u8文件 ");
                 // 1.将M3U8结构保存到本地
                 File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
                 M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
-
+                Log.e(TAG,"m3u8创建完毕 ");
                 File proxyM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.PROXY_M3U8_SUFFIX);
                 cacheInfo.setLocalPort(ProxyCacheUtils.getLocalPort());
                 M3U8Utils.createProxyM3U8File(proxyM3U8File, m3u8, cacheInfo.getMd5(), videoRequest.getHeaders());
-
+                Log.e(TAG,"代理文件创建完毕 ");
                 // 2.构建一个本地代理的m3u8结构
                 videoRequest.getVideoInfoParsedListener().onM3U8ParsedFinished(videoRequest, m3u8, cacheInfo);
             }
         } catch (Exception e) {
-            LogUtils.e(TAG, "parseNetworkM3U8Info error.", e);
+            Log.e(TAG,"解析m3u8出错："+e.getMessage());
             videoRequest.getVideoInfoParsedListener().onM3U8ParsedFailed(new VideoCacheException("parseM3U8Info failed, " + e), cacheInfo);
         }
     }

@@ -198,7 +198,7 @@ public class M3U8Utils {
             m3u8.setSequence(sequence);
             //去掉这个，不然有的m3u8无法下载  https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8
 //            m3u8.setIsLive(!hasEndList);
-            Log.e(TAG, "m3u8解析完毕");
+            Log.e(TAG, "m3u8解析完毕:"+m3u8.getUrl());
             return m3u8;
         } catch (IOException e) {
             e.printStackTrace();
@@ -556,6 +556,9 @@ public class M3U8Utils {
                         }
                         boolean isMessyStr = VideoCacheUtils.isMessyCode(textBuilder.toString());
                         m3u8Ts.mIsMessyKey=isMessyStr;
+                        if (m3u8File.getParentFile() != null && m3u8File.getParentFile().exists()) {
+                            m3u8File.getParentFile().mkdir();
+                        }
                         File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
                         FileOutputStream outputStream = new FileOutputStream(keyFile);
                         outputStream.write(textBuilder.toString().getBytes());
@@ -617,6 +620,9 @@ public class M3U8Utils {
                             textBuilder.append(line);
                         }
                         m3u8Ts.mIsMessyKey= VideoCacheUtils.isMessyCode(textBuilder.toString());
+                        if (m3u8File.getParentFile() != null && m3u8File.getParentFile().exists()) {
+                            m3u8File.getParentFile().mkdir();
+                        }
                         File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
                         FileOutputStream outputStream = new FileOutputStream(keyFile);
                         outputStream.write(textBuilder.toString().getBytes());
