@@ -63,7 +63,7 @@ public class M3U8Response extends BaseResponse {
             wait += WAIT_TIME;
         }
         if (!mFile.exists() || !VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5)) {
-            LogUtils.e(TAG, "timeout");
+            LogUtils.e(TAG, "m3u8 parse timeout");
             return;
         }
         RandomAccessFile randomAccessFile = null;

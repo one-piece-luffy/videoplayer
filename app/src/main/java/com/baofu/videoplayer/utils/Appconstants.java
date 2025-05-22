@@ -7,4 +7,5 @@ public class Appconstants {
     public static String shixiong = "https://ikcdn01.ikzybf.com/20240502/hEBel7Yp/index.m3u8";//师兄阿师兄
     public static String huajianghu = "https://ikcdn01.ikzybf.com/20240111/4bKhhokb/index.m3u8";//画江湖
     public static String fanren = "https://ikcdn01.ikzybf.com/20240504/UkuX5E7m/index.m3u8";//凡人修仙传
+    public static String canghaizhuan = "https://ukzy.ukubf4.com/20250518/JS5k7pPe/index.m3u8";//藏海传
 }

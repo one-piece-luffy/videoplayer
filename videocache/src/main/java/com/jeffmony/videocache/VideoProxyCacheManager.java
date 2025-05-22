@@ -391,7 +391,7 @@ public class VideoProxyCacheManager {
                 saveDir.mkdirs();
             }
             VideoCacheInfo videoCacheInfo = StorageUtils.readVideoCacheInfo(saveDir);
-            LogUtils.i(TAG, "startRequestVideoInfo " + videoCacheInfo);
+            LogUtils.e(TAG, "startRequestVideoInfo " + videoCacheInfo);
             if (videoCacheInfo == null) {
                 //之前没有缓存信息
                 videoCacheInfo = new VideoCacheInfo(videoUrl);

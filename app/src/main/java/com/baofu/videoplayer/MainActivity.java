@@ -282,6 +282,12 @@ public class MainActivity extends AppCompatActivity {
             name="师兄啊师兄";
             play(name);
         });
+        findViewById(R.id.canghaizhuan).setOnClickListener(v -> {
+            Log.e("asdf","========test==========");
+            mUrl=Appconstants.canghaizhuan;
+            name="test";
+            play(name);
+        });
     }
     @Override
     protected void onResume() {

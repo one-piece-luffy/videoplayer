@@ -65,6 +65,13 @@
                 android:text="师兄啊师兄"
                 android:layout_marginStart="5dp"
                 />
+            <Button
+                android:id="@+id/canghaizhuan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="藏海传-ts加密"
+                android:layout_marginStart="5dp"
+                />
         </LinearLayout>
     </LinearLayout>
 

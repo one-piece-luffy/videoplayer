@@ -8,6 +8,7 @@ import com.jeffmony.videocache.m3u8.M3U8;
 import com.jeffmony.videocache.m3u8.M3U8Seg;
 import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.utils.AES128Utils;
+import com.jeffmony.videocache.utils.FileUtils;
 import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.OkHttpUtil;
@@ -204,12 +205,18 @@ public class M3U8CacheTask extends VideoCacheTask {
             downloadFile(seg, segFile, seg.getUrl());
         }
 
+        boolean exist=segFile.exists();
+        long length=segFile.length();
+        long contentLength=seg.getContentLength();
         //确保当前文件下载完整
-        if (segFile.exists() && segFile.length() == seg.getContentLength()) {
+        if (exist && length > 0 &&length==contentLength) {
             //只有这样的情况下才能保证当前的ts文件真正被下载下来了
             seg.setFileSize(segFile.length());
             //更新进度
             notifyCacheProgress();
+            Log.e(TAG,"notifyCacheProgress:"+segFile.getName()+" length:"+segFile.length());
+        }else {
+            Log.e(TAG,"文件大小不一致:"+segFile.getName()+" length:"+length+" contentlength:"+contentLength);
         }
     }
 
@@ -221,6 +228,8 @@ public class M3U8CacheTask extends VideoCacheTask {
         FileOutputStream fos = null;
         FileChannel foutc = null;
         Response response=null;
+        File tmpFile = new File(file.getParentFile(), file.getName() + TEMP_POSTFIX);
+
         try {
             response = OkHttpUtil.getInstance().requestSync(videoUrl,mHeaders);
             int responseCode = response.code();
@@ -246,6 +255,8 @@ public class M3U8CacheTask extends VideoCacheTask {
                         if (result != null) {
                             fileOutputStream = new FileOutputStream(file);//todo oom
                             fileOutputStream.write(result);
+                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
+                            contentLength = file.length();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -257,19 +268,26 @@ public class M3U8CacheTask extends VideoCacheTask {
                     }
                 } else {
                     rbc = Channels.newChannel(inputStream);
-                    fos = new FileOutputStream(file);
+                    fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
+                    /**
+                     *  todo
+                     *  这里需要引入临时文件，下载完成后再重命名为原来的名字，不然 M3U8SegResponse的sendBody()的判断会出问题
+                     *  sendBody 监听文件是否存在，只要文件存在就将数据发给播放器，这时候的文件可能是不完整的。所以这里等全部下载完成再重命名。
+                     *  这时候sendBody监听到的就是完整的文件。
+                     */
+                    FileUtils.rename(tmpFile,file);
+                    if (contentLength <= 0) {
+                        contentLength = file.length();
+                    }
                 }
 
-                if (contentLength <= 0) {
-                    contentLength = file.length();
-                }
+
                 ts.setContentLength(contentLength);
                 Log.d(TAG,"队列ts下载完成:"+ts.getSegName());
-                Log.d(TAG,"队列ts下载完成");
-                if(ts.getSegIndex()==0){
-                    Log.e(TAG, "首个片段已经下载 index="+ts.getSegIndex()+", url="+ts.getUrl());
+                if (ts.getSegIndex() == 0) {
+                    Log.e(TAG, "首个片段已经下载 " + file.getName()+ ", url=" + ts.getUrl());
                 }
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
@@ -290,11 +308,11 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
-//            Log.e(TAG, "InterruptedIOException" );
+            Log.e(TAG, "InterruptedIOException" );
 
         } catch (Exception e) {
             e.printStackTrace();
-
+            Log.e(TAG, "ts下载出错了",e );
             ts.setRetryCount(ts.getRetryCount() + 1);
 //            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
 ////                Log.e(TAG, "====retry, exception=" + e.getMessage());
