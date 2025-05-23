@@ -14,6 +14,8 @@ import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.jeffmony.videocache.VideoInfoParseManager;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
+import com.jeffmony.videocache.listener.IVideoCacheListener;
+import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.baofu.videoplayer.utils.Appconstants;
 import com.yc.video.config.ConstantKeys;
@@ -35,6 +37,38 @@ public class MainActivity extends AppCompatActivity {
     //倍速播放速度
     String speed;
     String name;
+    public IVideoCacheListener mListener=new IVideoCacheListener() {
+        @Override
+        public void onCacheStart(VideoCacheInfo cacheInfo) {
+
+        }
+
+        @Override
+        public void onCacheProgress(VideoCacheInfo cacheInfo) {
+
+        }
+
+        @Override
+        public void onCacheError(VideoCacheInfo cacheInfo, String msg, int errorCode) {
+
+        }
+
+        @Override
+        public void onCacheForbidden(VideoCacheInfo cacheInfo) {
+
+        }
+
+        @Override
+        public void onCacheFinished(VideoCacheInfo cacheInfo) {
+
+        }
+
+        @Override
+        public void onFirstTsDownload(String filename) {
+            CommonUtils.showToast("第一个ts下载完成:"+filename);
+            Log.e("MainActivity","第一个ts下载完成:"+filename);
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -158,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
                     super.run();
                     //开始缓存
                     mLocalProxyVideoControl = new LocalProxyVideoControl();
+                    mLocalProxyVideoControl.mListener = mListener;
                     mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,null, null);
                 }
             }.start();
@@ -283,8 +318,14 @@ public class MainActivity extends AppCompatActivity {
             play(name);
         });
         findViewById(R.id.canghaizhuan).setOnClickListener(v -> {
-            Log.e("asdf","========test==========");
+            Log.e("asdf","========藏海传==========");
             mUrl=Appconstants.canghaizhuan;
+            name="test";
+            play(name);
+        });
+        findViewById(R.id.shaohua).setOnClickListener(v -> {
+            Log.e("asdf","========韶华若锦==========");
+            mUrl=Appconstants.ShaoHuaRuoJIn;
             name="test";
             play(name);
         });

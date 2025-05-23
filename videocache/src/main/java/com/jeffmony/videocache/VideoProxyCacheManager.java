@@ -152,6 +152,9 @@ public class VideoProxyCacheManager {
                     case ProxyMessage.MSG_VIDEO_PROXY_COMPLETED:
                         cacheListener.onCacheFinished(cacheInfo);
                         break;
+                    case ProxyMessage.MSG_VIDEO_PROXY_FIRST_TS:
+                        cacheListener.onFirstTsDownload(cacheInfo.getSavePath());
+                        break;
                     default:
                         break;
                 }
@@ -481,6 +484,12 @@ public class VideoProxyCacheManager {
             @Override
             public void onVideoSeekComplete() {
                 notifyLocalProxyLock(lock);
+            }
+
+            @Override
+            public void onFirstTsDownload(String filename) {
+                cacheInfo.setSavePath(filename);
+                mMainHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_FIRST_TS, new VideoResult(cacheInfo)).sendToTarget();
             }
 
             @Override

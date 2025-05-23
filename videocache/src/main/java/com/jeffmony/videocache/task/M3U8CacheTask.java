@@ -38,7 +38,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     private static final String TAG = "M3U8CacheTask";
 
-    private static final String TEMP_POSTFIX = ".download";
+    private static final String TEMP_POSTFIX = ".task_downloading";
 
     private static final int THREAD_POOL_COUNT = 6;
     private static final int CONTINUOUS_SUCCESS_TS_THRESHOLD = 6;
@@ -112,7 +112,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void stopCacheTask() {
-        LogUtils.i(TAG, "stopCacheTask");
+        LogUtils.e(TAG, "stopCacheTask");
         if (isTaskRunning()) {
             try {
                 if (mTaskExecutor != null) {
@@ -155,6 +155,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startRequestVideoRange(int curTs) {
+        saveVideoInfo();
         if (mCacheInfo.isCompleted()) {
             notifyOnTaskCompleted();
             return;
@@ -177,18 +178,47 @@ public class M3U8CacheTask extends VideoCacheTask {
                 new ThreadPoolExecutor.DiscardOldestPolicy());
         for (int index = curTs; index < mTotalSegCount; index++) {
             final M3U8Seg seg = mSegList.get(index);
-            mTaskExecutor.execute(() -> {
-                try {
+            try {
+                mTaskExecutor.execute(() -> {
+//                            try {
                     startDownloadSegTask(seg);
-                } catch (Exception e) {
-                    LogUtils.w(TAG, "M3U8 ts video download failed, exception=" + e);
-                    notifyOnTaskFailed(e);
-                }
-            });
+//                            } catch (Exception e) {
+//                                LogUtils.w(TAG, "M3U8 ts video download failed, exception=" + e);
+//                                notifyOnTaskFailed(e);
+//                            }
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "发生异常: ", e);
+            }
+
         }
+//        if (mTaskExecutor != null) {
+//            mTaskExecutor.shutdown();//下载完成之后要关闭线程池
+//        }
+//        while (mTaskExecutor != null && !mTaskExecutor.isTerminated()) {
+//
+//            try {
+//                //等待中
+//                Thread.sleep(2000);
+//            } catch (Exception e) {
+//                Log.e(TAG, "发生异常: ", e);
+//            }
+//
+//            try {
+//                ThreadPoolExecutor tpe = ((ThreadPoolExecutor) mTaskExecutor);
+//                int queueSize = tpe.getQueue().size();
+//                int activeCount = tpe.getActiveCount();
+//                long completedTaskCount = tpe.getCompletedTaskCount();
+//                long taskCount = tpe.getTaskCount();
+//                Log.e(TAG, " 当前排队线程数：" + queueSize + " 当前活动线程数：" + activeCount + " 执行完成线程数：" + completedTaskCount + " 总线程数：" + taskCount);
+//            } catch (Exception e) {
+//                Log.e(TAG, "发生异常: ", e);
+//            }
+//        }
+
     }
 
-    private void startDownloadSegTask(M3U8Seg seg) throws Exception {
+    private void startDownloadSegTask(M3U8Seg seg)  {
         LogUtils.i(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
@@ -214,14 +244,14 @@ public class M3U8CacheTask extends VideoCacheTask {
             seg.setFileSize(segFile.length());
             //更新进度
             notifyCacheProgress();
-            Log.e(TAG,"notifyCacheProgress:"+segFile.getName()+" length:"+segFile.length());
+//            Log.e(TAG,"notifyCacheProgress:"+segFile.getName()+" length:"+segFile.length());
         }else {
-            Log.e(TAG,"文件大小不一致:"+segFile.getName()+" length:"+length+" contentlength:"+contentLength);
+//            Log.e(TAG,"文件大小不一致:"+segFile.getName()+" length:"+length+" contentlength:"+contentLength);
         }
     }
 
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
-//        Log.e(TAG,"队列开始下载ts");
+//        Log.e(TAG,"队列开始下载ts:"+file.getName());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
@@ -241,30 +271,29 @@ public class M3U8CacheTask extends VideoCacheTask {
                 byte[] encryptionKey = ts.encryptionKey == null ? mM3U8.encryptionKey : ts.encryptionKey;
                 String iv = ts.encryptionKey == null ? mM3U8.encryptionIV : ts.getKeyIv();
                 if ( encryptionKey != null) {
-                    String tsInitSegmentName = ts.getInitSegmentName() + ".temp";
-                    File tsInitSegmentFile = new File(mSaveDir, tsInitSegmentName);
 
                     rbc = Channels.newChannel(inputStream);
-                    fos = new FileOutputStream(tsInitSegmentFile);
+                    fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
 
                     FileOutputStream fileOutputStream = null;
                     try {
-                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
+                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
                         if (result != null) {
-                            fileOutputStream = new FileOutputStream(file);//todo oom
+                            fileOutputStream = new FileOutputStream(tmpFile);//todo oom
                             fileOutputStream.write(result);
                             //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
-                            contentLength = file.length();
+                            contentLength = tmpFile.length();
+                            FileUtils.handleRename(tmpFile,file);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         if (fileOutputStream != null) {
                             fileOutputStream.close();
-                            tsInitSegmentFile.delete();
                         }
+                        FileUtils.deleteFile(tmpFile);
                     }
                 } else {
                     rbc = Channels.newChannel(inputStream);
@@ -277,7 +306,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                      *  sendBody 监听文件是否存在，只要文件存在就将数据发给播放器，这时候的文件可能是不完整的。所以这里等全部下载完成再重命名。
                      *  这时候sendBody监听到的就是完整的文件。
                      */
-                    FileUtils.rename(tmpFile,file);
+                    FileUtils.handleRename(tmpFile,file);
                     if (contentLength <= 0) {
                         contentLength = file.length();
                     }
@@ -287,7 +316,10 @@ public class M3U8CacheTask extends VideoCacheTask {
                 ts.setContentLength(contentLength);
                 Log.d(TAG,"队列ts下载完成:"+ts.getSegName());
                 if (ts.getSegIndex() == 0) {
-                    Log.e(TAG, "首个片段已经下载 " + file.getName()+ ", url=" + ts.getUrl());
+                    if (mListener != null) {
+                        mListener.onFirstTsDownload(file.getName());
+                    }
+//                    Log.e(TAG, "首个片段已经下载 " + file.getName()+ ", url=" + ts.getUrl());
                 }
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);

@@ -51,7 +51,7 @@ public class M3U8SegResponse extends BaseResponse {
 
     private static final String TAG = "M3U8SegResponse";
 
-    private static final String TEMP_POSTFIX = ".downloading";
+    private static final String TEMP_POSTFIX = ".player_downloading";
 
     private String mParentUrl;
     private final File mSegFile;
@@ -149,7 +149,7 @@ public class M3U8SegResponse extends BaseResponse {
 //            }
 //            LogUtils.d(TAG,  "FileLength=" + mSegFile.length() + ", segLength=" + mSegLength + ", FilePath=" + mSegFile.getAbsolutePath());
 //        }
-//        Log.e(TAG,"ts已存在，发往服务器");
+        Log.e(TAG,mSegFile.getName()+"已存在，发往服务器");
         RandomAccessFile randomAccessFile = null;
 
         try {
@@ -288,34 +288,34 @@ public class M3U8SegResponse extends BaseResponse {
 
                 if (encryptionKey != null) {
                     Log.e(TAG,"播放器正在下载:"+file.getName()+" ts是加密过的");
-                    String tsInitSegmentName = ts.getInitSegmentName() + ".temp";
-                    File tsInitSegmentFile = new File(file.getParentFile().getAbsolutePath(), tsInitSegmentName);
-
 
                     rbc = Channels.newChannel(inputStream);
-                    fos = new FileOutputStream(tsInitSegmentFile);
+                    fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
 //                    Log.i(TAG, "解密ts");
                     FileOutputStream fileOutputStream = null;
                     try {
-                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
+                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
                         if (result != null) {
-                            fileOutputStream = new FileOutputStream(file);
+                            //这里写入的是临时文件
+                            fileOutputStream = new FileOutputStream(tmpFile);
                             fileOutputStream.write(result);
                             //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
-                            contentLength=file.length();
+                            contentLength = tmpFile.length();
+                            Log.e(TAG, "ts下载完成"+file.getName());
+                            FileUtils.handleRename(tmpFile,file);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         if (fileOutputStream != null) {
                             fileOutputStream.close();
-                            tsInitSegmentFile.delete();
                         }
+                        FileUtils.deleteFile(tmpFile);
                     }
                 } else {
-                    Log.e(TAG,"播放器正在下载:"+file.getName()+" ts是加密过的");
+                    Log.e(TAG,"播放器正在下载:"+file.getName());
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
@@ -326,7 +326,8 @@ public class M3U8SegResponse extends BaseResponse {
                      *  sendBody 监听文件是否存在，只要文件存在就将数据发给播放器，这时候的文件可能是不完整的。所以这里等全部下载完成再重命名。
                      *  这时候sendBody监听到的就是完整的文件。
                      */
-                    FileUtils.rename(tmpFile,file);
+                    FileUtils.handleRename(tmpFile,file);
+                    Log.e(TAG, "ts下载完成"+file.getName());
                     if (contentLength <= 0) {
                         contentLength = file.length();
                     }
@@ -335,7 +336,7 @@ public class M3U8SegResponse extends BaseResponse {
 
                 mSegLength = contentLength;
                 ts.setContentLength(contentLength);
-                Log.e(TAG, "ts下载完成");
+
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503 || responseCode == HttpUtils.RESPONSE_429) {
@@ -393,5 +394,8 @@ public class M3U8SegResponse extends BaseResponse {
         }
 
     }
+
+
+
 
 }

@@ -7,4 +7,5 @@ public class ProxyMessage {
     public static final int MSG_VIDEO_PROXY_START = 3;
     public static final int MSG_VIDEO_PROXY_PROGRESS = 4;
     public static final int MSG_VIDEO_PROXY_COMPLETED = 5;
+    public static final int MSG_VIDEO_PROXY_FIRST_TS = 6;
 }

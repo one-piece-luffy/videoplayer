@@ -18,7 +18,7 @@ public class LocalProxyVideoControl {
 
     private String mVideoUrl;
 
-    private IVideoCacheListener mListener = new IVideoCacheListener() {
+    public IVideoCacheListener mListener = new IVideoCacheListener() {
         @Override
         public void onCacheStart(VideoCacheInfo cacheInfo) { }
 
@@ -44,6 +44,11 @@ public class LocalProxyVideoControl {
             Map<String, Object> params = new HashMap<>();
             params.put(VideoParams.PERCENT, 100f);
             params.put(VideoParams.TOTAL_SIZE, cacheInfo.getTotalSize());
+        }
+
+        @Override
+        public void onFirstTsDownload(String filename) {
+            Log.e(TAG, "==========第一个ts下载完成:"+filename);
         }
     };
 
