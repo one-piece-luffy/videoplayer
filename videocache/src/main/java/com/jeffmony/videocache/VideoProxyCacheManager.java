@@ -139,6 +139,9 @@ public class VideoProxyCacheManager {
                 switch (msg.what) {
                     case ProxyMessage.MSG_VIDEO_PROXY_ERROR:
                         cacheListener.onCacheError(cacheInfo, videoResult.msg, 0);
+                        if(PlayerProgressListenerManager.getInstance().getListener()!=null){
+                            PlayerProgressListenerManager.getInstance().getListener().onPlayerFirstTsDownload(videoResult.msg);
+                        }
                         break;
                     case ProxyMessage.MSG_VIDEO_PROXY_FORBIDDEN:
                         cacheListener.onCacheForbidden(cacheInfo);
@@ -152,9 +155,7 @@ public class VideoProxyCacheManager {
                     case ProxyMessage.MSG_VIDEO_PROXY_COMPLETED:
                         cacheListener.onCacheFinished(cacheInfo);
                         break;
-                    case ProxyMessage.MSG_VIDEO_PROXY_FIRST_TS:
-                        cacheListener.onFirstTsDownload(cacheInfo.getSavePath());
-                        break;
+
                     default:
                         break;
                 }
@@ -484,12 +485,6 @@ public class VideoProxyCacheManager {
             @Override
             public void onVideoSeekComplete() {
                 notifyLocalProxyLock(lock);
-            }
-
-            @Override
-            public void onFirstTsDownload(String filename) {
-                cacheInfo.setSavePath(filename);
-                mMainHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_FIRST_TS, new VideoResult(cacheInfo)).sendToTarget();
             }
 
             @Override

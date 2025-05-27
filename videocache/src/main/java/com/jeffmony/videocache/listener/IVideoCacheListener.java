@@ -13,5 +13,5 @@ public interface IVideoCacheListener {
     void onCacheForbidden(VideoCacheInfo cacheInfo);
 
     void onCacheFinished(VideoCacheInfo cacheInfo);
-    void onFirstTsDownload(String filename);
+
 }

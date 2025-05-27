@@ -3,6 +3,7 @@ package com.jeffmony.videocache.socket.response;
 import android.os.Build;
 import android.util.Log;
 
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoInfoParseManager;
 import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.jeffmony.videocache.common.VideoCacheException;
@@ -245,7 +246,7 @@ public class M3U8SegResponse extends BaseResponse {
         M3U8Seg ts = null;
         if (m3u8 == null) {
             Log.i(TAG, "m3u8 is null：" + videoUrl);
-        }else {
+        } else {
 //            Log.i(TAG, "m3u8 list：" + m3u8.getSegList().size());
             for (int i = 0; i < m3u8.getSegList().size(); i++) {
                 M3U8Seg m3U8Seg = m3u8.getSegList().get(i);
@@ -268,7 +269,8 @@ public class M3U8SegResponse extends BaseResponse {
         FileOutputStream fos = null;
         FileChannel foutc = null;
         Response response = null;
-        File tmpFile = new File(file.getParentFile(), file.getName() + TEMP_POSTFIX);
+        String filename=file.getName();
+        File tmpFile = new File(file.getParentFile(), filename + TEMP_POSTFIX);
         try {
 
             response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
@@ -287,7 +289,7 @@ public class M3U8SegResponse extends BaseResponse {
                 String iv = ts.encryptionKey == null&&m3u8!=null ? m3u8.encryptionIV : ts.getKeyIv();
 
                 if (encryptionKey != null) {
-                    Log.e(TAG,"播放器正在下载:"+file.getName()+" ts是加密过的");
+                    Log.e(TAG,"播放器正在下载:"+filename+" ts是加密过的");
 
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tmpFile);
@@ -303,7 +305,7 @@ public class M3U8SegResponse extends BaseResponse {
                             fileOutputStream.write(result);
                             //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
                             contentLength = tmpFile.length();
-                            Log.e(TAG, "ts下载完成"+file.getName());
+                            Log.e(TAG, "ts下载完成"+filename);
                             FileUtils.handleRename(tmpFile,file);
                         }
                     } catch (Exception e) {
@@ -315,7 +317,7 @@ public class M3U8SegResponse extends BaseResponse {
                         FileUtils.deleteFile(tmpFile);
                     }
                 } else {
-                    Log.e(TAG,"播放器正在下载:"+file.getName());
+                    Log.e(TAG,"播放器正在下载:"+filename);
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
@@ -327,13 +329,16 @@ public class M3U8SegResponse extends BaseResponse {
                      *  这时候sendBody监听到的就是完整的文件。
                      */
                     FileUtils.handleRename(tmpFile,file);
-                    Log.e(TAG, "ts下载完成"+file.getName());
+                    Log.e(TAG, "ts下载完成"+filename);
                     if (contentLength <= 0) {
                         contentLength = file.length();
                     }
                 }
-
-
+                if (filename.startsWith("0.")) {
+                    if (PlayerProgressListenerManager.getInstance().getListener() != null) {
+                        PlayerProgressListenerManager.getInstance().getListener().onPlayerFirstTsDownload(filename);
+                    }
+                }
                 mSegLength = contentLength;
                 ts.setContentLength(contentLength);
 

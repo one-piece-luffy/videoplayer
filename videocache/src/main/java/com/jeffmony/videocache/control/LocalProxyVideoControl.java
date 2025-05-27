@@ -46,10 +46,6 @@ public class LocalProxyVideoControl {
             params.put(VideoParams.TOTAL_SIZE, cacheInfo.getTotalSize());
         }
 
-        @Override
-        public void onFirstTsDownload(String filename) {
-            Log.e(TAG, "==========第一个ts下载完成:"+filename);
-        }
     };
 
     public LocalProxyVideoControl() {

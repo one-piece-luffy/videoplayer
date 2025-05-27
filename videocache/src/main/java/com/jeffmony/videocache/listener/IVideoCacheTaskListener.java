@@ -15,6 +15,4 @@ public interface IVideoCacheTaskListener {
 
     void onVideoSeekComplete();
 
-    void onFirstTsDownload(String filename);
-
 }

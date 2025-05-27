@@ -2,6 +2,8 @@ package com.baofu.videoplayer;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,8 +14,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoInfoParseManager;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
+import com.jeffmony.videocache.listener.IPlayerProgressListener;
 import com.jeffmony.videocache.listener.IVideoCacheListener;
 import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
@@ -37,38 +41,44 @@ public class MainActivity extends AppCompatActivity {
     //倍速播放速度
     String speed;
     String name;
-    public IVideoCacheListener mListener=new IVideoCacheListener() {
+    Handler handler =new Handler(Looper.getMainLooper());
+    IPlayerProgressListener iPlayerProgressListener=new IPlayerProgressListener() {
         @Override
-        public void onCacheStart(VideoCacheInfo cacheInfo) {
+        public void onTaskFirstTsDownload(String filename) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    CommonUtils.showToast("task 第一个ts下载完成:"+filename);
+                    Log.e("MainActivity","task 第一个ts下载完成:"+filename);
+                }
+            });
+        }
+
+        @Override
+        public void onPlayerFirstTsDownload(String filename) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    CommonUtils.showToast("播放器 第一个ts下载完成:"+filename);
+                    Log.e("MainActivity","player 第一个ts下载完成:"+filename);
+                }
+            });
 
         }
 
         @Override
-        public void onCacheProgress(VideoCacheInfo cacheInfo) {
-
+        public void onM3U8ParsedFailed(String error) {
+            CommonUtils.showToast("m3u8解析失败:"+error);
+            Log.e("MainActivity","m3u8解析失败:"+error);
         }
 
         @Override
-        public void onCacheError(VideoCacheInfo cacheInfo, String msg, int errorCode) {
-
+        public void playerCacheLog(String log) {
+            
         }
 
-        @Override
-        public void onCacheForbidden(VideoCacheInfo cacheInfo) {
-
-        }
-
-        @Override
-        public void onCacheFinished(VideoCacheInfo cacheInfo) {
-
-        }
-
-        @Override
-        public void onFirstTsDownload(String filename) {
-            CommonUtils.showToast("第一个ts下载完成:"+filename);
-            Log.e("MainActivity","第一个ts下载完成:"+filename);
-        }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     void initPlayer(){
+        //设置播放器缓存加载进度监听
+        PlayerProgressListenerManager.getInstance().setListener(iPlayerProgressListener);
 
         videoView = findViewById(R.id.videoView);
         controller = new AvNormalPlayController(this);
@@ -192,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
                     super.run();
                     //开始缓存
                     mLocalProxyVideoControl = new LocalProxyVideoControl();
-                    mLocalProxyVideoControl.mListener = mListener;
                     mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,null, null);
                 }
             }.start();

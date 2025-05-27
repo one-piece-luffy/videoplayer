@@ -3,6 +3,7 @@ package com.jeffmony.videocache.task;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.m3u8.M3U8;
 import com.jeffmony.videocache.m3u8.M3U8Seg;
@@ -316,8 +317,8 @@ public class M3U8CacheTask extends VideoCacheTask {
                 ts.setContentLength(contentLength);
                 Log.d(TAG,"队列ts下载完成:"+ts.getSegName());
                 if (ts.getSegIndex() == 0) {
-                    if (mListener != null) {
-                        mListener.onFirstTsDownload(file.getName());
+                    if (PlayerProgressListenerManager.getInstance().getListener() != null) {
+                        PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(file.getName());
                     }
 //                    Log.e(TAG, "首个片段已经下载 " + file.getName()+ ", url=" + ts.getUrl());
                 }
