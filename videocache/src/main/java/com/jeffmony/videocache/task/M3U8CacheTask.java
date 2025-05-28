@@ -347,7 +347,8 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e(TAG, "ts下载出错了",e );
+//            Log.e(TAG, "ts下载出错了",e );
+            PlayerProgressListenerManager.getInstance().log("task ts下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
 //            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
 ////                Log.e(TAG, "====retry, exception=" + e.getMessage());

@@ -370,7 +370,7 @@ public class M3U8SegResponse extends BaseResponse {
             //被中断了，使用stop时会抛出这个，不需要处理
         } catch (Exception e) {
 //            Log.e(TAG,"exception:"+e);
-            PlayerProgressListenerManager.getInstance().log("ts下载出错:"+e.getMessage());
+            PlayerProgressListenerManager.getInstance().log("player ts下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
                 downloadFile(videoUrl, file);
