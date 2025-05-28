@@ -24,4 +24,10 @@ public class PlayerProgressListenerManager {
     public void setListener(IPlayerProgressListener mListener) {
         this.mListener = mListener;
     }
+
+    public void log(String log) {
+        if (mListener != null) {
+            mListener.playerCacheLog(log);
+        }
+    }
 }

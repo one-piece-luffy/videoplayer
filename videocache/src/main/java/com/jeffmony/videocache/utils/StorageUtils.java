@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.storage.StorageManager;
 
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.model.VideoCacheInfo;
 
 import java.io.File;
@@ -104,11 +105,14 @@ public class StorageUtils {
         if (file == null || !file.exists()) return;
         File[] listFiles = file.listFiles();
         if (listFiles == null) return;
+        int count=0;
         for (File itemFile : listFiles) {
             if (isExpiredCacheData(itemFile.lastModified(), expiredTime)) {
                 delete(itemFile);
+                count++;
             }
         }
+        PlayerProgressListenerManager.getInstance().log("清理过期缓存:" + count);
     }
 
     private static boolean isExpiredCacheData(long lastModifiedTime, long expiredTime) {

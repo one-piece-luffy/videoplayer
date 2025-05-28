@@ -221,7 +221,6 @@ public class PlayerFragement extends Fragment {
         String link = mUrl;
         if (mUrl.contains("m3u8") &&ProxyCacheUtils.getConfig() != null && ProxyCacheUtils.getConfig().getFilePath() != null) {
             //开启视频缓存
-            ProxyCacheUtils.getConfig().setUseOkHttp(true);
             link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), header, null);
             header.put("type", "m3u8");
             new Thread(){

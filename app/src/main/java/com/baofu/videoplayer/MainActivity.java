@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void playerCacheLog(String log) {
-            
+            Log.e("===asdf",log);
         }
 
     };
@@ -195,8 +195,6 @@ public class MainActivity extends AppCompatActivity {
         if(mUrl.contains("m3u8")){
             header.put("type","m3u8");
             //开启视频缓存
-            ProxyCacheUtils.getConfig().setUseOkHttp(true);
-
             link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), null, null);
             new Thread() {
                 @Override

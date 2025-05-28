@@ -98,7 +98,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void pauseCacheTask() {
-        Log.e(TAG, "pauseCacheTask");
+        Log.i(TAG, "pauseCacheTask");
         if (isTaskRunning()) {
             try {
                 if (mTaskExecutor != null) {
@@ -157,6 +157,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     private void startRequestVideoRange(int curTs) {
         saveVideoInfo();
+        PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
         if (mCacheInfo.isCompleted()) {
             notifyOnTaskCompleted();
             return;
@@ -321,6 +322,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                         PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(file.getName());
                     }
 //                    Log.e(TAG, "首个片段已经下载 " + file.getName()+ ", url=" + ts.getUrl());
+//                    PlayerProgressListenerManager.getInstance().log("首个片段已经下载 " + file.getName()");
                 }
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);

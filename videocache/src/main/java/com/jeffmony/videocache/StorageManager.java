@@ -178,6 +178,7 @@ public class StorageManager {
             Iterator<Map.Entry<String, CacheFileInfo>> iterator = mLruCache.entrySet().iterator();
             if (!iterator.hasNext()) return;
 
+            int count=0;
             while (mCurrentSize > mMaxRemainingSize) {
                 Map.Entry<String, CacheFileInfo> item = iterator.next();
 
@@ -186,16 +187,19 @@ public class StorageManager {
                 if (!TextUtils.isEmpty(VideoProxyCacheManager.getInstance().getPlayingUrlMd5())
                         && filePath.contains(VideoProxyCacheManager.getInstance().getPlayingUrlMd5())) {
                     LogUtils.i(TAG, "trimCacheData ignore playing video");
+                    PlayerProgressListenerManager.getInstance().log("trimCacheData ignore playing video");
                 } else {
                     CacheFileInfo cacheFileInfo = item.getValue();
                     File file = new File(filePath);
                     boolean deleted = StorageUtils.deleteFile(file);
                     if (deleted) {
                         mCurrentSize -= cacheFileInfo.mSize;
+                        count++;
                         //不会存在多线程的操作情况
                         iterator.remove();
                     }
                 }
+                PlayerProgressListenerManager.getInstance().log("存储超限清理:"+count);
                 if (!iterator.hasNext()) break;
             }
         }

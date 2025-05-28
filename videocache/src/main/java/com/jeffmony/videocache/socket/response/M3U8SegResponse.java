@@ -150,7 +150,8 @@ public class M3U8SegResponse extends BaseResponse {
 //            }
 //            LogUtils.d(TAG,  "FileLength=" + mSegFile.length() + ", segLength=" + mSegLength + ", FilePath=" + mSegFile.getAbsolutePath());
 //        }
-        Log.e(TAG,mSegFile.getName()+"已存在，发往服务器");
+//        Log.e(TAG,mSegFile.getName()+"已存在，发往服务器");
+//        PlayerProgressListenerManager.getInstance().log(mSegFile.getName()+"已存在，发往服务器");
         RandomAccessFile randomAccessFile = null;
 
         try {
@@ -171,6 +172,7 @@ public class M3U8SegResponse extends BaseResponse {
             }
         } catch (Exception e) {
             Log.e(TAG,"出错了",e);
+            PlayerProgressListenerManager.getInstance().log("ts发送出错："+e.getMessage());
             throw e;
         } finally {
             ProxyCacheUtils.close(randomAccessFile);
@@ -190,7 +192,8 @@ public class M3U8SegResponse extends BaseResponse {
                 saveSegFile(inputStream, file);
             }
         } catch (Exception e) {
-            Log.e(TAG,"ts下载出错了",e);
+//            Log.e(TAG,"ts下载出错了",e);
+            PlayerProgressListenerManager.getInstance().log("ts下载出错了："+e.getMessage());
             throw e;
         } finally {
             if (connection != null) {
@@ -289,8 +292,8 @@ public class M3U8SegResponse extends BaseResponse {
                 String iv = ts.encryptionKey == null&&m3u8!=null ? m3u8.encryptionIV : ts.getKeyIv();
 
                 if (encryptionKey != null) {
-                    Log.e(TAG,"播放器正在下载:"+filename+" ts是加密过的");
-
+//                    Log.e(TAG,"播放器正在下载:"+filename+" ts是加密过的");
+                    PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+filename+" ts是加密过的");
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
@@ -305,7 +308,8 @@ public class M3U8SegResponse extends BaseResponse {
                             fileOutputStream.write(result);
                             //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
                             contentLength = tmpFile.length();
-                            Log.e(TAG, "ts下载完成"+filename);
+//                            Log.i(TAG, "ts下载完成"+filename);
+                            PlayerProgressListenerManager.getInstance().log("ts下载完成"+filename);
                             FileUtils.handleRename(tmpFile,file);
                         }
                     } catch (Exception e) {
@@ -317,7 +321,8 @@ public class M3U8SegResponse extends BaseResponse {
                         FileUtils.deleteFile(tmpFile);
                     }
                 } else {
-                    Log.e(TAG,"播放器正在下载:"+filename);
+//                    Log.e(TAG,"播放器正在下载:"+filename);
+                    PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+filename);
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
@@ -329,7 +334,8 @@ public class M3U8SegResponse extends BaseResponse {
                      *  这时候sendBody监听到的就是完整的文件。
                      */
                     FileUtils.handleRename(tmpFile,file);
-                    Log.e(TAG, "ts下载完成"+filename);
+//                    Log.i(TAG, "ts下载完成"+filename);
+                    PlayerProgressListenerManager.getInstance().log("ts下载完成"+filename);
                     if (contentLength <= 0) {
                         contentLength = file.length();
                     }
@@ -363,7 +369,8 @@ public class M3U8SegResponse extends BaseResponse {
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
         } catch (Exception e) {
-            Log.e(TAG,"exception:"+e);
+//            Log.e(TAG,"exception:"+e);
+            PlayerProgressListenerManager.getInstance().log("ts下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
             if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
                 downloadFile(videoUrl, file);

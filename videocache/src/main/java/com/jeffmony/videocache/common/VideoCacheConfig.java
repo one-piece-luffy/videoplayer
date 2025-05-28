@@ -11,7 +11,6 @@ public class VideoCacheConfig {
     private final int mConnTimeOut;      //网络建连超时
     private final boolean mIgnoreCert;   //是否忽略证书校验
     private int mPort;             //本地代理的端口
-    private boolean mUseOkHttp;    //使用okhttp接管网络请求
 
     private final SourceCreator mSourceCreator; //可以自定义响应、下载逻辑
 
@@ -28,7 +27,6 @@ public class VideoCacheConfig {
         mConnTimeOut = connTimeOut;
         mIgnoreCert = ignoreCert;
         mPort = port;
-        mUseOkHttp = useOkHttp;
         mSourceCreator = sourceCreator != null ? sourceCreator : new SourceCreator();
     }
 
@@ -60,11 +58,6 @@ public class VideoCacheConfig {
         return mPort;
     }
 
-    public void setUseOkHttp(boolean useOkHttp) {
-        mUseOkHttp = useOkHttp;
-    }
-
-    public boolean useOkHttp() { return mUseOkHttp; }
 
     public boolean ignoreCert() { return mIgnoreCert; }
 
