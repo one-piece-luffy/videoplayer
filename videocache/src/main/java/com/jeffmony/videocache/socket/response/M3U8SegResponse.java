@@ -1,6 +1,7 @@
 package com.jeffmony.videocache.socket.response;
 
 import android.os.Build;
+import android.os.Looper;
 import android.util.Log;
 
 import com.jeffmony.videocache.PlayerProgressListenerManager;
@@ -63,7 +64,6 @@ public class M3U8SegResponse extends BaseResponse {
     private String mFileName;
     int MAX_RETRY_COUNT = 2;
     int MAX_RETRY_COUNT_503 = 3;
-    AtomicBoolean downloading = new AtomicBoolean(false);
 
     public M3U8SegResponse(HttpRequest request, String parentUrl, String videoUrl, Map<String, String> headers, long time, String fileName) throws Exception {
         super(request, videoUrl, headers, time);
@@ -113,20 +113,11 @@ public class M3U8SegResponse extends BaseResponse {
     @Override
     public void sendBody(Socket socket, OutputStream outputStream, long pending) throws Exception {
         //因为下载过程的文件名称和已经完成的不一样，可以简化判断条件
-
         while (!mSegFile.exists()) {
-            if (!downloading.get()) {
-                downloading.set(true);
-                DefaultExecutor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Log.e(TAG,"ts不存在,开始下载："+mSegFile.getAbsolutePath());
-                       //downloadSegFile(mSegUrl, mSegFile);
-                        downloadFile(mSegUrl, mSegFile);
-                    }
-                });
+            //Log.e(TAG,"ts不存在,开始下载："+mSegFile.getAbsolutePath());
+            //downloadSegFile(mSegUrl, mSegFile);
+            downloadFile(mSegUrl, mSegFile);
 
-            }
             if ((mSegLength > 0 && mSegLength == mSegFile.length()) || (mSegLength == -1 && mSegFile.length() > 0)) {
                 break;
             }
@@ -236,7 +227,11 @@ public class M3U8SegResponse extends BaseResponse {
     }
 
 
-
+    /**
+     * 下载ts文件，不需要失败重试，因为前面while循环判断了，否则下载失败会OOM
+     * @param videoUrl
+     * @param file
+     */
     public void downloadFile(String videoUrl, File file)  {
         if (!file.exists()) {
             File parent = file.getParentFile();
@@ -309,7 +304,7 @@ public class M3U8SegResponse extends BaseResponse {
                             //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
                             contentLength = tmpFile.length();
 //                            Log.i(TAG, "ts下载完成"+filename);
-                            PlayerProgressListenerManager.getInstance().log("ts下载完成"+filename);
+                            PlayerProgressListenerManager.getInstance().log("播放器ts下载完成"+filename);
                             FileUtils.handleRename(tmpFile,file);
                         }
                     } catch (Exception e) {
@@ -335,7 +330,7 @@ public class M3U8SegResponse extends BaseResponse {
                      */
                     FileUtils.handleRename(tmpFile,file);
 //                    Log.i(TAG, "ts下载完成"+filename);
-                    PlayerProgressListenerManager.getInstance().log("ts下载完成"+filename);
+                    PlayerProgressListenerManager.getInstance().log("播放器ts下载完成"+filename);
                     if (contentLength <= 0) {
                         contentLength = file.length();
                     }
@@ -349,38 +344,44 @@ public class M3U8SegResponse extends BaseResponse {
                 ts.setContentLength(contentLength);
 
             } else {
-                ts.setRetryCount(ts.getRetryCount() + 1);
-                if (responseCode == HttpUtils.RESPONSE_503 || responseCode == HttpUtils.RESPONSE_429) {
-                    if (ts.getRetryCount() <= MAX_RETRY_COUNT_503) {
-                        //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
-                        int ran = 4000 + (int) (Math.random() * 20000);
-                        Thread.sleep(ran);
-                        Log.i(TAG, "sleep:" + ran);
-                        downloadFile(videoUrl, file);
-                    }
-                } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-//                    Log.i(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+                //不需要重试否则会导致oom， downloading.set(false);会触发重新下载
 
-                    downloadFile(videoUrl, file);
-                }
+//                ts.setRetryCount(ts.getRetryCount() + 1);
+//                if (responseCode == HttpUtils.RESPONSE_503 || responseCode == HttpUtils.RESPONSE_429) {
+//                    if (ts.getRetryCount() <= MAX_RETRY_COUNT_503) {
+//                        //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
+//                        int ran = 4000 + (int) (Math.random() * 20000);
+//                        Thread.sleep(ran);
+//                        Log.i(TAG, "sleep:" + ran);
+//                        downloadFile(videoUrl, file);
+//                    }
+//                } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
+////                    Log.i(TAG, "====retry1   responseCode=" + responseCode + "  ts:" + ts.getUrl());
+//
+//                    downloadFile(videoUrl, file);
+//                }
             }
 
 
-        } catch (InterruptedIOException e) {
-            //被中断了，使用stop时会抛出这个，不需要处理
-        } catch (Exception e) {
-//            Log.e(TAG,"exception:"+e);
-            PlayerProgressListenerManager.getInstance().log("player ts下载出错:"+e.getMessage());
-            ts.setRetryCount(ts.getRetryCount() + 1);
-            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-                downloadFile(videoUrl, file);
+        }  catch (Exception e) {
+            Log.e(TAG,"exception:"+e);
+//            PlayerProgressListenerManager.getInstance().log("player 下载"+file.getName()+" 出错:"+e.getMessage());
+//            ts.setRetryCount(ts.getRetryCount() + 1);
+//            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
+//                downloadFile(videoUrl, file);
+//            } else {
+//                if (tmpFile.exists() && ((mSegLength > 0 && mSegLength == tmpFile.length()) || (mSegLength == -1 && tmpFile.length() > 0))) {
+//                    //说明此文件下载完成
+//                    FileUtils.rename(tmpFile, file);
+//                } else {
+//                    tmpFile.delete();
+//                }
+//            }
+            if (tmpFile.exists() && ((mSegLength > 0 && mSegLength == tmpFile.length()) || (mSegLength == -1 && tmpFile.length() > 0))) {
+                //说明此文件下载完成
+                FileUtils.rename(tmpFile, file);
             } else {
-                if (tmpFile.exists() && ((mSegLength > 0 && mSegLength == tmpFile.length()) || (mSegLength == -1 && tmpFile.length() > 0))) {
-                    //说明此文件下载完成
-                    FileUtils.rename(tmpFile, file);
-                } else {
-                    tmpFile.delete();
-                }
+                tmpFile.delete();
             }
         } finally {
             ProxyCacheUtils.close(inputStream);
@@ -402,7 +403,6 @@ public class M3U8SegResponse extends BaseResponse {
                     e.printStackTrace();
                 }
             }
-            downloading.set(false);
         }
 
     }
