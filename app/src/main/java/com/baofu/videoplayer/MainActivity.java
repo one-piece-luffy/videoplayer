@@ -48,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    if(isDestroyed()||isFinishing()){
+                        return;
+                    }
                     CommonUtils.showToast("task 第一个ts下载完成:"+filename);
                     Log.e("MainActivity","task 第一个ts下载完成:"+filename);
                 }
@@ -59,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    if(isDestroyed()||isFinishing()){
+                        return;
+                    }
                     CommonUtils.showToast("播放器 第一个ts下载完成:"+filename);
                     Log.e("MainActivity","player 第一个ts下载完成:"+filename);
                 }

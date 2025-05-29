@@ -358,6 +358,8 @@ public class M3U8Utils {
             //key只能是16位
             byte[] buffer = new byte[16];
             if ((inStream.read(buffer)) != -1) {
+//                String b= new String(buffer, "UTF-8"); // 使用UTF-8编码
+//                String c= new String(buffer); // 使用UTF-8编码
                 return buffer;
             }
 

@@ -27,6 +27,7 @@ public class FileUtils {
     public static void rename(File old, File newFile){
         boolean result=old.renameTo(newFile);
         if(!result){
+            Log.e(TAG,"rename失败");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Path source = Paths.get(old.getAbsolutePath());
                 Path dest = Paths.get(newFile.getAbsolutePath());
@@ -35,11 +36,13 @@ public class FileUtils {
                     Files.move(source, dest, StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     // 处理异常情况
-                    System.err.println("文件移动失败: " + e.getMessage());
+                    Log.e(TAG,"文件移动失败: " + e.getMessage());
                     e.printStackTrace();
                 }
             }
 
+        }else {
+            Log.e(TAG,"rename suc");
         }
     }
 

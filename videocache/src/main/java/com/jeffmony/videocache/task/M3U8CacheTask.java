@@ -272,6 +272,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                 long contentLength =  response.body().contentLength();
 
                 byte[] encryptionKey = ts.encryptionKey == null ? mM3U8.encryptionKey : ts.encryptionKey;
+//                String a=new String(encryptionKey);
                 String iv = ts.encryptionKey == null ? mM3U8.encryptionIV : ts.getKeyIv();
                 if ( encryptionKey != null) {
 
@@ -283,12 +284,18 @@ public class M3U8CacheTask extends VideoCacheTask {
                     FileOutputStream fileOutputStream = null;
                     try {
                         byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
-                        if (result != null) {
+                        if (result == null) {
+                            //todo shibai
+//                            Log.e(TAG,"task ts下载失败:"+ts.getSegName());
+                            PlayerProgressListenerManager.getInstance().log("task ts下载失败:"+ts.getSegName());
+                            ts.setRetryCount(ts.getRetryCount() + 1);
+                            return;
+                        } else {
                             fileOutputStream = new FileOutputStream(tmpFile);//todo oom
                             fileOutputStream.write(result);
                             //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
                             contentLength = tmpFile.length();
-                            FileUtils.handleRename(tmpFile,file);
+                            FileUtils.handleRename(tmpFile, file);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -325,6 +332,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 //                    Log.e(TAG, "首个片段已经下载 " + file.getName()+ ", url=" + ts.getUrl());
 //                    PlayerProgressListenerManager.getInstance().log("首个片段已经下载 " + file.getName()");
                 }
+//                Log.e(TAG, "已经下载 " + file.getAbsolutePath()+ ", url=" + ts.getUrl()+" exits:"+file.exists());
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
                 if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {
