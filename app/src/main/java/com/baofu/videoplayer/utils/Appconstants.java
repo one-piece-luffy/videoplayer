@@ -9,4 +9,5 @@ public class Appconstants {
     public static String fanren = "https://ikcdn01.ikzybf.com/20240504/UkuX5E7m/index.m3u8";//凡人修仙传
     public static String canghaizhuan = "https://ukzy.ukubf4.com/20250518/JS5k7pPe/index.m3u8";//藏海传
     public static String ShaoHuaRuoJIn = "https://ukzy.ukubf4.com/20250519/8iAToske/index.m3u8";//韶华若锦
+    public static String LuoHua = "https://vodcnd14.wyfkg.cn/20250429/UzSmR9HM/index.m3u8";//落后时节又逢君
 }

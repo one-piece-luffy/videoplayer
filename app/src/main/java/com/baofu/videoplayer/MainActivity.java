@@ -335,13 +335,19 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.canghaizhuan).setOnClickListener(v -> {
             Log.e("asdf","========藏海传==========");
             mUrl=Appconstants.canghaizhuan;
-            name="test";
+            name="藏海传";
             play(name);
         });
         findViewById(R.id.shaohua).setOnClickListener(v -> {
             Log.e("asdf","========韶华若锦==========");
             mUrl=Appconstants.ShaoHuaRuoJIn;
-            name="test";
+            name="韶华若锦";
+            play(name);
+        });
+        findViewById(R.id.luohua).setOnClickListener(v -> {
+            Log.e("asdf","========落花时节又逢君==========");
+            mUrl=Appconstants.LuoHua;
+            name="落花时节又逢君";
             play(name);
         });
     }
@@ -369,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
         if (videoView != null) {
             videoView.release();
         }
-        if(mLocalProxyVideoControl!=null){
+        if (mLocalProxyVideoControl != null) {
             mLocalProxyVideoControl.releaseLocalProxyResources();
         }
     }

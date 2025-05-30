@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoInfoParseManager;
+import com.jeffmony.videocache.VideoLockManager;
 import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.m3u8.M3U8;
@@ -39,6 +40,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import okhttp3.Response;
@@ -64,6 +69,8 @@ public class M3U8SegResponse extends BaseResponse {
     private String mFileName;
     int MAX_RETRY_COUNT = 2;
     int MAX_RETRY_COUNT_503 = 3;
+    AtomicBoolean downloading = new AtomicBoolean(false);
+//    protected ThreadPoolExecutor mTaskExecutor;
 
     public M3U8SegResponse(HttpRequest request, String parentUrl, String videoUrl, Map<String, String> headers, long time, String fileName) throws Exception {
         super(request, videoUrl, headers, time);
@@ -81,6 +88,9 @@ public class M3U8SegResponse extends BaseResponse {
         mResponseState = ResponseState.OK;
         LogUtils.i(TAG, "start M3U8SegResponse: index=" + mSegIndex +", parentUrl=" + mParentUrl + "\n, segUrl=" + mSegUrl);
         VideoProxyCacheManager.getInstance().seekToCacheTaskFromServer(mParentUrl, mSegIndex);
+//        mTaskExecutor = new ThreadPoolExecutor(1, 1, 0L,
+//                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
+//                new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     private String getM3U8Md5(String str) throws VideoCacheException {
@@ -112,17 +122,44 @@ public class M3U8SegResponse extends BaseResponse {
 
     @Override
     public void sendBody(Socket socket, OutputStream outputStream, long pending) throws Exception {
-        //因为下载过程的文件名称和已经完成的不一样，可以简化判断条件
-        while (!mSegFile.exists()) {
-            //Log.e(TAG,"ts不存在,开始下载："+mSegFile.getAbsolutePath());
-            //downloadSegFile(mSegUrl, mSegFile);
-            downloadFile(mSegUrl, mSegFile);
+        Object lock = VideoLockManager.getInstance().getLock(mM3U8Md5);
+        long wait = 0;
+        //todo 如何感知播放器已经断开，避免占用线程池
+        while (!mSegFile.exists()&& wait < TIME_OUT) {
+            synchronized (lock) {
+                lock.wait(WAIT_TIME);
+            }
+            wait += WAIT_TIME;
+            if (!downloading.get()) {
+                downloading.set(true);
+                //新开个线程，这样才可以同时监听player下载和task下载，不会互相阻塞
+//                mTaskExecutor.execute(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        downloadFile(mSegUrl, mSegFile);
+//                    }
+//                });
+                DefaultExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        downloadFile(mSegUrl, mSegFile);
+                    }
+                });
+
+            }
 
             if ((mSegLength > 0 && mSegLength == mSegFile.length()) || (mSegLength == -1 && mSegFile.length() > 0)) {
                 break;
             }
 //            LogUtils.e(TAG, "FileLength=" + mSegFile.length() + ", segLength=" + mSegLength + ", FilePath=" + mSegFile.getAbsolutePath());
         }
+        if (!mSegFile.exists()) {
+            PlayerProgressListenerManager.getInstance().log("wait " + mSegFile.getName() + " timeout "+wait);
+//            LogUtils.e(TAG, "wait " + mSegFile.getName() + " timeout" + " socket.isClosed:" + socket.isClosed() + ",socket.isOutputShutdown:" + socket.isOutputShutdown());
+            outputStream.write(null, 0, 0);
+            return;
+        }
+
 //        if (mFileName.startsWith(ProxyCacheUtils.INIT_SEGMENT_PREFIX)) {
 //        Log.e(TAG,mSegFile.getName()+"已存在，发往服务器");
         RandomAccessFile randomAccessFile = null;
@@ -242,7 +279,20 @@ public class M3U8SegResponse extends BaseResponse {
             ts=new M3U8Seg();
             ts.setUrl(videoUrl);
         }
-//        Log.e(TAG, "开始下载ts：" + videoUrl );
+//        Log.e(TAG, "开始下载ts：mSegIndex=" + mSegIndex +",index="+ts.getSegIndex()+", name="+mFileName+" url="+videoUrl);
+
+//
+//            try {
+//                ThreadPoolExecutor tpe = ((ThreadPoolExecutor) mTaskExecutor);
+//                int queueSize = tpe.getQueue().size();
+//                int activeCount = tpe.getActiveCount();
+//                long completedTaskCount = tpe.getCompletedTaskCount();
+//                long taskCount = tpe.getTaskCount();
+//                Log.e(TAG, " 当前排队线程数：" + queueSize + " 当前活动线程数：" + activeCount + " 执行完成线程数：" + completedTaskCount + " 总线程数：" + taskCount);
+//            } catch (Exception e) {
+//                Log.e(TAG, "发生异常: ", e);
+//            }
+
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
@@ -283,7 +333,7 @@ public class M3U8SegResponse extends BaseResponse {
                             //todo下载失败
                             PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:"+ts.getSegName());
                             try {
-                                Thread.sleep(10000); // 暂停当前线程5000毫秒（即5秒）
+                                Thread.sleep(7000);
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt(); // 恢复中断状态
                                 // 处理中断逻辑，例如退出循环或任务
@@ -327,7 +377,7 @@ public class M3U8SegResponse extends BaseResponse {
                         contentLength = file.length();
                     }
                 }
-                if (filename.startsWith("0.")) {
+                if (file.exists() && filename.startsWith("0.")) {
                     if (PlayerProgressListenerManager.getInstance().getListener() != null) {
                         PlayerProgressListenerManager.getInstance().getListener().onPlayerFirstTsDownload(filename);
                     }
@@ -396,7 +446,7 @@ public class M3U8SegResponse extends BaseResponse {
                     e.printStackTrace();
                 }
             }
-
+            downloading.set(false);
         }
 
     }

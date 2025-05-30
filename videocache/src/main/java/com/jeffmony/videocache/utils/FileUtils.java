@@ -42,7 +42,7 @@ public class FileUtils {
             }
 
         }else {
-            Log.e(TAG,"rename suc");
+//            Log.e(TAG,"rename suc");
         }
     }
 

@@ -56,7 +56,6 @@ public class M3U8Utils {
             int responseCode =response.code();
             Log.e(TAG, "==parseNetworkM3U8Info responseCode=" + responseCode);
             if (responseCode == HttpUtils.RESPONSE_503 && retryCount < HttpUtils.MAX_RETRY_COUNT) {
-                Log.e(TAG, "==parseNetworkM3U8Info responseCode=" + responseCode);
                 return parseNetworkM3U8Info(parentUrl, videoUrl, headers, retryCount + 1);
             }
             bufferedReader = new BufferedReader(new InputStreamReader(response.body().byteStream()));
