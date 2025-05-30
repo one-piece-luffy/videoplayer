@@ -154,7 +154,7 @@ public class M3U8SegResponse extends BaseResponse {
 //            LogUtils.e(TAG, "FileLength=" + mSegFile.length() + ", segLength=" + mSegLength + ", FilePath=" + mSegFile.getAbsolutePath());
         }
         if (!mSegFile.exists()) {
-            PlayerProgressListenerManager.getInstance().log("wait " + mSegFile.getName() + " timeout "+wait);
+            PlayerProgressListenerManager.getInstance().log("==timeout " + mSegFile.getName() + "  "+wait+" ms==");
 //            LogUtils.e(TAG, "wait " + mSegFile.getName() + " timeout" + " socket.isClosed:" + socket.isClosed() + ",socket.isOutputShutdown:" + socket.isOutputShutdown());
             outputStream.write(null, 0, 0);
             return;
@@ -302,7 +302,7 @@ public class M3U8SegResponse extends BaseResponse {
         String filename=file.getName();
         File tmpFile = new File(file.getParentFile(), filename + TEMP_POSTFIX);
         try {
-
+            PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+filename);
             response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
@@ -320,7 +320,6 @@ public class M3U8SegResponse extends BaseResponse {
 
                 if (encryptionKey != null) {
 //                    Log.e(TAG,"播放器正在下载:"+filename+" ts是加密过的");
-                    PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+filename+" ts是加密过的 "+videoUrl);
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
@@ -346,7 +345,7 @@ public class M3U8SegResponse extends BaseResponse {
                             //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
                             contentLength = tmpFile.length();
 //                            Log.i(TAG, "ts下载完成"+filename);
-                            PlayerProgressListenerManager.getInstance().log("播放器ts下载完成:" + filename);
+                            PlayerProgressListenerManager.getInstance().log("播放器ts下载完成:" + filename+" ts是加密过的 ");
                             FileUtils.handleRename(tmpFile, file);
                         }
                     } catch (Exception e) {
@@ -359,7 +358,6 @@ public class M3U8SegResponse extends BaseResponse {
                     }
                 } else {
 //                    Log.e(TAG,"播放器正在下载:"+filename);
-                    PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+filename);
                     rbc = Channels.newChannel(inputStream);
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
@@ -402,11 +400,24 @@ public class M3U8SegResponse extends BaseResponse {
 //
 //                    downloadFile(videoUrl, file);
 //                }
+                PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:"+ts.getSegName()+" code:"+responseCode);
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // 恢复中断状态
+                    // 处理中断逻辑，例如退出循环或任务
+                }
             }
 
 
         }  catch (Exception e) {
-            Log.e(TAG,"exception:"+e);
+            PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:"+ts.getSegName()+" msg:"+e.getMessage());
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt(); // 恢复中断状态
+                // 处理中断逻辑，例如退出循环或任务
+            }
 //            PlayerProgressListenerManager.getInstance().log("player 下载"+file.getName()+" 出错:"+e.getMessage());
 //            ts.setRetryCount(ts.getRetryCount() + 1);
 //            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
