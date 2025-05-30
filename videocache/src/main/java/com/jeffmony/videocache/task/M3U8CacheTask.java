@@ -287,7 +287,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                         if (result == null) {
                             //todo shibai
 //                            Log.e(TAG,"task ts下载失败:"+ts.getSegName());
-                            PlayerProgressListenerManager.getInstance().log("task ts下载失败:"+ts.getSegName());
+                            PlayerProgressListenerManager.getInstance().log("task aes dencry fail:"+ts.getSegName());
                             ts.setRetryCount(ts.getRetryCount() + 1);
                             return;
                         } else {
