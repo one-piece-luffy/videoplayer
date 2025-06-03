@@ -24,6 +24,7 @@ import java.io.InterruptedIOException;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.nio.channels.Channels;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.List;
@@ -353,12 +354,13 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
-            Log.e(TAG, "InterruptedIOException" );
+            Log.e(TAG, "InterruptedIOException");
 
+        } catch (ClosedByInterruptException e) {
+            Log.e(TAG, "ClosedByInterruptException");
         } catch (Exception e) {
-            e.printStackTrace();
-//            Log.e(TAG, "ts下载出错了",e );
-            PlayerProgressListenerManager.getInstance().log("task ts下载出错:"+e.getMessage());
+            Log.e(TAG, "ts下载出错了",e );
+            PlayerProgressListenerManager.getInstance().log("task "+file.getName()+"下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
 //            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
 ////                Log.e(TAG, "====retry, exception=" + e.getMessage());
