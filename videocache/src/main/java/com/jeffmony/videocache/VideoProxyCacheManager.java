@@ -141,9 +141,7 @@ public class VideoProxyCacheManager {
                 switch (msg.what) {
                     case ProxyMessage.MSG_VIDEO_PROXY_ERROR:
                         cacheListener.onCacheError(cacheInfo, videoResult.msg, 0);
-                        if(PlayerProgressListenerManager.getInstance().getListener()!=null){
-                            PlayerProgressListenerManager.getInstance().getListener().onPlayerFirstTsDownload(videoResult.msg);
-                        }
+                        PlayerProgressListenerManager.getInstance().parseM3u8Fail(videoResult.msg);
                         break;
                     case ProxyMessage.MSG_VIDEO_PROXY_FORBIDDEN:
                         cacheListener.onCacheForbidden(cacheInfo);

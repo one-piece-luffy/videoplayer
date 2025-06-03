@@ -42,7 +42,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     private static final String TEMP_POSTFIX = ".task_downloading";
 
     //太多会导致OOM
-    private static final int THREAD_POOL_COUNT = 5;
+    private static final int THREAD_POOL_COUNT = 6;
     private static final int CONTINUOUS_SUCCESS_TS_THRESHOLD = 6;
     private volatile int mM3U8DownloadPoolCount;
     private volatile int mContinuousSuccessSegCount;   //连续请求分片成功的个数
@@ -324,7 +324,8 @@ public class M3U8CacheTask extends VideoCacheTask {
 
 
                 ts.setContentLength(contentLength);
-                Log.d(TAG,"队列ts下载完成:"+ts.getSegName());
+//                Log.d(TAG,"队列ts下载完成:"+ts.getSegName());
+                PlayerProgressListenerManager.getInstance().log("=task ts下载完成:"+ts.getSegName());
                 if (ts.getSegIndex() == 0) {
                     if (PlayerProgressListenerManager.getInstance().getListener() != null) {
                         PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(file.getName());

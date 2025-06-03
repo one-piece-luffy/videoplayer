@@ -30,4 +30,9 @@ public class PlayerProgressListenerManager {
             mListener.playerCacheLog(log);
         }
     }
+    public void parseM3u8Fail(String log) {
+        if (mListener != null) {
+            mListener.onM3U8ParsedFailed(log);
+        }
+    }
 }
