@@ -256,14 +256,15 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
 //        Log.e(TAG,"队列开始下载ts:"+file.getName());
-        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+file.getName());
+        String fileName=file.getName();
+        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+fileName);
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
         FileOutputStream fos = null;
         FileChannel foutc = null;
         Response response=null;
-        File tmpFile = new File(file.getParentFile(), file.getName() + TEMP_POSTFIX);
+        File tmpFile = new File(file.getParentFile(), fileName + TEMP_POSTFIX);
 
         try {
             response = OkHttpUtil.getInstance().requestSync(videoUrl,mHeaders);
@@ -330,10 +331,10 @@ public class M3U8CacheTask extends VideoCacheTask {
                 PlayerProgressListenerManager.getInstance().log("=task ts下载完成:"+ts.getSegName());
                 if (ts.getSegIndex() == 0) {
                     if (PlayerProgressListenerManager.getInstance().getListener() != null) {
-                        PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(file.getName());
+                        PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(fileName);
                     }
-//                    Log.e(TAG, "首个片段已经下载 " + file.getName()+ ", url=" + ts.getUrl());
-//                    PlayerProgressListenerManager.getInstance().log("首个片段已经下载 " + file.getName()");
+//                    Log.e(TAG, "首个片段已经下载 " + fileName+ ", url=" + ts.getUrl());
+//                    PlayerProgressListenerManager.getInstance().log("首个片段已经下载 " + fileName");
                 }
 //                Log.e(TAG, "已经下载 " + file.getAbsolutePath()+ ", url=" + ts.getUrl()+" exits:"+file.exists());
             } else {
@@ -361,7 +362,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             Log.e(TAG, "ClosedByInterruptException");
         } catch (Exception e) {
             Log.e(TAG, "ts下载出错了",e );
-            PlayerProgressListenerManager.getInstance().log("task "+file.getName()+"下载出错:"+e.getMessage());
+            PlayerProgressListenerManager.getInstance().log("=task "+fileName+"下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
 //            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
 ////                Log.e(TAG, "====retry, exception=" + e.getMessage());
