@@ -256,6 +256,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
 //        Log.e(TAG,"队列开始下载ts:"+file.getName());
+        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+file.getName());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
