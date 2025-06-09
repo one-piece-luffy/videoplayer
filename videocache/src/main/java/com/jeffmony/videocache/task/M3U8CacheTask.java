@@ -17,6 +17,7 @@ import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -360,7 +361,14 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         } catch (ClosedByInterruptException e) {
             Log.e(TAG, "ClosedByInterruptException");
-        } catch (Exception e) {
+        } catch (FileNotFoundException e){
+            //父目录
+            File file1=file.getParentFile();
+            if (file1 != null && !file1.exists()) {
+                PlayerProgressListenerManager.getInstance().log("文件不存在，终止任务");
+                stopCacheTask();
+            }
+        }catch (Exception e) {
             Log.e(TAG, "ts下载出错了",e );
             PlayerProgressListenerManager.getInstance().log("=task "+fileName+"下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
