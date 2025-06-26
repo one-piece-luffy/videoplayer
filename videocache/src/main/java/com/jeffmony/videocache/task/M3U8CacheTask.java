@@ -40,7 +40,6 @@ import okhttp3.Response;
 
 public class M3U8CacheTask extends VideoCacheTask {
 
-    private static final String TAG = "asdf";
     private static final String TAG = "M3U8CacheTask";
 
     private static final String TEMP_POSTFIX = ".task_downloading";
