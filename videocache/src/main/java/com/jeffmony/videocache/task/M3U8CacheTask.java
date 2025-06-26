@@ -35,16 +35,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import kotlin.io.NoSuchFileException;
 import okhttp3.Response;
 
 public class M3U8CacheTask extends VideoCacheTask {
 
+    private static final String TAG = "asdf";
     private static final String TAG = "M3U8CacheTask";
 
     private static final String TEMP_POSTFIX = ".task_downloading";
 
     //太多会导致OOM
-    private static final int THREAD_POOL_COUNT = 6;
+    private static final int THREAD_POOL_COUNT = 5;
     private static final int CONTINUOUS_SUCCESS_TS_THRESHOLD = 6;
     private volatile int mM3U8DownloadPoolCount;
     private volatile int mContinuousSuccessSegCount;   //连续请求分片成功的个数
@@ -81,6 +83,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     private void initM3U8TsInfo() {
         long tempCachedSize = 0;
         int tempCachedTs = 0;
+
         for (int index = 0; index < mSegList.size(); index++) {
             M3U8Seg ts = mSegList.get(index);
             File tempTsFile = new File(mSaveDir, ts.getSegName());
@@ -258,7 +261,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
 //        Log.e(TAG,"队列开始下载ts:"+file.getName());
         String fileName=file.getName();
-        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+fileName);
+        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+fileName+" "+ts.getSegName());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;
@@ -361,14 +364,18 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         } catch (ClosedByInterruptException e) {
             Log.e(TAG, "ClosedByInterruptException");
-        } catch (FileNotFoundException e){
-            //父目录
-            File file1=file.getParentFile();
-            if (file1 != null && !file1.exists()) {
-                PlayerProgressListenerManager.getInstance().log("文件不存在，终止任务");
-                stopCacheTask();
+        }  catch (Exception e) {
+
+            if (e instanceof FileNotFoundException || e instanceof NoSuchFileException) {
+                //父目录
+                File file1 = file.getParentFile();
+                if (file1 != null && !file1.exists()) {
+                    PlayerProgressListenerManager.getInstance().log("文件不存在，终止任务");
+                    stopCacheTask();
+                    PlayerProgressListenerManager.getInstance().parseM3u8Fail("文件不存在，终止任务");
+                    return;
+                }
             }
-        }catch (Exception e) {
             Log.e(TAG, "ts下载出错了",e );
             PlayerProgressListenerManager.getInstance().log("=task "+fileName+"下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
