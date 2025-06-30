@@ -6,10 +6,13 @@ import androidx.viewpager2.widget.ViewPager2;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.baofu.base.utils.CommonUtils;
 import com.baofu.cache.downloader.model.VideoTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.videoplayer.adapter.MyFragmentStateAdapter;
 import com.baofu.videoplayer.utils.Appconstants;
+import com.jeffmony.videocache.PlayerProgressListenerManager;
+import com.jeffmony.videocache.listener.IPlayerProgressListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,51 @@ import java.util.List;
 public class ViewPagerActivity extends AppCompatActivity {
     ViewPager2 viewPager;
     MyFragmentStateAdapter adapter;
+    String TAG="ViewPagerActivity";
+    int lastpostion;
+
+    IPlayerProgressListener iPlayerProgressListener=new IPlayerProgressListener() {
+        @Override
+        public void onTaskFirstTsDownload(String filename) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if(isDestroyed()||isFinishing()){
+                        return;
+                    }
+                    CommonUtils.showToast("task 第一个ts下载完成:"+filename);
+                    Log.e("MainActivity","task 第一个ts下载完成:"+filename);
+                }
+            });
+        }
+
+        @Override
+        public void onPlayerFirstTsDownload(String filename) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if(isDestroyed()||isFinishing()){
+                        return;
+                    }
+                    CommonUtils.showToast("播放器 第一个ts下载完成:"+filename);
+                    Log.e(TAG,"player 第一个ts下载完成:"+filename);
+                }
+            });
+
+        }
+
+        @Override
+        public void onM3U8ParsedFailed(String error) {
+            CommonUtils.showToast("m3u8解析失败:"+error);
+            Log.e(TAG,"m3u8解析失败:"+error);
+        }
+
+        @Override
+        public void playerCacheLog(String log) {
+            Log.e("===asdf",log);
+        }
+
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,20 +85,33 @@ public class ViewPagerActivity extends AppCompatActivity {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                Log.e("asdf","position:"+position);
-                CacheDownloadManager.getInstance().curPlayUrl= list.get(position).url;
-                CacheDownloadManager.getInstance().pauseAllDownloadTasks();
-                List<VideoTaskItem> cacheList = getCacheList(position);
-                if (cacheList != null) {
-                    for (int i = 0; i < cacheList.size(); i++) {
-                        VideoTaskItem item = cacheList.get(i);
-                        CacheDownloadManager.getInstance().startDownload(item);
-                    }
+                Log.e("asdf","position:"+position+" last:"+lastpostion);
 
+                if(position==lastpostion){
+                    return;
                 }
+                lastpostion=position;
+                startCache(position);
 
             }
         });
+        PlayerProgressListenerManager.getInstance().setListener(iPlayerProgressListener);
+        startCache(0);
+    }
+
+    private void startCache(int position){
+        List<MyModel> list=adapter.getData();
+        CacheDownloadManager.getInstance().curPlayUrl= list.get(position).url;
+        CacheDownloadManager.getInstance().pauseAllDownloadTasks();
+        List<VideoTaskItem> cacheList = getCacheList(position);
+        if (cacheList != null) {
+            for (int i = 0; i < cacheList.size(); i++) {
+                VideoTaskItem item = cacheList.get(i);
+                Log.e("asdf","开始下载:"+item.mName);
+                CacheDownloadManager.getInstance().startDownload(item);
+            }
+
+        }
     }
 
     public List<VideoTaskItem> getCacheList(int index) {
@@ -79,5 +140,6 @@ public class ViewPagerActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         CacheDownloadManager.getInstance().pauseAllDownloadTasks();
+        PlayerProgressListenerManager.getInstance().setListener(null);
     }
 }

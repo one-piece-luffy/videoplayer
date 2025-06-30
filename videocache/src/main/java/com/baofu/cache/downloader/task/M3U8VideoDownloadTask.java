@@ -285,7 +285,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
 
     @Override
     public void pauseDownload() {
-        Log.e(TAG, "暂停下载:"+mTaskItem.mName);
+        Log.e(TAG, "==========暂停下载===========:"+mTaskItem.mName);
 
         new Thread() {
             @Override
