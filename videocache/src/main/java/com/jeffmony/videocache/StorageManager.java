@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.text.TextUtils;
+import android.util.Log;
 
 
 import androidx.annotation.NonNull;
@@ -138,6 +139,7 @@ public class StorageManager {
     }
 
     private void initCacheInfoInternal() {
+        mCurrentSize = 0;
         if (TextUtils.isEmpty(mRootFilePath)) return;
         File rootFile = new File(mRootFilePath);
         if (!rootFile.exists()) return;
@@ -177,6 +179,7 @@ public class StorageManager {
      * 清理存储超限的缓存
      */
     private void trimCacheData() {
+        Log.i(TAG, "=========mCurrentSize:" + (mCurrentSize / 1024 / 1024) + "MB");
         if (mCurrentSize > mMaxCacheSize) {
             Iterator<Map.Entry<String, CacheFileInfo>> iterator = mLruCache.entrySet().iterator();
             if (!iterator.hasNext()) return;
