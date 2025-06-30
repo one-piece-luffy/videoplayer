@@ -1,7 +1,12 @@
 package com.baofu.videoplayer;
 
+import android.os.Environment;
+
 import com.baofu.base.BaseApplication;
 import com.baofu.base.utils.CrashHandler;
+import com.baofu.downloader.rules.VideoDownloadManager;
+import com.baofu.downloader.utils.VideoDownloadConfig;
+import com.baofu.downloader.utils.VideoStorageUtils;
 import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.yc.kernel.utils.PlayerConstant;
 import com.yc.kernel.utils.PlayerFactoryUtils;
@@ -46,6 +51,27 @@ public class MyApplication extends BaseApplication {
                 setExpireTime(2 * 24 * 60 * 60 * 1000).     //2天的过期时间
                 setMaxCacheSize(2 * 1024 * 1024 * 1024L);    //2G的存储上限
         VideoProxyCacheManager.getInstance().initProxyConfig(builder.build());
+
+
+        //下载器初始化
+//        VideoDownloadManager.getInstance().downloadDir = AppConfig.DOWNLOAD_DIR;
+
+        try {
+            VideoDownloadConfig config = new VideoDownloadConfig.Builder(this)
+//                    .publicPath(file.getAbsolutePath())
+                    .privatePath(saveFile.getAbsolutePath())
+                    .connTimeOut(20)
+                    .readTimeOut(20)
+                    .writeTimeOut(20)
+                    .retryCount(2)
+                    .concurrentCount(2) //并发数
+                    .context(this)
+                    .threadSchedule(true)
+                    .build();
+            VideoDownloadManager.getInstance().initConfig(config);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
     }

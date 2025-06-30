@@ -17,6 +17,7 @@ import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.baofu.base.utils.CommonUtils;
+import com.baofu.videoplayer.MyModel;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.databinding.FragmentPlayerBinding;
@@ -35,13 +36,15 @@ public class PlayerFragement extends Fragment {
     FragmentPlayerBinding binding;
 
     public String mUrl;
+    public String name;
     public int mPosition;
     boolean isFirst=true;
 
-    public static PlayerFragement newInstance(String url,int position) {
+    public static PlayerFragement newInstance(MyModel model, int position) {
         Bundle args = new Bundle();
         //设置当前位置
-        args.putString("url", url);
+        args.putString("url", model.url);
+        args.putString("name", model.name);
         args.putInt("position", position);
         PlayerFragement fragment = new PlayerFragement();
         fragment.setArguments(args);

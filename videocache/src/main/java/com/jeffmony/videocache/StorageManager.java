@@ -173,6 +173,9 @@ public class StorageManager {
         }
     }
 
+    /**
+     * 清理存储超限的缓存
+     */
     private void trimCacheData() {
         if (mCurrentSize > mMaxCacheSize) {
             Iterator<Map.Entry<String, CacheFileInfo>> iterator = mLruCache.entrySet().iterator();

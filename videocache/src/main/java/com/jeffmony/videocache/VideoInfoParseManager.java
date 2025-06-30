@@ -7,6 +7,9 @@ import android.util.Log;
 
 import androidx.annotation.WorkerThread;
 
+import com.baofu.downloader.model.VideoTaskItem;
+import com.baofu.downloader.rules.VideoDownloadManager;
+import com.baofu.downloader.utils.VideoDownloadUtils;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.common.VideoRequest;
 import com.jeffmony.videocache.common.VideoType;
@@ -20,6 +23,7 @@ import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
+import com.jeffmony.videocache.utils.VideoProxyThreadUtils;
 
 import java.io.File;
 import java.net.HttpURLConnection;
@@ -139,6 +143,7 @@ public class VideoInfoParseManager {
 //                    return;
 //                }
                 PlayerProgressListenerManager.getInstance().log("开始创建m3u8文件");
+
                 // 1.将M3U8结构保存到本地
                 File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
                 M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
@@ -147,6 +152,8 @@ public class VideoInfoParseManager {
                 cacheInfo.setLocalPort(ProxyCacheUtils.getLocalPort());
                 M3U8Utils.createProxyM3U8File(proxyM3U8File, m3u8, cacheInfo.getMd5(), videoRequest.getHeaders());
                 PlayerProgressListenerManager.getInstance().log("代理文件创建完毕");
+
+                VideoProxyThreadUtils.submitRunnableTask(() -> StorageUtils.saveVideoCacheInfo(cacheInfo, new File(cacheInfo.getSavePath())));
                 // 2.构建一个本地代理的m3u8结构
                 videoRequest.getVideoInfoParsedListener().onM3U8ParsedFinished(videoRequest, m3u8, cacheInfo);
             }

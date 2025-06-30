@@ -7,8 +7,6 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.Log;
-
 
 import androidx.annotation.NonNull;
 
@@ -396,6 +394,7 @@ public class VideoProxyCacheManager {
             }
             VideoCacheInfo videoCacheInfo = StorageUtils.readVideoCacheInfo(saveDir);
             PlayerProgressListenerManager.getInstance().log("startRequestVideoInfo: " + videoCacheInfo);
+            //todo 处理videoinfo 还是判断缓存文件存不存在
             if (videoCacheInfo == null) {
                 //之前没有缓存信息
                 videoCacheInfo = new VideoCacheInfo(videoUrl);
