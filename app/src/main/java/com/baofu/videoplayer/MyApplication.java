@@ -1,12 +1,9 @@
 package com.baofu.videoplayer;
 
-import android.os.Environment;
-
 import com.baofu.base.BaseApplication;
 import com.baofu.base.utils.CrashHandler;
-import com.baofu.downloader.rules.VideoDownloadManager;
-import com.baofu.downloader.utils.VideoDownloadConfig;
-import com.baofu.downloader.utils.VideoStorageUtils;
+import com.baofu.cache.downloader.rules.CacheDownloadManager;
+import com.baofu.cache.downloader.utils.VideoDownloadConfig;
 import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.yc.kernel.utils.PlayerConstant;
 import com.yc.kernel.utils.PlayerFactoryUtils;
@@ -68,7 +65,7 @@ public class MyApplication extends BaseApplication {
                     .context(this)
                     .threadSchedule(true)
                     .build();
-            VideoDownloadManager.getInstance().initConfig(config);
+            CacheDownloadManager.getInstance().initConfig(config);
         } catch (Exception e) {
             e.printStackTrace();
         }

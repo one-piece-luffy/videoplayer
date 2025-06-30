@@ -1,32 +1,23 @@
 package com.jeffmony.videocache;
 
 import android.net.Uri;
-import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.WorkerThread;
 
-import com.baofu.downloader.model.VideoTaskItem;
-import com.baofu.downloader.rules.VideoDownloadManager;
-import com.baofu.downloader.utils.VideoDownloadUtils;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.common.VideoRequest;
 import com.jeffmony.videocache.common.VideoType;
 import com.jeffmony.videocache.common.VideoParams;
 import com.jeffmony.videocache.m3u8.M3U8;
-import com.jeffmony.videocache.m3u8.M3U8Seg;
 import com.jeffmony.videocache.m3u8.M3U8Utils;
 import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.okhttp.OkHttpManager;
-import com.jeffmony.videocache.utils.HttpUtils;
-import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
 import com.jeffmony.videocache.utils.VideoProxyThreadUtils;
 
 import java.io.File;
-import java.net.HttpURLConnection;
 
 /**
  * @author jeffmony

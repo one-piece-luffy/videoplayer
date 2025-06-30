@@ -6,8 +6,8 @@ import androidx.viewpager2.widget.ViewPager2;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.baofu.downloader.model.VideoTaskItem;
-import com.baofu.downloader.rules.VideoDownloadManager;
+import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.videoplayer.adapter.MyFragmentStateAdapter;
 import com.baofu.videoplayer.utils.Appconstants;
 
@@ -38,13 +38,13 @@ public class ViewPagerActivity extends AppCompatActivity {
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels);
                 Log.e("asdf","position:"+position);
-                VideoDownloadManager.getInstance().curPlayUrl= list.get(position).url;
-                VideoDownloadManager.getInstance().pauseAllDownloadTasks();
+                CacheDownloadManager.getInstance().curPlayUrl= list.get(position).url;
+                CacheDownloadManager.getInstance().pauseAllDownloadTasks();
                 List<VideoTaskItem> cacheList = getCacheList(position);
                 if (cacheList != null) {
                     for (int i = 0; i < cacheList.size(); i++) {
                         VideoTaskItem item = cacheList.get(i);
-                        VideoDownloadManager.getInstance().startDownload(item);
+                        CacheDownloadManager.getInstance().startDownload(item);
                     }
 
                 }
@@ -78,6 +78,6 @@ public class ViewPagerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        VideoDownloadManager.getInstance().pauseAllDownloadTasks();
+        CacheDownloadManager.getInstance().pauseAllDownloadTasks();
     }
 }
