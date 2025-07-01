@@ -57,6 +57,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     M3U8 mM3U8;
     final static int MAX_RETRY_COUNT=1;
     private final static int MAX_RETRY_COUNT_503 = 3;//遇到503的重试次数
+    private String mVideoName;
 
     public M3U8CacheTask(VideoCacheInfo cacheInfo, Map<String, String> headers, M3U8 m3u8) {
         super(cacheInfo, headers);
@@ -65,6 +66,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         mTotalSegCount = cacheInfo.getTotalTs();
         mCachedSegCount = cacheInfo.getCachedTs();
         mHeaders.put("Connection", "close");
+        mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get("vodName"));
     }
 
     @Override
@@ -260,7 +262,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
 //        Log.e(TAG,"队列开始下载ts:"+file.getName());
         String fileName=file.getName();
-        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+fileName+" "+ts.getSegName());
+        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+" "+mVideoName+" "+fileName+" "+ts.getSegName());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;

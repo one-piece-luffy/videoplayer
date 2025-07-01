@@ -70,6 +70,7 @@ public class M3U8SegResponse extends BaseResponse {
     int MAX_RETRY_COUNT = 2;
     int MAX_RETRY_COUNT_503 = 3;
     AtomicBoolean downloading = new AtomicBoolean(false);
+    private String mVideoName;
 //    protected ThreadPoolExecutor mTaskExecutor;
 
     public M3U8SegResponse(HttpRequest request, String parentUrl, String videoUrl, Map<String, String> headers, long time, String fileName) throws Exception {
@@ -85,6 +86,7 @@ public class M3U8SegResponse extends BaseResponse {
         }
         mHeaders.put("Connection", "close");
         mSegIndex = getSegIndex(fileName);
+        mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get("vodName"));
         mResponseState = ResponseState.OK;
         LogUtils.i(TAG, "start M3U8SegResponse: index=" + mSegIndex +", parentUrl=" + mParentUrl + "\n, segUrl=" + mSegUrl);
         VideoProxyCacheManager.getInstance().seekToCacheTaskFromServer(mParentUrl, mSegIndex);
@@ -302,7 +304,7 @@ public class M3U8SegResponse extends BaseResponse {
         String filename=file.getName();
         File tmpFile = new File(file.getParentFile(), filename + TEMP_POSTFIX);
         try {
-            PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+filename);
+            PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+mVideoName+" "+filename);
             response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {

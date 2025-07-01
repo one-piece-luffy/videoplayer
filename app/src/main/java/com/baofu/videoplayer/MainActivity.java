@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
+import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoInfoParseManager;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
@@ -200,15 +201,17 @@ public class MainActivity extends AppCompatActivity {
         String link=mUrl;
         if(mUrl.contains("m3u8")){
             header.put("type","m3u8");
+            header.put("vodName",ProxyCacheUtils.encodeUriWithBase64(name));
+
             //开启视频缓存
-            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), null, null);
+            link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), header, null);
             new Thread() {
                 @Override
                 public void run() {
                     super.run();
                     //开始缓存
                     mLocalProxyVideoControl = new LocalProxyVideoControl();
-                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,null, null);
+                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,header, null);
                 }
             }.start();
 //            VideoProxyCacheManager.getInstance().addSocketListener(mUrl, new ISocketListener() {
