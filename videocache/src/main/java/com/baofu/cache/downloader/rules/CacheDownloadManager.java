@@ -482,6 +482,13 @@ public class CacheDownloadManager {
                     Log.e("asdf","==onTaskFailed");
                     notifyError(taskItem,exception);
                 }
+
+                @Override
+                public void onTaskFirstTsDownload(VideoTaskItem item) {
+                    //todo
+                    mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_FIRST_TS_SUCCESS, taskItem).sendToTarget();
+
+                }
             });
 
             downloadTask.startDownload();
@@ -742,6 +749,9 @@ public class CacheDownloadManager {
                 case VideoDownloadConstants.MSG_DOWNLOAD_SUCCESS:
                     handleOnDownloadSuccess(taskItem);
                     break;
+                case VideoDownloadConstants.MSG_FIRST_TS_SUCCESS:
+                    handleOnFirstTsSuccess(taskItem);
+                    break;
                 case VideoDownloadConstants.MSG_DOWNLOAD_MERGE:
                     handleOnDownloadMerge(taskItem);
                     break;
@@ -806,6 +816,16 @@ public class CacheDownloadManager {
 
         if (mGlobalDownloadListener != null) {
             mGlobalDownloadListener.onDownloadSuccess(taskItem);
+        }
+
+    }
+    private void handleOnFirstTsSuccess(VideoTaskItem taskItem) {
+        if (mGlobalDownloadListener != null) {
+            mGlobalDownloadListener.onTaskFirstTsDownload(taskItem);
+        }
+        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+        if (listener != null) {
+            listener.onTaskFirstTsDownload(taskItem);
         }
 
     }

@@ -1,5 +1,7 @@
 package com.baofu.cache.downloader.listener;
 
+import com.baofu.cache.downloader.model.VideoTaskItem;
+
 public interface IDownloadTaskListener {
 
     void onTaskStart(String url);
@@ -14,5 +16,8 @@ public interface IDownloadTaskListener {
     void onTaskFinished(long totalSize);
 
     void onTaskFailed(Exception e);
+
+    void onTaskFirstTsDownload(VideoTaskItem item);
+
 
 }

@@ -17,6 +17,7 @@ public class VideoDownloadConstants {
     public static final int MSG_DOWNLOAD_SUCCESS = 6;
     public static final int MSG_DOWNLOAD_ERROR = 7;
     public static final int MSG_DOWNLOAD_MERGE = 8;
+    public static final int MSG_FIRST_TS_SUCCESS = 9;
 
     public static final int MSG_FETCH_DOWNLOAD_INFO = 100;
     public static final int MSG_DELETE_ALL_FILES = 101;

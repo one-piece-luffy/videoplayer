@@ -16,6 +16,7 @@ import com.baofu.cache.downloader.utils.HttpUtils;
 import com.baofu.cache.downloader.utils.OkHttpUtil;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 import com.baofu.cache.downloader.utils.VideoStorageUtils;
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.utils.AES128Utils;
 
 import java.io.BufferedOutputStream;
@@ -103,7 +104,9 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
 
     @Override
     public void startDownload() {
-        mDownloadTaskListener.onTaskStart(mTaskItem.getUrl());
+        if(mDownloadTaskListener!=null){
+            mDownloadTaskListener.onTaskStart(mTaskItem.getUrl());
+        }
 
         initM3U8Ts();
         begin();
@@ -260,12 +263,14 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
 
                         mTotalSize = mCurrentDownloaddSize.get();
                         Log.i(TAG, "下载完成:" + mTotalSize);
+                        if (mDownloadTaskListener != null) {
                             mDownloadTaskListener.onTaskProgressForM3U8(100.0f, mTotalSize, mCurTs.get(), mTotalTs, mSpeed);
-                            notifyDownloadFinish();
+                        }
+                        notifyDownloadFinish();
 
 
-                            mCurrentCachedSize = VideoStorageUtils.countTotalSize(mSaveDir);
-                            Log.i(TAG, "文件目录大小:" + VideoDownloadUtils.getSizeStr(mCurrentCachedSize));
+                        mCurrentCachedSize = VideoStorageUtils.countTotalSize(mSaveDir);
+                        Log.i(TAG, "文件目录大小:" + VideoDownloadUtils.getSizeStr(mCurrentCachedSize));
 
 
 
@@ -373,7 +378,10 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
         }
         if (mTaskItem.isCompleted()) {
             mCurTs.set(mTotalTs);
-            mDownloadTaskListener.onTaskProgressForM3U8(100.0f, mCurrentDownloaddSize.get(), mCurTs.get(), mTotalTs, mSpeed);
+            if(mDownloadTaskListener!=null){
+
+                mDownloadTaskListener.onTaskProgressForM3U8(100.0f, mCurrentDownloaddSize.get(), mCurTs.get(), mTotalTs, mSpeed);
+            }
             mPercent = 100.0f;
             mTotalSize = mCurrentDownloaddSize.get();
             notifyDownloadFinish();
@@ -386,7 +394,9 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
         if (!VideoDownloadUtils.isFloatEqual(percent, mPercent) && mCurrentDownloaddSize.get() > mLastCachedSize) {
             long nowTime = System.currentTimeMillis();
             mSpeed = (mCurrentDownloaddSize.get() - mLastCachedSize)   / ((nowTime - mLastInvokeTime)/1000f);
-            mDownloadTaskListener.onTaskProgressForM3U8(percent, mCurrentDownloaddSize.get(), mCurTs.get(), mTotalTs, mSpeed);
+            if(mDownloadTaskListener!=null){
+                mDownloadTaskListener.onTaskProgressForM3U8(percent, mCurrentDownloaddSize.get(), mCurTs.get(), mTotalTs, mSpeed);
+            }
             mPercent = percent;
 
             mLastCachedSize = mCurrentDownloaddSize.get();
@@ -400,7 +410,9 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
     private void notifyDownloadFinish() {
         stopTimer();
         mTaskItem.setFilePath(mTaskItem.getSaveDir() + File.separator + fileName);
-        mDownloadTaskListener.onTaskFinished(mTotalSize);
+        if(mDownloadTaskListener!=null){
+            mDownloadTaskListener.onTaskFinished(mTotalSize);
+        }
     }
 
     private void notifyDownloadError(Exception e) {
@@ -511,6 +523,11 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
                     mCurrentDownloaddSize.getAndAdd(contentLength);
                     mCurTs.incrementAndGet();
                     ts.success = true;
+
+                    if (ts.mSegIndex == 0 && mDownloadTaskListener != null) {
+                        mDownloadTaskListener.onTaskFirstTsDownload(mTaskItem);
+//                    Log.e(TAG, "首个片段已经下载 " + fileName+ ", url=" + ts.getUrl());
+                    }
                 }
 
             } else {

@@ -52,4 +52,9 @@ public class DownloadListener implements IDownloadListener {
     public void onDownloadMerge(VideoTaskItem item) {
 
     }
+
+    @Override
+    public void onTaskFirstTsDownload(VideoTaskItem item) {
+
+    }
 }

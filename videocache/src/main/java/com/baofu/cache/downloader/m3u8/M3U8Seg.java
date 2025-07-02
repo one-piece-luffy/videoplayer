@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class M3U8Seg implements Comparable<M3U8Seg> {
     private float mDuration;                     //分片时长
-    private int mSegIndex;                          //分片索引值,第一个为0
+    public int mSegIndex;                          //分片索引值,第一个为0
     private int mSequence;                       //分片的sequence, 根据initSequence自增得到的
     private String mUrl;                         //分片url
     private String mName;                        //分片名,可以自己定义

@@ -23,4 +23,6 @@ public interface IDownloadListener {
     void onDownloadSuccess(VideoTaskItem item);
 
     void onDownloadMerge(VideoTaskItem item);
+
+    void onTaskFirstTsDownload(VideoTaskItem item);
 }

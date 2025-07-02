@@ -4,9 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.baofu.base.utils.CommonUtils;
+import com.baofu.cache.downloader.listener.DownloadListener;
 import com.baofu.cache.downloader.model.VideoTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.videoplayer.adapter.MyFragmentStateAdapter;
@@ -22,6 +25,7 @@ public class ViewPagerActivity extends AppCompatActivity {
     MyFragmentStateAdapter adapter;
     String TAG="ViewPagerActivity";
     int lastpostion;
+    Handler handler=new Handler(Looper.getMainLooper());
 
     IPlayerProgressListener iPlayerProgressListener=new IPlayerProgressListener() {
         @Override
@@ -64,6 +68,24 @@ public class ViewPagerActivity extends AppCompatActivity {
             Log.e("===asdf",log);
         }
 
+
+    };
+
+    DownloadListener downloadListener=new DownloadListener(){
+        @Override
+        public void onTaskFirstTsDownload(VideoTaskItem item) {
+            super.onTaskFirstTsDownload(item);
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(isFinishing()||isDestroyed()){
+                        return;
+                    }
+                    CommonUtils.showToast(item.mName+" 预加载--全局--第一个ts下载成功");
+                    Log.e("asdf","预加载--全局--第一个ts下载成功");
+                }
+            },1000);
+        }
     };
 
     @Override
@@ -99,6 +121,12 @@ public class ViewPagerActivity extends AppCompatActivity {
         startCache(0);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        CacheDownloadManager.getInstance().setGlobalDownloadListener(downloadListener);
+    }
+
     private void startCache(int position){
         List<MyModel> list=adapter.getData();
         CacheDownloadManager.getInstance().curPlayUrl= list.get(position).url;
@@ -109,6 +137,22 @@ public class ViewPagerActivity extends AppCompatActivity {
                 VideoTaskItem item = cacheList.get(i);
                 Log.e("asdf","开始下载:"+item.mName);
                 CacheDownloadManager.getInstance().startDownload(item);
+                CacheDownloadManager.getInstance().addDownloadListener(item.mUrl,new DownloadListener(){
+                    @Override
+                    public void onTaskFirstTsDownload(VideoTaskItem item) {
+                        super.onTaskFirstTsDownload(item);
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if(isFinishing()||isDestroyed()){
+                                    return;
+                                }
+                                CommonUtils.showToast(item.mName+" 预加载--第一个ts下载成功");
+                                Log.e("asdf","预加载--第一个ts下载成功");
+                            }
+                        },2000);
+                    }
+                });
             }
 
         }
