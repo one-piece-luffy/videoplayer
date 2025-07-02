@@ -1,6 +1,6 @@
 package com.baofu.cache.downloader;
 
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.model.VideoTaskState;
 import com.baofu.cache.downloader.utils.LogUtils;
 
@@ -14,27 +14,27 @@ public class VideoDownloadQueue {
 
     private static final String TAG = "VideoDownloadQueue";
 
-    private CopyOnWriteArrayList<VideoTaskItem> mQueue;
+    private CopyOnWriteArrayList<CacheTaskItem> mQueue;
 
     public VideoDownloadQueue() {
         mQueue = new CopyOnWriteArrayList<>();
     }
 
-    public List<VideoTaskItem> getDownloadList() {
+    public List<CacheTaskItem> getDownloadList() {
         return mQueue;
     }
 
     //put it into queue
-    public void offer(VideoTaskItem taskItem) {
+    public void offer(CacheTaskItem taskItem) {
         mQueue.add(taskItem);
     }
 
     //Remove Queue head item,
     //Return Next Queue head.
-    public VideoTaskItem poll() {
+    public CacheTaskItem poll() {
         try {
             if (mQueue.size() >= 1) {
-                VideoTaskItem item=mQueue.get(0);
+                CacheTaskItem item=mQueue.get(0);
                 mQueue.remove(0);
                 return item;
             }
@@ -44,7 +44,7 @@ public class VideoDownloadQueue {
         return null;
     }
 
-    public VideoTaskItem peek() {
+    public CacheTaskItem peek() {
         try {
             if (mQueue.size() >= 1) {
                 return mQueue.get(0);
@@ -55,21 +55,21 @@ public class VideoDownloadQueue {
         return null;
     }
 
-    public boolean remove(VideoTaskItem taskItem) {
+    public boolean remove(CacheTaskItem taskItem) {
         if (contains(taskItem)) {
             return mQueue.remove(taskItem);
         }
         return false;
     }
 
-    public boolean contains(VideoTaskItem taskItem) {
+    public boolean contains(CacheTaskItem taskItem) {
         return mQueue.contains(taskItem);
     }
 
-    public VideoTaskItem getTaskItem(String url) {
+    public CacheTaskItem getTaskItem(String url) {
         try {
             for (int index = 0; index < mQueue.size(); index++) {
-                VideoTaskItem taskItem = mQueue.get(index);
+                CacheTaskItem taskItem = mQueue.get(index);
                 if (taskItem != null && taskItem.getUrl() != null &&
                         taskItem.getUrl().equals(url)) {
                     return taskItem;
@@ -89,7 +89,7 @@ public class VideoDownloadQueue {
         return mQueue.size();
     }
 
-    public boolean isHead(VideoTaskItem taskItem) {
+    public boolean isHead(CacheTaskItem taskItem) {
         if (taskItem == null)
             return false;
         return taskItem.equals(peek());
@@ -151,10 +151,10 @@ public class VideoDownloadQueue {
         return count;
     }
 
-    public VideoTaskItem peekPendingTask() {
+    public CacheTaskItem peekPendingTask() {
         try {
             for (int index = 0; index < mQueue.size(); index++) {
-                VideoTaskItem taskItem = mQueue.get(index);
+                CacheTaskItem taskItem = mQueue.get(index);
                 if (isTaskPending(taskItem)) {
                     return taskItem;
                 }
@@ -165,28 +165,28 @@ public class VideoDownloadQueue {
         return null;
     }
 
-    public boolean isTaskPending(VideoTaskItem taskItem) {
+    public boolean isTaskPending(CacheTaskItem taskItem) {
         if (taskItem == null)
             return false;
         int taskState = taskItem.getTaskState();
         return taskState == VideoTaskState.PENDING ||
                 taskState == VideoTaskState.PREPARE;
     }
-    public boolean isTaskStart(VideoTaskItem taskItem) {
+    public boolean isTaskStart(CacheTaskItem taskItem) {
         if (taskItem == null)
             return false;
         int taskState = taskItem.getTaskState();
         return taskState == VideoTaskState.START;
     }
 
-    public boolean isTaskRunnig(VideoTaskItem taskItem) {
+    public boolean isTaskRunnig(CacheTaskItem taskItem) {
         if (taskItem == null)
             return false;
         int taskState = taskItem.getTaskState();
         return taskState == VideoTaskState.START ||
                 taskState == VideoTaskState.DOWNLOADING;
     }
-    public boolean isTaskDownloading(VideoTaskItem taskItem) {
+    public boolean isTaskDownloading(CacheTaskItem taskItem) {
         if (taskItem == null)
             return false;
         int taskState = taskItem.getTaskState();

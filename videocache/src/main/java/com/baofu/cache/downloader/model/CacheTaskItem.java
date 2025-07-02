@@ -11,7 +11,7 @@ import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 
 import java.util.Map;
 
-public class VideoTaskItem implements Cloneable, Parcelable {
+public class CacheTaskItem implements Cloneable, Parcelable {
 
     public int id;
     @NonNull
@@ -78,11 +78,11 @@ public class VideoTaskItem implements Cloneable, Parcelable {
 
 
 
-    public VideoTaskItem(String url) {
+    public CacheTaskItem(String url) {
         mUrl = url;
     }
 
-    public VideoTaskItem(String url, String coverUrl,String name,String sourceUrl,String quality,Map<String,String> header) {
+    public CacheTaskItem(String url, String coverUrl, String name, String sourceUrl, String quality, Map<String,String> header) {
         mUrl = url;
         mCoverUrl = coverUrl;
         mName = name;
@@ -398,7 +398,7 @@ public class VideoTaskItem implements Cloneable, Parcelable {
 
     @Override
     public Object clone() {
-        VideoTaskItem taskItem = new VideoTaskItem(mUrl);
+        CacheTaskItem taskItem = new CacheTaskItem(mUrl);
         taskItem.setDownloadCreateTime(mDownloadCreateTime);
         taskItem.setTaskState(mTaskState);
         taskItem.setMimeType(mMimeType);
@@ -429,10 +429,10 @@ public class VideoTaskItem implements Cloneable, Parcelable {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj != null && obj instanceof VideoTaskItem) {
-            String objUrl = ((VideoTaskItem) obj).getUrl();
-            String objSourceUrl = ((VideoTaskItem) obj).sourceUrl;
-            String objQuality = ((VideoTaskItem) obj).quality;
+        if (obj != null && obj instanceof CacheTaskItem) {
+            String objUrl = ((CacheTaskItem) obj).getUrl();
+            String objSourceUrl = ((CacheTaskItem) obj).sourceUrl;
+            String objQuality = ((CacheTaskItem) obj).quality;
 
 
             if (TextUtils.isEmpty(sourceUrl)||TextUtils.isEmpty(quality)) {
@@ -545,7 +545,7 @@ public class VideoTaskItem implements Cloneable, Parcelable {
         this.isSelect = source.readByte() != 0;
     }
 
-    protected VideoTaskItem(Parcel in) {
+    protected CacheTaskItem(Parcel in) {
         this.mUrl = in.readString();
         this.mCoverUrl = in.readString();
         this.mCoverPath = in.readString();
@@ -580,15 +580,15 @@ public class VideoTaskItem implements Cloneable, Parcelable {
         this.isSelect = in.readByte() != 0;
     }
 
-    public static final Creator<VideoTaskItem> CREATOR = new Creator<VideoTaskItem>() {
+    public static final Creator<CacheTaskItem> CREATOR = new Creator<CacheTaskItem>() {
         @Override
-        public VideoTaskItem createFromParcel(Parcel source) {
-            return new VideoTaskItem(source);
+        public CacheTaskItem createFromParcel(Parcel source) {
+            return new CacheTaskItem(source);
         }
 
         @Override
-        public VideoTaskItem[] newArray(int size) {
-            return new VideoTaskItem[size];
+        public CacheTaskItem[] newArray(int size) {
+            return new CacheTaskItem[size];
         }
     };
 

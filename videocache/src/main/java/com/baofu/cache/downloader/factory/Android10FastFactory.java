@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.baofu.cache.downloader.listener.IFactoryListener;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.cache.downloader.utils.OkHttpUtil;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
@@ -68,7 +68,7 @@ public class Android10FastFactory extends BaseFactory {
     private final AtomicInteger childFinshCount = new AtomicInteger(0);//子线程完成数量
 
 
-    public Android10FastFactory(VideoTaskItem taskItem, IFactoryListener listener) {
+    public Android10FastFactory(CacheTaskItem taskItem, IFactoryListener listener) {
         super(taskItem, listener);
         mWriteFileThread = new WriteFileThread();
         mRangeType = RANGE_TYPE_THREAD;

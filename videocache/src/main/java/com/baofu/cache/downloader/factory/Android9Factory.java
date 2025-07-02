@@ -8,7 +8,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.baofu.cache.downloader.listener.IFactoryListener;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 
 import java.io.BufferedOutputStream;
@@ -41,7 +41,7 @@ public class Android9Factory extends BaseFactory {
     private final AtomicInteger childFinshCount = new AtomicInteger(0);//子线程完成数量
 
 
-    public Android9Factory(VideoTaskItem taskItem, File savedir, IFactoryListener listener) {
+    public Android9Factory(CacheTaskItem taskItem, File savedir, IFactoryListener listener) {
         super(taskItem, listener);
         mSaveDir = savedir;
         mFileBuffersQueue = new LinkedList();

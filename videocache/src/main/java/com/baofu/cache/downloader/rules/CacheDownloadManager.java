@@ -11,14 +11,14 @@ import android.util.Log;
 import com.baofu.cache.downloader.VideoDownloadQueue;
 import com.baofu.cache.downloader.VideoInfoParserManager;
 import com.baofu.cache.downloader.common.VideoDownloadConstants;
-import com.baofu.cache.downloader.listener.DownloadListener;
-import com.baofu.cache.downloader.listener.IDownloadListener;
-import com.baofu.cache.downloader.listener.IDownloadTaskListener;
+import com.baofu.cache.downloader.listener.CacheDownloadListener;
+import com.baofu.cache.downloader.listener.ICacheDownloadListener;
+import com.baofu.cache.downloader.listener.ICacheDownloadTaskListener;
 import com.baofu.cache.downloader.listener.IVideoInfoListener;
 import com.baofu.cache.downloader.listener.IVideoInfoParseListener;
 import com.baofu.cache.downloader.m3u8.M3U8;
 import com.baofu.cache.downloader.model.Video;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.model.VideoTaskState;
 import com.baofu.cache.downloader.task.AllDownloadTask;
 import com.baofu.cache.downloader.task.M3U8VideoDownloadTask;
@@ -46,7 +46,7 @@ public class CacheDownloadManager {
     private static final String TAG2 = "VideoDownloadManager: ";
     public String downloadDir="";
     private static volatile CacheDownloadManager sInstance = null;
-    private DownloadListener mGlobalDownloadListener = null;
+    private CacheDownloadListener mGlobalCacheDownloadListener = null;
     //下载队列
     public VideoDownloadQueue mVideoDownloadQueue;
     private final Object mQueueLock = new Object();
@@ -54,11 +54,11 @@ public class CacheDownloadManager {
     private VideoDownloadHandler mVideoDownloadHandler;
     //下载回调
     private final Map<String, VideoDownloadTask> mVideoDownloadTaskMap = new ConcurrentHashMap<>();
-    public final Map<String, VideoTaskItem> mVideoItemTaskMap = new ConcurrentHashMap<>();
+    public final Map<String, CacheTaskItem> mVideoItemTaskMap = new ConcurrentHashMap<>();
     public Map mDownloadReplace;
-    public Map<String, IDownloadListener> mDownloadListener = new ConcurrentHashMap<>();
+    public Map<String, ICacheDownloadListener> mDownloadListener = new ConcurrentHashMap<>();
     //有下载任务就加到map里，用于获取打包下载时的进度
-    public Map<String, VideoTaskItem> mDownloadTaskMap = new ConcurrentHashMap<>();
+    public Map<String, CacheTaskItem> mDownloadTaskMap = new ConcurrentHashMap<>();
 
     //正在下载的队列
     public VideoDownloadQueue mRunningQueue = new VideoDownloadQueue();
@@ -69,11 +69,11 @@ public class CacheDownloadManager {
     public String curPlayUrl;
 
 
-    public Map<String, VideoTaskItem> getDownloadTaskMap() {
+    public Map<String, CacheTaskItem> getDownloadTaskMap() {
         return mDownloadTaskMap;
     }
 
-    public void addDownloadListener(String url, IDownloadListener listener) {
+    public void addDownloadListener(String url, ICacheDownloadListener listener) {
         mDownloadListener.put(url, listener);
     }
 
@@ -103,11 +103,11 @@ public class CacheDownloadManager {
 
 
 
-    public void setGlobalDownloadListener(DownloadListener downloadListener) {
-        mGlobalDownloadListener = downloadListener;
+    public void setGlobalDownloadListener(CacheDownloadListener cacheDownloadListener) {
+        mGlobalCacheDownloadListener = cacheDownloadListener;
     }
 
-    public void startDownload( VideoTaskItem taskItem) {
+    public void startDownload( CacheTaskItem taskItem) {
 
         if (taskItem == null || TextUtils.isEmpty(taskItem.getUrl()))
             return;
@@ -115,7 +115,7 @@ public class CacheDownloadManager {
         synchronized (mQueueLock) {
             if (mVideoDownloadQueue.contains(taskItem)) {
                 try {
-                    VideoTaskItem item = mVideoDownloadQueue.getTaskItem(taskItem.getUrl());
+                    CacheTaskItem item = mVideoDownloadQueue.getTaskItem(taskItem.getUrl());
                     if (item != null) {
                         taskItem = item;
                     }
@@ -131,7 +131,7 @@ public class CacheDownloadManager {
         taskItem.setPaused(false);
         taskItem.setDownloadCreateTime(taskItem.getDownloadCreateTime());
         taskItem.setTaskState(VideoTaskState.PENDING);
-        VideoTaskItem tempTaskItem = (VideoTaskItem) taskItem.clone();
+        CacheTaskItem tempTaskItem = (CacheTaskItem) taskItem.clone();
         mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_PENDING, tempTaskItem).sendToTarget();
         // 保存到数据库
         handleOnDownloadPrepare(taskItem);
@@ -158,7 +158,7 @@ public class CacheDownloadManager {
 
 
 
-    private void parseVideoDownloadInfo(VideoTaskItem taskItem) {
+    private void parseVideoDownloadInfo(CacheTaskItem taskItem) {
 
         String saveName = VideoDownloadUtils.getFileName(taskItem, null, false);
         File dir = new File(CacheDownloadManager.getInstance().mConfig.privatePath, saveName);
@@ -175,21 +175,21 @@ public class CacheDownloadManager {
         }
     }
 
-    private void parseExistVideoDownloadInfo(final VideoTaskItem taskItem, File m3u8File) {
+    private void parseExistVideoDownloadInfo(final CacheTaskItem taskItem, File m3u8File) {
         VideoInfoParserManager.getInstance().parseLocalM3U8File(taskItem, m3u8File, new IVideoInfoParseListener() {
             @Override
-            public void onM3U8FileParseSuccess(VideoTaskItem info, M3U8 m3u8) {
+            public void onM3U8FileParseSuccess(CacheTaskItem info, M3U8 m3u8) {
                 startM3U8VideoDownloadTask(taskItem, m3u8);
             }
 
             @Override
-            public void onM3U8FileParseFailed(VideoTaskItem info, Throwable error) {
+            public void onM3U8FileParseFailed(CacheTaskItem info, Throwable error) {
                 parseNetworkVideoInfo(taskItem);
             }
         });
     }
 
-    private void parseNetworkVideoInfo(final VideoTaskItem taskItem) {
+    private void parseNetworkVideoInfo(final CacheTaskItem taskItem) {
         DownloadExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -241,7 +241,7 @@ public class CacheDownloadManager {
                             }
 
                             @Override
-                            public void onBaseVideoInfoSuccess(VideoTaskItem info) {
+                            public void onBaseVideoInfoSuccess(CacheTaskItem info) {
 
                             }
 
@@ -251,13 +251,13 @@ public class CacheDownloadManager {
                             }
 
                             @Override
-                            public void onM3U8InfoSuccess(VideoTaskItem info, M3U8 m3u8) {
+                            public void onM3U8InfoSuccess(CacheTaskItem info, M3U8 m3u8) {
                                 taskItem.setMimeType(info.getMimeType());
                                 startM3U8VideoDownloadTask(taskItem, m3u8);
                             }
 
                             @Override
-                            public void onLiveM3U8Callback(VideoTaskItem info) {
+                            public void onLiveM3U8Callback(CacheTaskItem info) {
                                 LogUtils.w(TAG, "onLiveM3U8Callback cannot be cached.");
                                 taskItem.setErrorCode(DownloadExceptionUtils.LIVE_M3U8_ERROR);
                                 taskItem.setTaskState(VideoTaskState.ERROR);
@@ -293,12 +293,12 @@ public class CacheDownloadManager {
     }
 
 
-    private void startM3U8VideoDownloadTask(final VideoTaskItem taskItem, M3U8 m3u8) {
+    private void startM3U8VideoDownloadTask(final CacheTaskItem taskItem, M3U8 m3u8) {
 
         if ( mVideoDownloadQueue.contains(taskItem)) {
             taskItem.setTaskState(VideoTaskState.PREPARE);
             mVideoItemTaskMap.put(taskItem.getUrl(), taskItem);
-            VideoTaskItem tempTaskItem = (VideoTaskItem) taskItem.clone();
+            CacheTaskItem tempTaskItem = (CacheTaskItem) taskItem.clone();
             mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_PREPARE, tempTaskItem).sendToTarget();
 //        synchronized (mQueueLock) {
 //            if (mVideoDownloadQueue.getDownloadingCount() >= mConfig.getConcurrentCount()) {
@@ -321,13 +321,13 @@ public class CacheDownloadManager {
 
     }
 
-    private void startBaseVideoDownloadTask(VideoTaskItem taskItem) {
+    private void startBaseVideoDownloadTask(CacheTaskItem taskItem) {
 
 
         if (mVideoDownloadQueue.contains(taskItem)) {
             taskItem.setTaskState(VideoTaskState.PREPARE);
             mVideoItemTaskMap.put(taskItem.getUrl(), taskItem);
-            VideoTaskItem tempTaskItem = (VideoTaskItem) taskItem.clone();
+            CacheTaskItem tempTaskItem = (CacheTaskItem) taskItem.clone();
             mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_PREPARE, tempTaskItem).sendToTarget();
 //        synchronized (mQueueLock) {
 //            if (mVideoDownloadQueue.getRunningCount() >= mConfig.getConcurrentCount()) {
@@ -349,13 +349,13 @@ public class CacheDownloadManager {
 
     }
 
-    private void startDownloadTask(VideoDownloadTask downloadTask, VideoTaskItem taskItem) {
+    private void startDownloadTask(VideoDownloadTask downloadTask, CacheTaskItem taskItem) {
         Log.w(TAG, "============startDownloadTask");
 
 
         if (downloadTask != null) {
 
-            downloadTask.setDownloadTaskListener(new IDownloadTaskListener() {
+            downloadTask.setDownloadTaskListener(new ICacheDownloadTaskListener() {
                 @Override
                 public void onTaskStart(String url) {
 
@@ -363,7 +363,7 @@ public class CacheDownloadManager {
                         taskItem.setTaskState(VideoTaskState.START);
                         mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_START, taskItem).sendToTarget();
 //                            mDownloadTaskMap.put(taskItem.getUrl(), taskItem);
-                        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+                        ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
                         if (listener != null) {
                             listener.onDownloadStart(taskItem);
                         }
@@ -388,7 +388,7 @@ public class CacheDownloadManager {
                         //刷新map
                         mDownloadTaskMap.put(taskItem.getUrl(),taskItem);
                         mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_PROCESSING, taskItem).sendToTarget();
-                        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+                        ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
                         if (listener != null) {
                             listener.onDownloadProgress(taskItem);
                         }
@@ -406,7 +406,7 @@ public class CacheDownloadManager {
                         taskItem.setCurTs(curTs);
                         taskItem.setTotalTs(totalTs);
                         mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_PROCESSING, taskItem).sendToTarget();
-                        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+                        ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
                         if (listener != null) {
                             listener.onDownloadProgress(taskItem);
                         }
@@ -417,7 +417,7 @@ public class CacheDownloadManager {
                 public void onTaskM3U8Merge() {
                     taskItem.setTaskState(VideoTaskState.MERGE);
                     mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_MERGE, taskItem).sendToTarget();
-                    IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+                    ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
                     if (listener != null) {
                         listener.onDownloadMerge(taskItem);
                     }
@@ -430,7 +430,7 @@ public class CacheDownloadManager {
                         taskItem.setPaused(true);
                         mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_PAUSE, taskItem).sendToTarget();
                         mVideoDownloadHandler.removeMessages(VideoDownloadConstants.MSG_DOWNLOAD_PROCESSING);
-                        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+                        ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
                         if (listener != null) {
                             listener.onDownloadPause(taskItem);
                         }
@@ -463,7 +463,7 @@ public class CacheDownloadManager {
                             mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_SUCCESS, taskItem).sendToTarget();
                         }
 
-                        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+                        ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
                         if (listener != null) {
                             listener.onDownloadSuccess(taskItem);
                         }
@@ -484,7 +484,7 @@ public class CacheDownloadManager {
                 }
 
                 @Override
-                public void onTaskFirstTsDownload(VideoTaskItem item) {
+                public void onTaskFirstTsDownload(CacheTaskItem item) {
                     //todo
                     mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_FIRST_TS_SUCCESS, taskItem).sendToTarget();
 
@@ -495,7 +495,7 @@ public class CacheDownloadManager {
         }
     }
 
-    private void notifyError(VideoTaskItem taskItem,Exception e){
+    private void notifyError(CacheTaskItem taskItem, Exception e){
         if(e!=null){
             Log.e(TAG,"notify err:"+e.getMessage());
         }
@@ -507,7 +507,7 @@ public class CacheDownloadManager {
         mDownloadTaskMap.put(taskItem.getUrl(),taskItem);
 
         mVideoDownloadHandler.obtainMessage(VideoDownloadConstants.MSG_DOWNLOAD_ERROR, taskItem).sendToTarget();
-        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+        ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
         if (listener != null) {
             listener.onDownloadError(taskItem);
         }
@@ -519,8 +519,8 @@ public class CacheDownloadManager {
 
     public void pauseAllDownloadTasks() {
         synchronized (mQueueLock) {
-            List<VideoTaskItem> taskList = mVideoDownloadQueue.getDownloadList();
-            for (VideoTaskItem taskItem : taskList) {
+            List<CacheTaskItem> taskList = mVideoDownloadQueue.getDownloadList();
+            for (CacheTaskItem taskItem : taskList) {
                 if (taskItem.isPendingTask()) {
                     mVideoDownloadQueue.remove(taskItem);
                     mDownloadQueue.remove(taskItem);
@@ -540,12 +540,12 @@ public class CacheDownloadManager {
 
     public void pauseDownloadTask(String videoUrl) {
         if (mVideoItemTaskMap.containsKey(videoUrl)) {
-            VideoTaskItem taskItem = mVideoItemTaskMap.get(videoUrl);
+            CacheTaskItem taskItem = mVideoItemTaskMap.get(videoUrl);
             pauseDownloadTask(taskItem);
         }
     }
 
-    public void pauseDownloadTask(VideoTaskItem taskItem) {
+    public void pauseDownloadTask(CacheTaskItem taskItem) {
         if (taskItem == null || TextUtils.isEmpty(taskItem.getUrl()))
             return;
         synchronized (mQueueLock) {
@@ -565,7 +565,7 @@ public class CacheDownloadManager {
         }
     }
 
-    public void cancleTask(VideoTaskItem taskItem) {
+    public void cancleTask(CacheTaskItem taskItem) {
         if (taskItem == null || TextUtils.isEmpty(taskItem.getUrl()))
             return;
         synchronized (mQueueLock) {
@@ -591,7 +591,7 @@ public class CacheDownloadManager {
 
     public void resumeDownload(String videoUrl) {
         if (mVideoItemTaskMap.containsKey(videoUrl)) {
-            VideoTaskItem taskItem = mVideoItemTaskMap.get(videoUrl);
+            CacheTaskItem taskItem = mVideoItemTaskMap.get(videoUrl);
             synchronized (mQueueLock) {
                 //超过配置的并发数暂停第一个下载任务，并开启指定的任务
                 if (mRunningQueue.size() >= mConfig.concurrentCount) {
@@ -606,7 +606,7 @@ public class CacheDownloadManager {
 
 
     //Delete one task
-    private void deleteVideoTask(VideoTaskItem taskItem, boolean shouldDeleteSourceFile) {
+    private void deleteVideoTask(CacheTaskItem taskItem, boolean shouldDeleteSourceFile) {
 
         pauseDownloadTask(taskItem);
 //                String saveName = VideoDownloadUtils.getFileName(taskItem, null, false);
@@ -656,18 +656,18 @@ public class CacheDownloadManager {
 
     public void deleteVideoTask(String videoUrl, boolean shouldDeleteSourceFile) {
         if (mVideoItemTaskMap.containsKey(videoUrl)) {
-            VideoTaskItem taskItem = mVideoItemTaskMap.get(videoUrl);
+            CacheTaskItem taskItem = mVideoItemTaskMap.get(videoUrl);
             deleteVideoTask(taskItem, shouldDeleteSourceFile);
             mVideoItemTaskMap.remove(videoUrl);
 
         }
         if (mDownloadTaskMap.containsKey(videoUrl)) {
-            VideoTaskItem taskItem = mDownloadTaskMap.get(videoUrl);
+            CacheTaskItem taskItem = mDownloadTaskMap.get(videoUrl);
             deleteVideoTask(taskItem, shouldDeleteSourceFile);
             mDownloadTaskMap.remove(videoUrl);
         }
         //从下载的队列里移除
-        VideoTaskItem taskItem = mDownloadQueue.getTaskItem(videoUrl);
+        CacheTaskItem taskItem = mDownloadQueue.getTaskItem(videoUrl);
         if (taskItem != null) {
             mDownloadQueue.remove(taskItem);
         }
@@ -676,7 +676,7 @@ public class CacheDownloadManager {
 
 
 
-    private void removeDownloadQueue(VideoTaskItem taskItem) {
+    private void removeDownloadQueue(CacheTaskItem taskItem) {
         synchronized (mQueueLock) {
             mVideoDownloadQueue.remove(taskItem);
             mRunningQueue.remove(taskItem);
@@ -684,7 +684,7 @@ public class CacheDownloadManager {
             //下载完成，继续下一个下载任务
             synchronized (mQueueLock) {
                 while (mRunningQueue.size() < mConfig.concurrentCount) {
-                    VideoTaskItem item1 = mDownloadQueue.poll();
+                    CacheTaskItem item1 = mDownloadQueue.poll();
 
                     if (item1 == null) {
                         break;
@@ -715,12 +715,12 @@ public class CacheDownloadManager {
             if (msg.what == VideoDownloadConstants.MSG_DELETE_ALL_FILES) {
 
             } else {
-                dispatchDownloadMessage(msg.what, (VideoTaskItem) msg.obj);
+                dispatchDownloadMessage(msg.what, (CacheTaskItem) msg.obj);
             }
         }
 
 
-        private void dispatchDownloadMessage(int msg, VideoTaskItem taskItem) {
+        private void dispatchDownloadMessage(int msg, CacheTaskItem taskItem) {
             switch (msg) {
                 case VideoDownloadConstants.MSG_DOWNLOAD_DEFAULT:
                     handleOnDownloadDefault(taskItem);
@@ -759,81 +759,81 @@ public class CacheDownloadManager {
         }
     }
 
-    private void handleOnDownloadDefault(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadDefault(taskItem);
+    private void handleOnDownloadDefault(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadDefault(taskItem);
         }
 
 
     }
 
-    private void handleOnDownloadPending(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadPending(taskItem);
+    private void handleOnDownloadPending(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadPending(taskItem);
         }
 
     }
 
-    private void handleOnDownloadPrepare(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadPrepare(taskItem);
+    private void handleOnDownloadPrepare(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadPrepare(taskItem);
         }
 
     }
 
-    private void handleOnDownloadStart(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadStart(taskItem);
+    private void handleOnDownloadStart(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadStart(taskItem);
         }
 
     }
 
-    private void handleOnDownloadProcessing(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadProgress(taskItem);
+    private void handleOnDownloadProcessing(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadProgress(taskItem);
         }
 
     }
 
-    private void handleOnDownloadPause(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadPause(taskItem);
+    private void handleOnDownloadPause(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadPause(taskItem);
         }
 
         removeDownloadQueue(taskItem);
     }
 
-    private void handleOnDownloadError(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadError(taskItem);
+    private void handleOnDownloadError(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadError(taskItem);
         }
 
         removeDownloadQueue(taskItem);
     }
 
-    private void handleOnDownloadSuccess(VideoTaskItem taskItem) {
+    private void handleOnDownloadSuccess(CacheTaskItem taskItem) {
         removeDownloadQueue(taskItem);
 
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadSuccess(taskItem);
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadSuccess(taskItem);
         }
 
     }
-    private void handleOnFirstTsSuccess(VideoTaskItem taskItem) {
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onTaskFirstTsDownload(taskItem);
+    private void handleOnFirstTsSuccess(CacheTaskItem taskItem) {
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onTaskFirstTsDownload(taskItem);
         }
-        IDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
+        ICacheDownloadListener listener = mDownloadListener.get(taskItem.getUrl());
         if (listener != null) {
             listener.onTaskFirstTsDownload(taskItem);
         }
 
     }
 
-    private void handleOnDownloadMerge(VideoTaskItem taskItem) {
+    private void handleOnDownloadMerge(CacheTaskItem taskItem) {
 
-        if (mGlobalDownloadListener != null) {
-            mGlobalDownloadListener.onDownloadMerge(taskItem);
+        if (mGlobalCacheDownloadListener != null) {
+            mGlobalCacheDownloadListener.onDownloadMerge(taskItem);
         }
 
     }

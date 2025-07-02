@@ -9,8 +9,8 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.baofu.base.utils.CommonUtils;
-import com.baofu.cache.downloader.listener.DownloadListener;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.listener.CacheDownloadListener;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.videoplayer.adapter.MyFragmentStateAdapter;
 import com.baofu.videoplayer.utils.Appconstants;
@@ -71,9 +71,9 @@ public class ViewPagerActivity extends AppCompatActivity {
 
     };
 
-    DownloadListener downloadListener=new DownloadListener(){
+    CacheDownloadListener cacheDownloadListener =new CacheDownloadListener(){
         @Override
-        public void onTaskFirstTsDownload(VideoTaskItem item) {
+        public void onTaskFirstTsDownload(CacheTaskItem item) {
             super.onTaskFirstTsDownload(item);
             handler.postDelayed(new Runnable() {
                 @Override
@@ -124,22 +124,22 @@ public class ViewPagerActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        CacheDownloadManager.getInstance().setGlobalDownloadListener(downloadListener);
+        CacheDownloadManager.getInstance().setGlobalDownloadListener(cacheDownloadListener);
     }
 
     private void startCache(int position){
         List<MyModel> list=adapter.getData();
         CacheDownloadManager.getInstance().curPlayUrl= list.get(position).url;
         CacheDownloadManager.getInstance().pauseAllDownloadTasks();
-        List<VideoTaskItem> cacheList = getCacheList(position);
+        List<CacheTaskItem> cacheList = getCacheList(position);
         if (cacheList != null) {
             for (int i = 0; i < cacheList.size(); i++) {
-                VideoTaskItem item = cacheList.get(i);
+                CacheTaskItem item = cacheList.get(i);
                 Log.e("asdf","开始下载:"+item.mName);
                 CacheDownloadManager.getInstance().startDownload(item);
-                CacheDownloadManager.getInstance().addDownloadListener(item.mUrl,new DownloadListener(){
+                CacheDownloadManager.getInstance().addDownloadListener(item.mUrl,new CacheDownloadListener(){
                     @Override
-                    public void onTaskFirstTsDownload(VideoTaskItem item) {
+                    public void onTaskFirstTsDownload(CacheTaskItem item) {
                         super.onTaskFirstTsDownload(item);
                         handler.postDelayed(new Runnable() {
                             @Override
@@ -158,8 +158,8 @@ public class ViewPagerActivity extends AppCompatActivity {
         }
     }
 
-    public List<VideoTaskItem> getCacheList(int index) {
-        List<VideoTaskItem> result = new ArrayList<>();
+    public List<CacheTaskItem> getCacheList(int index) {
+        List<CacheTaskItem> result = new ArrayList<>();
         List<MyModel> list = adapter.getData();
         if (list == null || index >= list.size()) {
             return null;
@@ -168,7 +168,7 @@ public class ViewPagerActivity extends AppCompatActivity {
         for (int i = index + 1; i < list.size(); i++) {
             MyModel model=list.get(i);
             if (result.size() < cacheCount) {
-                VideoTaskItem item=new VideoTaskItem(model.url);
+                CacheTaskItem item=new CacheTaskItem(model.url);
                 item.mName=model.name;
                 item.overwrite=true;
                 result.add(item);

@@ -9,14 +9,13 @@ import com.baofu.cache.downloader.VideoDownloadException;
 import com.baofu.cache.downloader.m3u8.M3U8;
 import com.baofu.cache.downloader.m3u8.M3U8Constants;
 import com.baofu.cache.downloader.m3u8.M3U8Seg;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.cache.downloader.utils.DownloadExceptionUtils;
 import com.baofu.cache.downloader.utils.HttpUtils;
 import com.baofu.cache.downloader.utils.OkHttpUtil;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 import com.baofu.cache.downloader.utils.VideoStorageUtils;
-import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.utils.AES128Utils;
 
 import java.io.BufferedOutputStream;
@@ -71,7 +70,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
     final int MAX_THREAD_COUNT = 4;
     final int MIN_THREAD_COUNT = 2;
 
-    public M3U8VideoDownloadTask(VideoTaskItem taskItem, M3U8 m3u8) {
+    public M3U8VideoDownloadTask(CacheTaskItem taskItem, M3U8 m3u8) {
         super(taskItem);
         mM3U8 = m3u8;
         mTsList = m3u8.getTsList();

@@ -2,8 +2,8 @@ package com.baofu.cache.downloader.task;
 
 import android.util.Log;
 
-import com.baofu.cache.downloader.listener.IDownloadTaskListener;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.listener.ICacheDownloadTaskListener;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.utils.OkHttpUtil;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 
@@ -26,12 +26,12 @@ public abstract class VideoDownloadTask {
     public static final int maximumPoolSize = CPU_COUNT * 2 + 1;
     protected static final int THREAD_COUNT = maximumPoolSize;
     protected static final int BUFFER_SIZE = VideoDownloadUtils.DEFAULT_BUFFER_SIZE;
-    protected final VideoTaskItem mTaskItem;
+    protected final CacheTaskItem mTaskItem;
     protected final String mFinalUrl;
     protected File mSaveDir;
     protected String mSaveName;
     protected ThreadPoolExecutor mDownloadExecutor;
-    protected IDownloadTaskListener mDownloadTaskListener;
+    protected ICacheDownloadTaskListener mDownloadTaskListener;
     protected long mLastCachedSize = 0L;
     protected long mCurrentCachedSize = 0L;
     protected long mLastInvokeTime = 0L;
@@ -40,13 +40,13 @@ public abstract class VideoDownloadTask {
     protected float maxSpeed = 0;
     protected float minSpeed = 0;
 
-    protected VideoDownloadTask(VideoTaskItem taskItem) {
+    protected VideoDownloadTask(CacheTaskItem taskItem) {
         mTaskItem = taskItem;
         mFinalUrl = taskItem.getFinalUrl();
         initSaveDir();
     }
 
-    public void setDownloadTaskListener(IDownloadTaskListener listener) {
+    public void setDownloadTaskListener(ICacheDownloadTaskListener listener) {
         mDownloadTaskListener = listener;
     }
 

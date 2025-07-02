@@ -7,7 +7,7 @@ import com.baofu.cache.downloader.listener.IVideoInfoParseListener;
 import com.baofu.cache.downloader.m3u8.M3U8;
 import com.baofu.cache.downloader.m3u8.M3U8Utils;
 import com.baofu.cache.downloader.model.Video;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.cache.downloader.utils.DownloadExceptionUtils;
 import com.baofu.cache.downloader.utils.OkHttpUtil;
@@ -47,7 +47,7 @@ public class VideoInfoParserManager {
      * @param headers
      * @param listener
      */
-    public void parseNetworkM3U8Info(VideoTaskItem taskItem, Map<String, String> headers, IVideoInfoListener listener) {
+    public void parseNetworkM3U8Info(CacheTaskItem taskItem, Map<String, String> headers, IVideoInfoListener listener) {
         try {
             String method=OkHttpUtil.METHOD.GET;
             if(OkHttpUtil.METHOD.POST.equalsIgnoreCase(taskItem.method)){
@@ -126,7 +126,7 @@ public class VideoInfoParserManager {
      * @param taskItem
      * @param callback
      */
-    public void parseLocalM3U8File(VideoTaskItem taskItem,File m3u8File, IVideoInfoParseListener callback) {
+    public void parseLocalM3U8File(CacheTaskItem taskItem, File m3u8File, IVideoInfoParseListener callback) {
         if (!m3u8File.exists()) {
             Log.e("asdf", "代理文件不存在");
             callback.onM3U8FileParseFailed(taskItem, new VideoDownloadException(DownloadExceptionUtils.REMOTE_M3U8_EMPTY));

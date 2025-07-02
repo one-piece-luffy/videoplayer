@@ -21,7 +21,7 @@ import android.text.TextUtils;
 import androidx.annotation.RequiresApi;
 
 import com.baofu.cache.downloader.model.Video;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 
 import org.json.JSONObject;
@@ -530,7 +530,7 @@ public class VideoDownloadUtils {
     }
 
 
-    public static String getFileName(VideoTaskItem item, String appen, boolean appSuffix) {
+    public static String getFileName(CacheTaskItem item, String appen, boolean appSuffix) {
 
         String fileName;
         if (!TextUtils.isEmpty(item.getFileName())) {
@@ -575,7 +575,7 @@ public class VideoDownloadUtils {
         return fileName;
     }
 
-    public static String getFileNameWithSuffix(VideoTaskItem item) {
+    public static String getFileNameWithSuffix(CacheTaskItem item) {
 
         String fileName = item.getFileHash();
         if (TextUtils.isEmpty(item.suffix)) {
@@ -591,7 +591,7 @@ public class VideoDownloadUtils {
     /**
      * 设置默认文件名
      */
-    public static String getAndSetDefaultFileHash(VideoTaskItem item) {
+    public static String getAndSetDefaultFileHash(CacheTaskItem item) {
         if (item == null) {
             return null;
         }
@@ -634,7 +634,7 @@ public class VideoDownloadUtils {
         }
     }
 
-    public static Map<String,String> getTaskHeader(VideoTaskItem item){
+    public static Map<String,String> getTaskHeader(CacheTaskItem item){
         Map<String,String> result=null;
         if(item!=null&&!TextUtils.isEmpty(item.header)){
             try {

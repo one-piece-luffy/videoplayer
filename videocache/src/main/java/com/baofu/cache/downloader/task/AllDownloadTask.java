@@ -10,7 +10,7 @@ import com.baofu.cache.downloader.factory.Android10FastFactory;
 import com.baofu.cache.downloader.factory.Android9Factory;
 import com.baofu.cache.downloader.factory.IDownloadFactory;
 import com.baofu.cache.downloader.listener.IFactoryListener;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 
@@ -50,7 +50,7 @@ public class AllDownloadTask extends VideoDownloadTask {
         }
 
     };
-    public AllDownloadTask(VideoTaskItem taskItem) {
+    public AllDownloadTask(CacheTaskItem taskItem) {
         super(taskItem);
 
 

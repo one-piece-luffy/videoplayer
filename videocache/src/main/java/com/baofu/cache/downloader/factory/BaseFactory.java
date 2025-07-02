@@ -11,7 +11,7 @@ import android.util.Log;
 
 import com.baofu.cache.downloader.listener.IFactoryListener;
 import com.baofu.cache.downloader.m3u8.M3U8Utils;
-import com.baofu.cache.downloader.model.VideoTaskItem;
+import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.cache.downloader.utils.DownloadExecutor;
 import com.baofu.cache.downloader.utils.HttpUtils;
@@ -39,7 +39,7 @@ public abstract class BaseFactory implements IDownloadFactory {
     final String TAG = "BaseFactory";
     final int BUFFER_SIZE = 1024 * 1024  ;
     IFactoryListener listener;
-    VideoTaskItem mTaskItem;
+    CacheTaskItem mTaskItem;
     String method;
     // 初始等待时间（毫秒）
     static final int INITIAL_DELAY = 3000;
@@ -77,7 +77,7 @@ public abstract class BaseFactory implements IDownloadFactory {
         }
     }
 
-    public BaseFactory(VideoTaskItem taskItem, IFactoryListener listener) {
+    public BaseFactory(CacheTaskItem taskItem, IFactoryListener listener) {
         this.listener = listener;
         this.mTaskItem = taskItem;
         mFileBuffersQueue = new LinkedList();

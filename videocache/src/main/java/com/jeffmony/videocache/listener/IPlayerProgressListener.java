@@ -1,7 +1,5 @@
 package com.jeffmony.videocache.listener;
 
-import com.baofu.cache.downloader.model.VideoTaskItem;
-
 /**
  * 播放器解析进度监听
  */
