@@ -111,8 +111,7 @@ public class SocketProcessTask implements Runnable {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
-            LogUtils.w(TAG,"socket request failed, exception=" + e);
+            LogUtils.e(TAG,"socket request failed, exception=" + e);
         } finally {
             ProxyCacheUtils.close(outputStream);
             ProxyCacheUtils.close(inputStream);

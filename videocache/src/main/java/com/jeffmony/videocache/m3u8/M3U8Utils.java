@@ -200,7 +200,7 @@ public class M3U8Utils {
             Log.e(TAG, "m3u8解析完毕:"+m3u8.getUrl());
             return m3u8;
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG,"m3u8解析异常",e);
             throw e;
         } finally {
             ProxyCacheUtils.close(response.body());

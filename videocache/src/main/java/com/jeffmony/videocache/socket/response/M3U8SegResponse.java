@@ -4,6 +4,7 @@ import android.os.Build;
 import android.os.Looper;
 import android.util.Log;
 
+import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoInfoParseManager;
 import com.jeffmony.videocache.VideoLockManager;
@@ -86,7 +87,7 @@ public class M3U8SegResponse extends BaseResponse {
         }
         mHeaders.put("Connection", "close");
         mSegIndex = getSegIndex(fileName);
-        mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get("vodName"));
+        mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get(CacheConstants.HEADER_KEY_NAME));
         mResponseState = ResponseState.OK;
         LogUtils.i(TAG, "start M3U8SegResponse: index=" + mSegIndex +", parentUrl=" + mParentUrl + "\n, segUrl=" + mSegUrl);
         VideoProxyCacheManager.getInstance().seekToCacheTaskFromServer(mParentUrl, mSegIndex);
@@ -191,62 +192,6 @@ public class M3U8SegResponse extends BaseResponse {
         }
     }
 
-    private void downloadSegFile(String url, File file) throws Exception {
-        LogUtils.i(TAG, "downloadSegFile file:" + file);
-        HttpURLConnection connection = null;
-        InputStream inputStream = null;
-        try {
-            connection = HttpUtils.getConnection(url, mHeaders);
-            int responseCode = connection.getResponseCode();
-            if (responseCode == ResponseState.OK.getResponseCode() || responseCode == ResponseState.PARTIAL_CONTENT.getResponseCode()) {
-                inputStream = connection.getInputStream();
-                mSegLength = connection.getContentLength();
-                saveSegFile(inputStream, file);
-            }
-        } catch (Exception e) {
-//            Log.e(TAG,"ts下载出错了",e);
-            PlayerProgressListenerManager.getInstance().log("ts下载出错了："+e.getMessage());
-            throw e;
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-            ProxyCacheUtils.close(inputStream);
-        }
-    }
-
-
-
-    private void saveSegFile(InputStream inputStream, File file) throws Exception {
-        FileOutputStream fos = null;
-        long totalLength = 0;
-        File tmpFile = new File(file.getParentFile(), file.getName() + TEMP_POSTFIX);
-        if (tmpFile.exists()) {
-            tmpFile.delete();
-        }
-        try {
-            fos = new FileOutputStream(tmpFile);
-            int readLength;
-            byte[] buffer = new byte[StorageUtils.DEFAULT_BUFFER_SIZE];
-            while ((readLength = inputStream.read(buffer)) != -1) {
-                totalLength += readLength;
-                fos.write(buffer, 0, readLength);
-            }
-            tmpFile.renameTo(file);
-        } catch (Exception e) {
-            if (tmpFile.exists() && ((mSegLength > 0 && mSegLength == tmpFile.length()) || (mSegLength == -1 && tmpFile.length() == totalLength))) {
-                //说明此文件下载完成
-                tmpFile.renameTo(file);
-            } else {
-                tmpFile.delete();
-            }
-            throw e;
-        } finally {
-            ProxyCacheUtils.close(fos);
-            ProxyCacheUtils.close(inputStream);
-        }
-    }
-
 
     /**
      * 下载ts文件，不需要失败重试，因为前面while循环判断了，否则下载失败会OOM
@@ -266,7 +211,6 @@ public class M3U8SegResponse extends BaseResponse {
         if (m3u8 == null) {
             Log.i(TAG, "m3u8 is null：" + videoUrl);
         } else {
-//            Log.i(TAG, "m3u8 list：" + m3u8.getSegList().size());
             for (int i = 0; i < m3u8.getSegList().size(); i++) {
                 M3U8Seg m3U8Seg = m3u8.getSegList().get(i);
                 if (m3U8Seg.getUrl().equals(videoUrl)) {
@@ -277,7 +221,6 @@ public class M3U8SegResponse extends BaseResponse {
         }
 
         if (ts == null) {
-//            Log.i(TAG, "ts is null：" + videoUrl);
             ts=new M3U8Seg();
             ts.setUrl(videoUrl);
         }
@@ -420,7 +363,6 @@ public class M3U8SegResponse extends BaseResponse {
                 Thread.currentThread().interrupt(); // 恢复中断状态
                 // 处理中断逻辑，例如退出循环或任务
             }
-//            PlayerProgressListenerManager.getInstance().log("player 下载"+file.getName()+" 出错:"+e.getMessage());
 //            ts.setRetryCount(ts.getRetryCount() + 1);
 //            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
 //                downloadFile(videoUrl, file);

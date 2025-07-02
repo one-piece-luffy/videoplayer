@@ -105,6 +105,9 @@ public class ProxyCacheUtils {
     }
 
     public static String encodeUriWithBase64(String str) {
+        if(TextUtils.isEmpty(str)){
+            return null;
+        }
         try {
             return Base64.encodeToString(str.getBytes("utf-8"), Base64.NO_WRAP | Base64.NO_PADDING);
         } catch (Exception e) {
@@ -113,6 +116,9 @@ public class ProxyCacheUtils {
     }
 
     public static String decodeUriWithBase64(String str) {
+        if(TextUtils.isEmpty(str)){
+            return null;
+        }
         return new String(Base64.decode(str, Base64.NO_WRAP | Base64.NO_PADDING));
     }
 

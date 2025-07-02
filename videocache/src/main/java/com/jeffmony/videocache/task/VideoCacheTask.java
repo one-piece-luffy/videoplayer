@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import com.jeffmony.videocache.StorageManager;
 import com.jeffmony.videocache.listener.IVideoCacheTaskListener;
 import com.jeffmony.videocache.model.VideoCacheInfo;
+import com.jeffmony.videocache.utils.DefaultExecutor;
 import com.jeffmony.videocache.utils.StorageUtils;
 import com.jeffmony.videocache.utils.VideoProxyThreadUtils;
 
@@ -130,6 +131,6 @@ public abstract class VideoCacheTask {
     }
 
     protected void saveVideoInfo() {
-        VideoProxyThreadUtils.submitRunnableTask(() -> StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir));
+        DefaultExecutor.execute(() -> StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir));
     }
 }

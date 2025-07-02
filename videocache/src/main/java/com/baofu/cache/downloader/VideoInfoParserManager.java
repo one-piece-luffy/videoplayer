@@ -79,10 +79,10 @@ public class VideoInfoParserManager {
                 }
 
                 //todo
-                PlayerProgressListenerManager.getInstance().log("开始创建"+taskItem.mName+"m3u8文件");
+                PlayerProgressListenerManager.getInstance().log("开始创建" + taskItem.mName + "m3u8文件");
                 // 1.将M3U8结构保存到本地
                 File localM3U8File = new File(dir, saveName + StorageUtils.LOCAL_M3U8_SUFFIX);
-               M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
+                M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
                 PlayerProgressListenerManager.getInstance().log("m3u8创建完毕");
                 File proxyM3U8File = new File(dir, saveName + StorageUtils.PROXY_M3U8_SUFFIX);
 //                cacheInfo.setLocalPort(ProxyCacheUtils.getLocalPort());

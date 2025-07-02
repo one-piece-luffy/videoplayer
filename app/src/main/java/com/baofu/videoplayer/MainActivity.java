@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
+import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoInfoParseManager;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
@@ -188,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
         videoView.release();
         if(mLocalProxyVideoControl!=null){
-            mLocalProxyVideoControl.releaseLocalProxyResources();
+            mLocalProxyVideoControl.releaseAll();
         }
         Map<String, String> header = new HashMap();
 //        header.put(
@@ -201,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
         String link=mUrl;
         if(mUrl.contains("m3u8")){
             header.put("type","m3u8");
-            header.put("vodName",ProxyCacheUtils.encodeUriWithBase64(name));
+            header.put(CacheConstants.HEADER_KEY_NAME,ProxyCacheUtils.encodeUriWithBase64(name));
 
             //开启视频缓存
             link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), header, null);
@@ -310,20 +311,17 @@ public class MainActivity extends AppCompatActivity {
         });
         findViewById(R.id.jsc).setOnClickListener(v -> {
             Log.e("asdf","========镜双城=========");
-            Log.e("asdf","========镜双城=========");
             mUrl=Appconstants.jsc;
             name="镜双城";
             play(name);
         });
         findViewById(R.id.hzw).setOnClickListener(v -> {
             Log.e("asdf","========海贼王=========");
-            Log.e("asdf","========海贼王=========");
             mUrl=Appconstants.hzw;
             name="海贼王";
             play(name);
         });
         findViewById(R.id.hjh).setOnClickListener(v -> {
-            Log.e("asdf","========画江湖==========");
             Log.e("asdf","========画江湖==========");
             mUrl=Appconstants.huajianghu;
             name="画江湖";
@@ -379,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
             videoView.release();
         }
         if (mLocalProxyVideoControl != null) {
-            mLocalProxyVideoControl.releaseLocalProxyResources();
+            mLocalProxyVideoControl.releaseAll();
         }
     }
 

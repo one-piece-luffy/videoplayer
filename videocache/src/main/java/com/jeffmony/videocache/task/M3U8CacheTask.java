@@ -3,12 +3,14 @@ package com.jeffmony.videocache.task;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.m3u8.M3U8;
 import com.jeffmony.videocache.m3u8.M3U8Seg;
 import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.utils.AES128Utils;
+import com.jeffmony.videocache.utils.DefaultExecutor;
 import com.jeffmony.videocache.utils.FileUtils;
 import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
@@ -34,6 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import kotlin.io.NoSuchFileException;
 import okhttp3.Response;
@@ -58,6 +61,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     final static int MAX_RETRY_COUNT=1;
     private final static int MAX_RETRY_COUNT_503 = 3;//遇到503的重试次数
     private String mVideoName;
+    AtomicBoolean isRunning = new AtomicBoolean(false);//任务是否正在运行中
 
     public M3U8CacheTask(VideoCacheInfo cacheInfo, Map<String, String> headers, M3U8 m3u8) {
         super(cacheInfo, headers);
@@ -66,7 +70,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         mTotalSegCount = cacheInfo.getTotalTs();
         mCachedSegCount = cacheInfo.getCachedTs();
         mHeaders.put("Connection", "close");
-        mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get("vodName"));
+        mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get(CacheConstants.HEADER_KEY_NAME));
     }
 
     @Override
@@ -74,6 +78,10 @@ public class M3U8CacheTask extends VideoCacheTask {
         if (isTaskRunning()) {
             return;
         }
+        if (isRunning.get()){
+            return;
+        }
+
         notifyOnTaskStart();
         initM3U8TsInfo();
         int seekIndex = mCachedSegCount > 1 && mCachedSegCount <= mTotalSegCount ? mCachedSegCount - 1 : mCachedSegCount;
@@ -106,30 +114,31 @@ public class M3U8CacheTask extends VideoCacheTask {
     @Override
     public void pauseCacheTask() {
         Log.i(TAG, "pauseCacheTask");
-        if (isTaskRunning()) {
-            try {
-                if (mTaskExecutor != null) {
+        isRunning.set(false);
+        try {
+            if (mTaskExecutor != null) {
 
-                    mTaskExecutor.shutdownNow();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+                mTaskExecutor.shutdownNow();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public void stopCacheTask() {
-        LogUtils.e(TAG, "stopCacheTask");
-        if (isTaskRunning()) {
+        DefaultExecutor.execute(() -> {
+            isRunning.set(false);
             try {
                 if (mTaskExecutor != null) {
                     mTaskExecutor.shutdownNow();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG,"",e);
             }
-        }
+        });
+
+
     }
 
     @Override
@@ -163,67 +172,69 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startRequestVideoRange(int curTs) {
-        saveVideoInfo();
-        PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
-        if (mCacheInfo.isCompleted()) {
-            notifyOnTaskCompleted();
-            return;
-        }
-        if (isTaskRunning()) {
-            //已经存在的任务不需要重新创建了
-            return;
-        }
-        try {
-            if (mTaskExecutor != null) {
-                mTaskExecutor.shutdownNow();
+        isRunning.set(true);
+        DefaultExecutor.execute(() -> {
+            saveVideoInfo();
+            PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
+            if (mCacheInfo.isCompleted()) {
+                notifyOnTaskCompleted();
+                return;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        mTaskExecutor = null;
-        mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
-                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.DiscardOldestPolicy());
-        for (int index = curTs; index < mTotalSegCount; index++) {
-            final M3U8Seg seg = mSegList.get(index);
             try {
-                mTaskExecutor.execute(() -> {
+                if (mTaskExecutor != null) {
+                    mTaskExecutor.shutdownNow();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            mTaskExecutor = null;
+            mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
+                    TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
+                    new ThreadPoolExecutor.DiscardOldestPolicy());
+            for (int index = curTs; index < mTotalSegCount; index++) {
+                final M3U8Seg seg = mSegList.get(index);
+                try {
+                    mTaskExecutor.execute(() -> {
 //                            try {
-                    startDownloadSegTask(seg);
+                        startDownloadSegTask(seg);
 //                            } catch (Exception e) {
 //                                LogUtils.w(TAG, "M3U8 ts video download failed, exception=" + e);
 //                                notifyOnTaskFailed(e);
 //                            }
-                });
-            } catch (Exception e) {
-                Log.e(TAG, "发生异常: ", e);
-            }
+                    });
+                } catch (Exception e) {
+                    Log.e(TAG, "发生异常: ", e);
+                }
 
-        }
-//        if (mTaskExecutor != null) {
-//            mTaskExecutor.shutdown();//下载完成之后要关闭线程池
-//        }
-//        while (mTaskExecutor != null && !mTaskExecutor.isTerminated()) {
-//
-//            try {
-//                //等待中
-//                Thread.sleep(2000);
-//            } catch (Exception e) {
-//                Log.e(TAG, "发生异常: ", e);
-//            }
-//
+            }
+            if (mTaskExecutor != null) {
+                mTaskExecutor.shutdown();//下载完成之后要关闭线程池
+            }
+            while (mTaskExecutor != null && !mTaskExecutor.isTerminated()) {
+
+                try {
+                    //等待中
+                    Thread.sleep(2000);
+                } catch (Exception e) {
+                    Log.e(TAG, "发生异常: ", e);
+                }
+
 //            try {
 //                ThreadPoolExecutor tpe = ((ThreadPoolExecutor) mTaskExecutor);
 //                int queueSize = tpe.getQueue().size();
 //                int activeCount = tpe.getActiveCount();
 //                long completedTaskCount = tpe.getCompletedTaskCount();
 //                long taskCount = tpe.getTaskCount();
-//                Log.e(TAG, " 当前排队线程数：" + queueSize + " 当前活动线程数：" + activeCount + " 执行完成线程数：" + completedTaskCount + " 总线程数：" + taskCount);
+//                Log.e(TAG, mVideoName+" 当前排队线程数：" + queueSize + " 当前活动线程数：" + activeCount + " 执行完成线程数：" + completedTaskCount + " 总线程数：" + taskCount);
 //            } catch (Exception e) {
 //                Log.e(TAG, "发生异常: ", e);
 //            }
-//        }
+                //        isRunning.set(true);
+            }
+        });
+
+
 
     }
 
@@ -260,6 +271,9 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
+        if(!isRunning.get()){
+            return;
+        }
 //        Log.e(TAG,"队列开始下载ts:"+file.getName());
         String fileName=file.getName();
         PlayerProgressListenerManager.getInstance().log("=task开始下载:"+" "+mVideoName+" "+fileName+" "+ts.getSegName());
@@ -339,7 +353,6 @@ public class M3U8CacheTask extends VideoCacheTask {
                         PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(fileName);
                     }
 //                    Log.e(TAG, "首个片段已经下载 " + fileName+ ", url=" + ts.getUrl());
-//                    PlayerProgressListenerManager.getInstance().log("首个片段已经下载 " + fileName");
                 }
 //                Log.e(TAG, "已经下载 " + file.getAbsolutePath()+ ", url=" + ts.getUrl()+" exits:"+file.exists());
             } else {
@@ -361,10 +374,10 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         } catch (InterruptedIOException e) {
             //被中断了，使用stop时会抛出这个，不需要处理
-            Log.e(TAG, "InterruptedIOException");
+            Log.i(TAG, "InterruptedIOException");
 
         } catch (ClosedByInterruptException e) {
-            Log.e(TAG, "ClosedByInterruptException");
+            Log.i(TAG, "ClosedByInterruptException");
         }  catch (Exception e) {
 
             if (e instanceof FileNotFoundException || e instanceof NoSuchFileException) {
@@ -377,15 +390,14 @@ public class M3U8CacheTask extends VideoCacheTask {
                     return;
                 }
             }
-            Log.e(TAG, "ts下载出错了",e );
             PlayerProgressListenerManager.getInstance().log("=task "+fileName+"下载出错:"+e.getMessage());
             ts.setRetryCount(ts.getRetryCount() + 1);
 //            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-////                Log.e(TAG, "====retry, exception=" + e.getMessage());
+////                Log.i(TAG, "====retry, exception=" + e.getMessage());
 //                downloadFile(ts, file, videoUrl);//todo oom
-////                Log.e("asdf","重试");
+////                Log.i("asdf","重试");
 //            }else {
-////                Log.e("asdf","失败");
+////                Log.i("asdf","失败");
 //            }
         } finally {
             ProxyCacheUtils.close(inputStream);
