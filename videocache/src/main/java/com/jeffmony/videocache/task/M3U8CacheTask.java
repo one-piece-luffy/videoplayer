@@ -67,7 +67,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         super(cacheInfo, headers);
         mSegList = m3u8.getSegList();
         this.mM3U8=m3u8;
-        mTotalSegCount = cacheInfo.getTotalTs();
+        mTotalSegCount = mSegList == null ? 0 : mSegList.size();
         mCachedSegCount = cacheInfo.getCachedTs();
         mHeaders.put("Connection", "close");
         mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get(CacheConstants.HEADER_KEY_NAME));
@@ -192,7 +192,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
                     TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
                     new ThreadPoolExecutor.DiscardOldestPolicy());
-            for (int index = curTs; index < mTotalSegCount; index++) {
+            for (int index = curTs; index < mSegList.size(); index++) {
                 final M3U8Seg seg = mSegList.get(index);
                 try {
                     mTaskExecutor.execute(() -> {
