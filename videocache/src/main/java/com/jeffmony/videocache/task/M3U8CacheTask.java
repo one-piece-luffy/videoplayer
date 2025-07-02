@@ -357,10 +357,10 @@ public class M3U8CacheTask extends VideoCacheTask {
 //                Log.e(TAG, "已经下载 " + file.getAbsolutePath()+ ", url=" + ts.getUrl()+" exits:"+file.exists());
             } else {
                 ts.setRetryCount(ts.getRetryCount() + 1);
-                if (responseCode == HttpUtils.RESPONSE_503||responseCode == HttpUtils.RESPONSE_429) {
+                if (responseCode == HttpUtils.RESPONSE_503 || responseCode == HttpUtils.RESPONSE_429) {
                     if (ts.getRetryCount() <= MAX_RETRY_COUNT_503) {
                         //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
-                        int ran= 4000+(int) (Math.random()*20000);
+                        int ran = 4000 + (int) (Math.random() * 20000);
                         Thread.sleep(ran);
                         downloadFile(ts, file, videoUrl);
                     }
