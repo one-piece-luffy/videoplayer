@@ -1,6 +1,11 @@
 package com.baofu.videoplayer;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.databinding.DataBindingUtil;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
@@ -13,6 +18,7 @@ import com.baofu.cache.downloader.listener.CacheDownloadListener;
 import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.baofu.videoplayer.adapter.MyFragmentStateAdapter;
+import com.baofu.videoplayer.databinding.ActivityViewPagerBinding;
 import com.baofu.videoplayer.utils.Appconstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.listener.IPlayerProgressListener;
@@ -26,6 +32,7 @@ public class ViewPagerActivity extends AppCompatActivity {
     String TAG="ViewPagerActivity";
     int lastpostion;
     Handler handler=new Handler(Looper.getMainLooper());
+    ActivityViewPagerBinding binding;
 
     IPlayerProgressListener iPlayerProgressListener=new IPlayerProgressListener() {
         @Override
@@ -89,9 +96,20 @@ public class ViewPagerActivity extends AppCompatActivity {
     };
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_pager);
+        EdgeToEdge.enable(this);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_view_pager);
 
         viewPager = findViewById(R.id.pager);
         List<MyModel> list = new ArrayList<>();
@@ -118,6 +136,7 @@ public class ViewPagerActivity extends AppCompatActivity {
             }
         });
         PlayerProgressListenerManager.getInstance().setListener(iPlayerProgressListener);
+
         startCache(0);
     }
 
@@ -169,7 +188,7 @@ public class ViewPagerActivity extends AppCompatActivity {
             MyModel model=list.get(i);
             if (result.size() < cacheCount) {
                 CacheTaskItem item=new CacheTaskItem(model.url);
-                item.mName=model.name;
+//                item.mName=model.name;
                 item.overwrite=true;
                 result.add(item);
             } else {

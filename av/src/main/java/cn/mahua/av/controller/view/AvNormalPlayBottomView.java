@@ -45,10 +45,9 @@ import com.yc.video.ui.view.InterControlView;
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.listener.OnSpeedClickListener;
-import cn.mahua.av.listener.OnVisibilityChangedListener;
 import cn.mahua.av.play.ControllerClickListener;
-import cn.mahua.av.utils.AvSharePreference;
-import cn.mahua.av.widget.view.SpeedDialog;
+import cn.mahua.av.widget.SpeedBottomSheetDialog;
+import cn.mahua.av.widget.SpeedDialog;
 
 import static com.yc.video.config.ConstantKeys.PlayerScreenScaleType.SCREEN_SCALE_16_9;
 import static com.yc.video.config.ConstantKeys.PlayerScreenScaleType.SCREEN_SCALE_4_3;
@@ -200,7 +199,13 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                     break;
             }
         } else if (v == tv_speed) {
-            new SpeedDialog(mContext, mControlWrapper.getSpeed() + "",onSpeedClickListener).show();
+            boolean isLand = ((Activity) getContext()).getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+            if (mControlWrapper.isFullScreen() || isLand) {
+                new SpeedDialog(mContext, mControlWrapper.getSpeed() + "", onSpeedClickListener).show();
+            } else {
+                new SpeedBottomSheetDialog(mContext, mControlWrapper.getSpeed() + "", onSpeedClickListener).show();
+            }
+
 
         } else if (v == iv_av_next) {
             if (controllerClickListener != null) {

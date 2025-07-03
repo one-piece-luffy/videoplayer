@@ -50,7 +50,7 @@ public class MyApplication extends BaseApplication {
         VideoProxyCacheManager.getInstance().initProxyConfig(builder.build());
 
 
-        //下载器初始化
+        //播放器预加载初始化
 //        VideoDownloadManager.getInstance().downloadDir = AppConfig.DOWNLOAD_DIR;
 
         try {
