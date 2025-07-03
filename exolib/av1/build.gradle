@@ -15,8 +15,6 @@ apply from: "../common_library_config.gradle"
 apply from: "$rootDir/gradle/publish.gradle"
 
 android {
-    compileSdk 33
-    buildToolsVersion '32.0.0'
     namespace 'com.google.android.exoplayer3.ext.av1'
     defaultConfig {
         externalNativeBuild {
