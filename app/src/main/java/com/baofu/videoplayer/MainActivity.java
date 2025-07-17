@@ -14,20 +14,20 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
-import com.baofu.cache.downloader.utils.VideoDownloadUtils;
+import com.baofu.videoplayer.utils.Appconstants;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
-import com.jeffmony.videocache.VideoInfoParseManager;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
 import com.jeffmony.videocache.listener.IPlayerProgressListener;
-import com.jeffmony.videocache.listener.IVideoCacheListener;
-import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
-import com.baofu.videoplayer.utils.Appconstants;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
 import com.yc.video.player.VideoPlayer;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -186,6 +186,14 @@ public class MainActivity extends AppCompatActivity {
 //        controller.showPreviewLoading();
     }
     private void play(String name){
+
+        try {
+            String temp=mUrl;
+            mUrl = encodeUrl(mUrl);
+            Log.i("MainActivity",mUrl);
+        } catch (URISyntaxException e) {
+           e.printStackTrace();
+        }
 
         videoView.release();
         if(mLocalProxyVideoControl!=null){
@@ -351,7 +359,30 @@ public class MainActivity extends AppCompatActivity {
             name="落花时节又逢君";
             play(name);
         });
+        findViewById(R.id.langKeXing).setOnClickListener(v -> {
+            Log.e("asdf","========浪客行==========");
+            mUrl=Appconstants.LangKeXing;
+            name="浪客行";
+            play(name);
+        });
     }
+
+    public String encodeUrl(String url) throws URISyntaxException {
+        try {
+            URI uri = new URI(
+                    url.split("://")[0],                 // 协议部分
+                    url.split("://")[1].split("/")[0],   // 主机部分
+                    "/" + String.join("/", java.util.Arrays.copyOfRange(url.split("://")[1].split("/"), 1, url.split("://")[1].split("/").length)), // 路径部分
+                    null                                 // 查询参数（如果有需要单独处理）
+            );
+            return uri.toASCIIString();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+        return url;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();

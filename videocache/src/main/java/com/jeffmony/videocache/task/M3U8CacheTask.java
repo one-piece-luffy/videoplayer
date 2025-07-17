@@ -41,6 +41,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import kotlin.io.NoSuchFileException;
 import okhttp3.Response;
 
+/**
+ * 播放器缓存，边下边播
+ */
 public class M3U8CacheTask extends VideoCacheTask {
 
     private static final String TAG = "M3U8CacheTask";
@@ -386,6 +389,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                 if (file1 != null && !file1.exists()) {
                     PlayerProgressListenerManager.getInstance().log("文件不存在，终止任务");
                     stopCacheTask();
+                    //子线程
                     PlayerProgressListenerManager.getInstance().parseM3u8Fail("文件不存在，终止任务");
                     return;
                 }

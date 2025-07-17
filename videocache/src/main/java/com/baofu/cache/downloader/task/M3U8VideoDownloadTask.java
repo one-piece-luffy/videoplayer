@@ -422,7 +422,7 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
     }
 
     public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
-        Log.e(TAG,mTaskItem.mName+" 队列开始下载ts:"+file.getName());
+        Log.e(TAG,mTaskItem.mName+" 开始缓存ts:"+file.getName());
         if (CacheDownloadManager.getInstance().mDownloadReplace != null) {
             for (Map.Entry<String, String> entry : (Iterable<Map.Entry<String, String>>) CacheDownloadManager.getInstance().mDownloadReplace.entrySet()) {
                 if (videoUrl.contains(entry.getKey())) {
