@@ -29,6 +29,7 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.media3.ui.PlayerView;
 
 import com.yc.kernel.factory.PlayerFactory;
 import com.yc.kernel.inter.AbstractVideoPlayer;
@@ -364,7 +365,6 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
         mMediaPlayer.setPlayerEventListener(this);
         setInitOptions();
         mMediaPlayer.initPlayer();
-
         setOptions();
     }
 

@@ -5,24 +5,26 @@ import android.content.Context;
 import android.net.Uri;
 import android.text.TextUtils;
 
-import com.google.android.exoplayer3.C;
-import com.google.android.exoplayer3.database.ExoDatabaseProvider;
-import com.google.android.exoplayer3.source.MediaSource;
-import com.google.android.exoplayer3.source.ProgressiveMediaSource;
-import com.google.android.exoplayer3.source.dash.DashMediaSource;
-import com.google.android.exoplayer3.source.hls.HlsMediaSource;
-import com.google.android.exoplayer3.source.smoothstreaming.SsMediaSource;
-import com.google.android.exoplayer3.upstream.DataSource;
-import com.google.android.exoplayer3.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer3.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer3.upstream.DefaultHttpDataSourceFactory;
-import com.google.android.exoplayer3.upstream.HttpDataSource;
-import com.google.android.exoplayer3.upstream.cache.Cache;
-import com.google.android.exoplayer3.upstream.cache.CacheDataSource;
-import com.google.android.exoplayer3.upstream.cache.CacheDataSourceFactory;
-import com.google.android.exoplayer3.upstream.cache.LeastRecentlyUsedCacheEvictor;
-import com.google.android.exoplayer3.upstream.cache.SimpleCache;
-import com.google.android.exoplayer3.util.Util;
+
+import androidx.annotation.OptIn;
+import androidx.media3.common.C;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.util.UnstableApi;
+import androidx.media3.common.util.Util;
+import androidx.media3.database.ExoDatabaseProvider;
+import androidx.media3.datasource.DataSource;
+import androidx.media3.datasource.DefaultDataSourceFactory;
+import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.datasource.HttpDataSource;
+import androidx.media3.datasource.cache.Cache;
+import androidx.media3.datasource.cache.CacheDataSource;
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
+import androidx.media3.datasource.cache.SimpleCache;
+import androidx.media3.exoplayer.dash.DashMediaSource;
+import androidx.media3.exoplayer.hls.HlsMediaSource;
+import androidx.media3.exoplayer.smoothstreaming.SsMediaSource;
+import androidx.media3.exoplayer.source.MediaSource;
+import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -37,15 +39,15 @@ import java.util.Map;
  *     revise:
  * </pre>
  */
-public final class ExoMediaSourceHelper {
+@UnstableApi public final class ExoMediaSourceHelper {
 
     private static ExoMediaSourceHelper sInstance;
     private final String mUserAgent;
     private Context mAppContext;
     private HttpDataSource.Factory mHttpDataSourceFactory;
-    private Cache mCache;
+//    private Cache mCache;
 
-    private ExoMediaSourceHelper(Context context) {
+    @OptIn(markerClass = UnstableApi.class) private ExoMediaSourceHelper(Context context) {
         if (context instanceof Application){
             mAppContext = context;
         } else {
@@ -77,42 +79,44 @@ public final class ExoMediaSourceHelper {
         return getMediaSource(uri, null, isCache);
     }
 
-    public MediaSource getMediaSource(String uri, Map<String, String> headers, boolean isCache) {
+    @OptIn(markerClass = UnstableApi.class) public MediaSource getMediaSource(String uri, Map<String, String> headers, boolean isCache) {
         Uri contentUri = Uri.parse(uri);
         if ("rtmp".equals(contentUri.getScheme())) {
 //            RtmpDataSourceFactory rtmpDataSourceFactory = new RtmpDataSourceFactory(null);
 //            return new ProgressiveMediaSource.Factory(rtmpDataSourceFactory).createMediaSource(contentUri);
         }
 
+        MediaItem mediaItem = MediaItem.fromUri(uri);
+
         int contentType = inferContentType(uri);
         DataSource.Factory factory;
-        if (isCache) {
-            factory = getCacheDataSourceFactory();
-        } else {
+//        if (isCache) {
+//            factory = getCacheDataSourceFactory();
+//        } else {
             factory = getDataSourceFactory();
-        }
+//        }
         if (mHttpDataSourceFactory != null) {
             setHeaders(headers);
         }
 
         if(headers!=null&&"m3u8".equals(headers.get("type"))){
-            return new HlsMediaSource.Factory(factory).createMediaSource(contentUri);
+            return new HlsMediaSource.Factory(factory).createMediaSource(mediaItem);
         }
         switch (contentType) {
             case C.TYPE_DASH:
-                return new DashMediaSource.Factory(factory).createMediaSource(contentUri);
+                return new DashMediaSource.Factory(factory).createMediaSource(mediaItem);
             case C.TYPE_SS:
-                return new SsMediaSource.Factory(factory).createMediaSource(contentUri);
+                return new SsMediaSource.Factory(factory).createMediaSource(mediaItem);
             case C.TYPE_HLS:
-                return new HlsMediaSource.Factory(factory).createMediaSource(contentUri);
+                return new HlsMediaSource.Factory(factory).createMediaSource(mediaItem);
             default:
             case C.TYPE_OTHER:
-                return new ProgressiveMediaSource.Factory(factory).createMediaSource(contentUri);
+                return new ProgressiveMediaSource.Factory(factory).createMediaSource(mediaItem);
         }
     }
 
-    private int inferContentType(String fileName) {
-        fileName = Util.toLowerInvariant(fileName);
+    @OptIn(markerClass = UnstableApi.class) private int inferContentType(String fileName) {
+        fileName =fileName.toLowerCase();
         if (fileName.contains(".mpd")) {
             return C.TYPE_DASH;
         } else if (fileName.contains(".m3u8")||fileName.contains("127.0.0.1")) {
@@ -124,17 +128,17 @@ public final class ExoMediaSourceHelper {
         }
     }
 
-    private DataSource.Factory getCacheDataSourceFactory() {
-        if (mCache == null) {
-            mCache = newCache();
-        }
-        return new CacheDataSourceFactory(
-                mCache,
-                getDataSourceFactory(),
-                CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
-    }
+//    private DataSource.Factory getCacheDataSourceFactory() {
+//        if (mCache == null) {
+//            mCache = newCache();
+//        }
+//        return new CacheDataSourceFactory(
+//                mCache,
+//                getDataSourceFactory(),
+//                CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+//    }
 
-    private Cache newCache() {
+    @OptIn(markerClass = UnstableApi.class) private Cache newCache() {
         return new SimpleCache(
                 //缓存目录
                 new File(mAppContext.getExternalCacheDir(), "exo-video-cache"),
@@ -148,7 +152,7 @@ public final class ExoMediaSourceHelper {
      *
      * @return A new DataSource factory.
      */
-    private DataSource.Factory getDataSourceFactory() {
+    @OptIn(markerClass = UnstableApi.class) private DataSource.Factory getDataSourceFactory() {
         return new DefaultDataSourceFactory(mAppContext, getHttpDataSourceFactory());
     }
 
@@ -159,13 +163,11 @@ public final class ExoMediaSourceHelper {
      */
     private DataSource.Factory getHttpDataSourceFactory() {
         if (mHttpDataSourceFactory == null) {
-            mHttpDataSourceFactory = new DefaultHttpDataSourceFactory(
-                    mUserAgent,
-                    null,
-                    DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-                    DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
-                    //http->https重定向支持
-                    true);
+            mHttpDataSourceFactory = new DefaultHttpDataSource.Factory()
+                    .setConnectTimeoutMs(60000) // 连接超时时间（毫秒）
+                    .setReadTimeoutMs(60000) // 读取超时时间（毫秒）
+                    .setAllowCrossProtocolRedirects(true); // 允许跨协议重定向;
+
         }
         return mHttpDataSourceFactory;
     }
@@ -187,13 +189,13 @@ public final class ExoMediaSourceHelper {
                         }
                     }
                 } else {
-                    mHttpDataSourceFactory.getDefaultRequestProperties().set(key, value);
+                    mHttpDataSourceFactory.setDefaultRequestProperties(headers);
                 }
             }
         }
     }
 
-    public void setCache(Cache cache) {
-        this.mCache = cache;
-    }
+//    public void setCache(Cache cache) {
+//        this.mCache = cache;
+//    }
 }

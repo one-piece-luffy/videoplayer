@@ -37,17 +37,106 @@ dependencies {
 //    implementation "com.google.android.exoplayer:exoplayer-smoothstreaming:2.11.3"
 //    implementation "com.google.android.exoplayer:extension-rtmp:2.11.3"
 
-    implementation project(':exolib:core')
-    implementation project(':exolib:dash')
-    implementation project(':exolib:hls')
-//    implementation project(':exolib:rtmp')
-    implementation project(':exolib:smoothstreaming')
-    implementation project(':exolib:rtsp')
-    implementation project(':exolib:av1')
-    implementation project( ':exolib:ffmpeg')
-    implementation project( ':exolib:flac')
-    implementation project( ':exolib:opus')
-    implementation project( ':exolib:vp9')
+//    implementation project(':exolib:core')
+//    implementation project(':exolib:dash')
+//    implementation project(':exolib:hls')
+////    implementation project(':exolib:rtmp')
+//    implementation project(':exolib:smoothstreaming')
+//    implementation project(':exolib:rtsp')
+//    implementation project(':exolib:av1')
+//    implementation project( ':exolib:ffmpeg')
+//    implementation project( ':exolib:flac')
+//    implementation project( ':exolib:opus')
+//    implementation project( ':exolib:vp9')
+
+
+    def media3_version = "1.7.1"
+
+    api "androidx.media3:media3-exoplayer:$media3_version"
+    api "androidx.media3:media3-exoplayer-dash:$media3_version"
+    api "androidx.media3:media3-exoplayer-hls:$media3_version"
+    // 如需支持 SmoothStreaming 格式
+    api "androidx.media3:media3-exoplayer-smoothstreaming:$media3_version"
+
+// 如需支持 RTSP 协议
+    api "androidx.media3:media3-exoplayer-rtsp:$media3_version"
+    api "androidx.media3:media3-exoplayer-rtsp:$media3_version"
+    api "androidx.media3:media3-ui:$media3_version"
+
+
+
+
+    // For media playback using ExoPlayer
+//    api "androidx.media3:media3-exoplayer:$media3_version"
+//
+//    // For DASH playback support with ExoPlayer
+//    api "androidx.media3:media3-exoplayer-dash:$media3_version"
+//    // For HLS playback support with ExoPlayer
+//    api "androidx.media3:media3-exoplayer-hls:$media3_version"
+//    // For SmoothStreaming playback support with ExoPlayer
+//    api "androidx.media3:media3-exoplayer-smoothstreaming:$media3_version"
+//    // For RTSP playback support with ExoPlayer
+//    api "androidx.media3:media3-exoplayer-rtsp:$media3_version"
+//    // For MIDI playback support with ExoPlayer (see additional dependency requirements in
+//    // https://github.com/androidx/media/blob/release/libraries/decoder_midi/README.md)
+//    api "androidx.media3:media3-exoplayer-midi:$media3_version"
+//    // For ad insertion using the Interactive Media Ads SDK with ExoPlayer
+//    api "androidx.media3:media3-exoplayer-ima:$media3_version"
+//
+//    // For loading data using the Cronet network stack
+//    api "androidx.media3:media3-datasource-cronet:$media3_version"
+//    // For loading data using the OkHttp network stack
+//    api "androidx.media3:media3-datasource-okhttp:$media3_version"
+//    // For loading data using librtmp
+//    api "androidx.media3:media3-datasource-rtmp:$media3_version"
+//
+//    // For building media playback UIs using Compose
+//    api "androidx.media3:media3-ui-compose:$media3_version"
+//    // For building media playback UIs using Views
+//    api "androidx.media3:media3-ui:$media3_version"
+//    // For building media playback UIs using Jetpack Compose
+//    api "androidx.media3:media3-ui-compose:$media3_version"
+//    // For building media playback UIs for Android TV using the Jetpack Leanback library
+//    api "androidx.media3:media3-ui-leanback:$media3_version"
+//
+//    // For exposing and controlling media sessions
+//    api "androidx.media3:media3-session:$media3_version"
+//
+//    // For extracting data from media containers
+//    api "androidx.media3:media3-extractor:$media3_version"
+//
+//    // For integrating with Cast
+//    api "androidx.media3:media3-cast:$media3_version"
+//
+//    // For scheduling background operations using Jetpack Work's WorkManager with ExoPlayer
+//    api "androidx.media3:media3-exoplayer-workmanager:$media3_version"
+//
+//    // For transforming media files
+//    api "androidx.media3:media3-transformer:$media3_version"
+//
+//    // For applying effects on video frames
+//    api "androidx.media3:media3-effect:$media3_version"
+//
+//    // For muxing media files
+//    api "androidx.media3:media3-muxer:$media3_version"
+//
+//    // Utilities for testing media components (including ExoPlayer components)
+//    api "androidx.media3:media3-test-utils:$media3_version"
+//    // Utilities for testing media components (including ExoPlayer components) via Robolectric
+//    api "androidx.media3:media3-test-utils-robolectric:$media3_version"
+//
+//    // Common functionality for reading and writing media containers
+//    api "androidx.media3:media3-container:$media3_version"
+//    // Common functionality for media database components
+//    api "androidx.media3:media3-database:$media3_version"
+//    // Common functionality for media decoders
+//    api "androidx.media3:media3-decoder:$media3_version"
+//    // Common functionality for loading data
+//    api "androidx.media3:media3-datasource:$media3_version"
+//    // Common functionality used across multiple media libraries
+//    api "androidx.media3:media3-common:$media3_version"
+//    // Common Kotlin-specific functionality
+//    api "androidx.media3:media3-common-ktx:$media3_version"
 }
 
 

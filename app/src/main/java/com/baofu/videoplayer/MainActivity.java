@@ -194,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (URISyntaxException e) {
            e.printStackTrace();
         }
+//        mUrl="/storage/emulated/0/Download/图片/图片.m3u8";
 
         videoView.release();
         if(mLocalProxyVideoControl!=null){
