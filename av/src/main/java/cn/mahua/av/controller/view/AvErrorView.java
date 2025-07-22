@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -129,6 +130,7 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
 
     @Override
     public void onPlayStateChanged(int playState,String msg) {
+        Log.e("asdf","play status:"+playState);
         if (playState == ConstantKeys.CurrentState.STATE_ERROR||playState == ConstantKeys.CurrentState.STATE_NETWORK_ERROR||playState == ConstantKeys.CurrentState.STATE_PARSE_ERROR) {
             bringToFront();
             setVisibility(VISIBLE);
@@ -136,7 +138,7 @@ public class AvErrorView extends LinearLayout implements InterControlView, View.
             mTvMessage.setText(getContext().getString(R.string.error_message));
         }  else if (playState == ConstantKeys.CurrentState.STATE_IDLE) {
             setVisibility(GONE);
-        } else if (playState == ConstantKeys.CurrentState.STATE_ONCE_LIVE) {
+        } else {
             setVisibility(GONE);
         }
     }

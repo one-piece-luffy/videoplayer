@@ -669,8 +669,7 @@ public class VideoProxyCacheManager {
      * @param url
      * @param segIndex
      */
-    @Deprecated
-    public void seekToCacheTaskFromServer(String url, int segIndex) {
+    public void seekToCacheTaskFromServerByM3u8(String url, int segIndex) {
         String md5 = ProxyCacheUtils.computeMD5(url);
         boolean shouldSeek = false;
         synchronized (mSeekPositionLock) {
@@ -683,7 +682,7 @@ public class VideoProxyCacheManager {
         VideoProxyThreadUtils.runOnUiThread(() -> {
             VideoCacheTask cacheTask = mCacheTaskMap.get(url);
             if (cacheTask != null && seekByServer) {
-                cacheTask.seekToCacheTaskFromServer(segIndex);
+                cacheTask.seekToCacheTaskFromServerByM3u8(segIndex);
             }
         });
     }

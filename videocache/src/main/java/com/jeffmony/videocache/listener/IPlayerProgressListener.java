@@ -11,11 +11,6 @@ public interface IPlayerProgressListener {
      */
     void onTaskFirstTsDownload(String filename);
     /**
-     * 回调在子线程
-     * 播放器的第一个ts下载成功
-     */
-    void onPlayerFirstTsDownload(String filename);
-    /**
      * 回调在主线程
      * 播放器的第一个ts下载成功
      */
@@ -26,5 +21,7 @@ public interface IPlayerProgressListener {
      * @param log
      */
     void playerCacheLog(String log);
+
+    void onSeek(int segIndex);
 
 }

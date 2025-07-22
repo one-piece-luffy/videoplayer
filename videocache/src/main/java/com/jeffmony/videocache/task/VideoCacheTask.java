@@ -67,7 +67,7 @@ public abstract class VideoCacheTask {
     public abstract void seekToCacheTaskFromServer(long startPosition);   //来自服务端的seek操作,针对非M3U8视频
 
     @Deprecated
-    public abstract void seekToCacheTaskFromServer(int segIndex);         //来自服务端的seek操作,针对M3U8视频
+    public abstract void seekToCacheTaskFromServerByM3u8(int segIndex);         //来自服务端的seek操作,针对M3U8视频
 
     public abstract void seekToCacheTaskFromServer(int segIndex, long time);  //来自服务端的seek操作,针对M3U8视频
 

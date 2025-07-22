@@ -54,7 +54,7 @@ public class FileUtils {
      */
     public static void handleRename(File tmpFile, File file) {
         //
-        if (file.exists() && file.length() > 0) {
+        if (file.exists() && VideoCacheUtils.sizeSimilar(file.length(),tmpFile.length())) {
             deleteFile(tmpFile);
             Log.e(TAG,"文件已存在，删除临时文件:"+tmpFile.getName());
             return;

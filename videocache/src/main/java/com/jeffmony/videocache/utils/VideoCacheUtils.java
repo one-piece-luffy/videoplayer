@@ -27,7 +27,7 @@ public class VideoCacheUtils {
     public static final String SEGMENT_PREFIX = "video_";
     public static final String M3U8_SUFFIX = ".m3u8";
     public static final String INIT_SEGMENT_PREFIX = "init_video_";
-
+    public static final long SIZE_THRESHOLD = 5 * 1024;
 
     public static String computeMD5(String string) {
         try {
@@ -236,5 +236,24 @@ public class VideoCacheUtils {
 
         return fileName;
 
+    }
+
+    /**
+     * 判断两个文件大小是否近似
+     * 允许有5kb误差
+     */
+    public static boolean sizeSimilar(long size1,long size2){
+
+        long difference = Math.abs(size1 - size2);
+
+        if (difference <= SIZE_THRESHOLD) {
+//            System.out.println("两个文件大小相差在10KB以内");
+
+            return true;
+        } else {
+//            System.out.println("两个文件大小相差超过10KB");
+//            Log.e(TAG,"两个文件大小相差:"+difference);
+            return false;
+        }
     }
 }

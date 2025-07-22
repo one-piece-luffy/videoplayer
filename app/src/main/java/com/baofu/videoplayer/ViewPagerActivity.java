@@ -75,6 +75,11 @@ public class ViewPagerActivity extends AppCompatActivity {
             Log.e("===asdf",log);
         }
 
+        @Override
+        public void onSeek(int segIndex) {
+
+        }
+
 
     };
 

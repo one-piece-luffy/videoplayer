@@ -178,7 +178,7 @@ public class Mp4CacheTask extends VideoCacheTask {
     }
 
     @Override
-    public void seekToCacheTaskFromServer(int segIndex) { }
+    public void seekToCacheTaskFromServerByM3u8(int segIndex) { }
 
     @Override
     public void seekToCacheTaskFromServer(int segIndex, long time) {

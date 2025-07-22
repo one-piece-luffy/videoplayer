@@ -59,20 +59,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        @Override
-        public void onPlayerFirstTsDownload(String filename) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(isDestroyed()||isFinishing()){
-                        return;
-                    }
-                    CommonUtils.showToast("播放器 第一个ts下载完成:"+filename);
-                    Log.e("MainActivity","player 第一个ts下载完成:"+filename);
-                }
-            });
-
-        }
 
         @Override
         public void onM3U8ParsedFailed(String error) {
@@ -83,6 +69,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void playerCacheLog(String log) {
             Log.e("===asdf",log);
+        }
+
+        @Override
+        public void onSeek(int segIndex) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if(isDestroyed()||isFinishing()){
+                        return;
+                    }
+                    CommonUtils.showToast("当前ts:"+segIndex);
+                }
+            });
         }
 
     };

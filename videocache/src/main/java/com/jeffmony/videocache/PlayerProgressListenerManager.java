@@ -35,4 +35,9 @@ public class PlayerProgressListenerManager {
             mListener.onM3U8ParsedFailed(log);
         }
     }
+    public void onSeek(int segIndex) {
+        if (mListener != null) {
+            mListener.onSeek(segIndex);
+        }
+    }
 }

@@ -22,6 +22,7 @@ import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.OkHttpUtil;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
+import com.jeffmony.videocache.utils.VideoCacheUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -87,10 +88,11 @@ public class M3U8SegResponse extends BaseResponse {
         }
         mHeaders.put("Connection", "close");
         mSegIndex = getSegIndex(fileName);
+
         mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get(CacheConstants.HEADER_KEY_NAME));
         mResponseState = ResponseState.OK;
         LogUtils.i(TAG, "start M3U8SegResponse: index=" + mSegIndex +", parentUrl=" + mParentUrl + "\n, segUrl=" + mSegUrl);
-        VideoProxyCacheManager.getInstance().seekToCacheTaskFromServer(mParentUrl, mSegIndex);
+        VideoProxyCacheManager.getInstance().seekToCacheTaskFromServerByM3u8(mParentUrl, mSegIndex);
 //        mTaskExecutor = new ThreadPoolExecutor(1, 1, 0L,
 //                TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
 //                new ThreadPoolExecutor.DiscardOldestPolicy());
@@ -142,12 +144,12 @@ public class M3U8SegResponse extends BaseResponse {
 //                        downloadFile(mSegUrl, mSegFile);
 //                    }
 //                });
-                DefaultExecutor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        downloadFile(mSegUrl, mSegFile);
-                    }
-                });
+//                DefaultExecutor.execute(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        downloadFile(mSegUrl, mSegFile);
+//                    }
+//                });
 
             }
 
@@ -160,6 +162,7 @@ public class M3U8SegResponse extends BaseResponse {
             PlayerProgressListenerManager.getInstance().log("==timeout " + mSegFile.getName() + "  "+wait+" ms==");
 //            LogUtils.e(TAG, "wait " + mSegFile.getName() + " timeout" + " socket.isClosed:" + socket.isClosed() + ",socket.isOutputShutdown:" + socket.isOutputShutdown());
             outputStream.write(null, 0, 0);
+
             return;
         }
 
@@ -247,7 +250,7 @@ public class M3U8SegResponse extends BaseResponse {
         String filename=file.getName();
         File tmpFile = new File(file.getParentFile(), filename + TEMP_POSTFIX);
         try {
-            PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+mVideoName+" "+filename);
+//            PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+mVideoName+" "+filename);
             response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
@@ -269,6 +272,20 @@ public class M3U8SegResponse extends BaseResponse {
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
+                    if (contentLength <= 0) {
+                        contentLength = tmpFile.length();
+                    } else if (!VideoCacheUtils.sizeSimilar(contentLength, tmpFile.length())) {
+                        String log = tmpFile.getName() + " file length:" + tmpFile.length() + " content length:" + contentLength;
+                        PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + log);
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt(); // 恢复中断状态
+                            // 处理中断逻辑，例如退出循环或任务
+                        }
+                        return;
+                    }
+
 //                    Log.i(TAG, "解密ts");
                     FileOutputStream fileOutputStream = null;
                     try {
@@ -277,7 +294,7 @@ public class M3U8SegResponse extends BaseResponse {
                             //todo下载失败
                             PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:"+ts.getSegName());
                             try {
-                                Thread.sleep(7000);
+                                Thread.sleep(5000);
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt(); // 恢复中断状态
                                 // 处理中断逻辑，例如退出循环或任务
@@ -307,6 +324,19 @@ public class M3U8SegResponse extends BaseResponse {
                     fos = new FileOutputStream(tmpFile);
                     foutc = fos.getChannel();
                     foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
+                    if (contentLength <= 0) {
+                        contentLength = tmpFile.length();
+                    } else if (!VideoCacheUtils.sizeSimilar(contentLength, tmpFile.length())) {
+                        String log = tmpFile.getName() + " file length:" + tmpFile.length() + " content length:" + contentLength;
+                        PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + log);
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt(); // 恢复中断状态
+                            // 处理中断逻辑，例如退出循环或任务
+                        }
+                        return;
+                    }
                     /**
                      *  todo
                      *  这里需要引入临时文件，下载完成后再重命名为原来的名字，不然 M3U8SegResponse的sendBody()的判断会出问题
@@ -320,11 +350,11 @@ public class M3U8SegResponse extends BaseResponse {
                         contentLength = file.length();
                     }
                 }
-                if (file.exists() && filename.startsWith("0.")) {
-                    if (PlayerProgressListenerManager.getInstance().getListener() != null) {
-                        PlayerProgressListenerManager.getInstance().getListener().onPlayerFirstTsDownload(filename);
-                    }
-                }
+//                if (file.exists() && filename.startsWith("0.")) {
+//                    if (PlayerProgressListenerManager.getInstance().getListener() != null) {
+//                        PlayerProgressListenerManager.getInstance().getListener().onPlayerFirstTsDownload(filename);
+//                    }
+//                }
                 mSegLength = contentLength;
                 ts.setContentLength(contentLength);
 
