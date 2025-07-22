@@ -49,20 +49,6 @@ public class ViewPagerActivity extends AppCompatActivity {
             });
         }
 
-        @Override
-        public void onPlayerFirstTsDownload(String filename) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if(isDestroyed()||isFinishing()){
-                        return;
-                    }
-                    CommonUtils.showToast("播放器 第一个ts下载完成:"+filename);
-                    Log.e(TAG,"player 第一个ts下载完成:"+filename);
-                }
-            });
-
-        }
 
         @Override
         public void onM3U8ParsedFailed(String error) {
