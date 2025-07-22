@@ -267,7 +267,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         long length=segFile.length();
         long contentLength=seg.getContentLength();
         //确保当前文件下载完整
-        if (exist && length > 0 &&length==contentLength) {
+        if (exist && length > 0 &&VideoCacheUtils.sizeSimilar(length,contentLength)) {
             //只有这样的情况下才能保证当前的ts文件真正被下载下来了
             seg.setFileSize(segFile.length());
             //更新进度
