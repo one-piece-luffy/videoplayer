@@ -2,6 +2,7 @@ package com.jeffmony.videocache;
 
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.WorkerThread;
 
@@ -137,7 +138,7 @@ public class VideoInfoParseManager {
 
                 // 1.将M3U8结构保存到本地
                 File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
-                M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
+                M3U8Utils.createLocalM3U8File(localM3U8File, m3u8,videoRequest.getHeaders());
                 PlayerProgressListenerManager.getInstance().log("m3u8创建完毕");
                 File proxyM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.PROXY_M3U8_SUFFIX);
                 cacheInfo.setLocalPort(ProxyCacheUtils.getLocalPort());
@@ -149,7 +150,8 @@ public class VideoInfoParseManager {
                 videoRequest.getVideoInfoParsedListener().onM3U8ParsedFinished(videoRequest, m3u8, cacheInfo);
             }
         } catch (Exception e) {
-//            Log.e(TAG,"解析m3u8出错："+e.getMessage());
+            Log.e(TAG,"解析m3u8出错：",e);
+
 
             videoRequest.getVideoInfoParsedListener().onM3U8ParsedFailed(new VideoCacheException("parseM3U8Info failed, " + e), cacheInfo);
         }
@@ -167,7 +169,7 @@ public class VideoInfoParseManager {
             PlayerProgressListenerManager.getInstance().log("开始解析代理文件" );
             File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
             try {
-                M3U8 m3u8 = M3U8Utils.parseLocalM3U8Info(localM3U8File, cacheInfo.getVideoUrl());
+                M3U8 m3u8 = M3U8Utils.parseLocalM3U8Info(localM3U8File, cacheInfo.getVideoUrl(),videoRequest.getHeaders());
                 cacheInfo.setTotalTs(m3u8.getSegCount());
                 VideoInfoParseManager.getInstance().m3u8=m3u8;
                 //todo:可以像芒果tv那样自定义字段记录信息，不用再网络请求

@@ -160,6 +160,12 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void seekToCacheTaskFromClient(float percent) {
+        //todo
+        int segIndex= (int) (mSegList.size()*percent);
+        LogUtils.e(TAG, "====seekToCacheTaskFromClient=" + segIndex+" percent:"+percent);
+        PlayerProgressListenerManager.getInstance().onSeek(segIndex);
+        pauseCacheTask();
+        startRequestVideoRange(segIndex);
     }
 
     @Override
@@ -168,7 +174,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void seekToCacheTaskFromServerByM3u8(int segIndex) {
-        LogUtils.e(TAG, "==seek segIndex=" + segIndex);
+        LogUtils.e(TAG, "====seekToCacheTaskFromServerByM3u8 " + segIndex);
         PlayerProgressListenerManager.getInstance().onSeek(segIndex);
         pauseCacheTask();
         startRequestVideoRange(segIndex);
@@ -284,7 +290,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         }
 //        Log.e(TAG,"队列开始下载ts:"+file.getName());
         String fileName=file.getName();
-        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+" "+mVideoName+" "+fileName+" "+ts.getSegName());
+//        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+" "+mVideoName+" "+fileName+" "+ts.getSegName());
         InputStream inputStream = null;
 
         ReadableByteChannel rbc = null;

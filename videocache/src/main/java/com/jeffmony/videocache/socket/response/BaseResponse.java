@@ -33,7 +33,7 @@ public abstract class BaseResponse {
     protected static String CONNECTION = "Connection";
     protected static String TRANSFER_ENCODING = "Transfer-Encoding";
     protected static String GMT_PATTERN = "E, d MMM yyyy HH:mm:ss 'GMT'";
-    protected static final int WAIT_TIME = 50;
+    protected static final int WAIT_TIME = 100;
     protected static final int MAX_WAIT_TIME = 2 * 1000;
 
     protected static final int TIME_OUT = 40 * 1000; //60s

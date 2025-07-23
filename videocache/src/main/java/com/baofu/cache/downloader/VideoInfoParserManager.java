@@ -17,6 +17,7 @@ import com.jeffmony.videocache.common.VideoType;
 import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
+import com.jeffmony.videocache.utils.VideoCacheUtils;
 
 import java.io.File;
 import java.util.Map;
@@ -82,7 +83,7 @@ public class VideoInfoParserManager {
                 PlayerProgressListenerManager.getInstance().log("开始创建" + taskItem.mName + "m3u8文件");
                 // 1.将M3U8结构保存到本地
                 File localM3U8File = new File(dir, saveName + StorageUtils.LOCAL_M3U8_SUFFIX);
-                M3U8Utils.createLocalM3U8File(localM3U8File, m3u8);
+                M3U8Utils.createLocalM3U8File(localM3U8File, m3u8,headers);
                 PlayerProgressListenerManager.getInstance().log("m3u8创建完毕");
                 File proxyM3U8File = new File(dir, saveName + StorageUtils.PROXY_M3U8_SUFFIX);
 //                cacheInfo.setLocalPort(ProxyCacheUtils.getLocalPort());
@@ -133,7 +134,7 @@ public class VideoInfoParserManager {
             return;
         }
         try {
-            M3U8 m3u8 = M3U8Utils.parseLocalM3U8File(m3u8File);
+            M3U8 m3u8 = M3U8Utils.parseLocalM3U8File(m3u8File, VideoDownloadUtils.getTaskHeader(taskItem));
             callback.onM3U8FileParseSuccess(taskItem, m3u8);
         } catch (Exception e) {
             e.printStackTrace();

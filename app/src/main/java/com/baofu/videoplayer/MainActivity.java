@@ -195,15 +195,16 @@ public class MainActivity extends AppCompatActivity {
         }
 //        mUrl="/storage/emulated/0/Download/图片/图片.m3u8";
 
+
         videoView.release();
         if(mLocalProxyVideoControl!=null){
             mLocalProxyVideoControl.releaseAll();
         }
         Map<String, String> header = new HashMap();
-//        header.put(
-//                "User-Agent",
-//                "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
-//        );
+        header.put(
+                "User-Agent",
+                "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
+        );
 
 
 //
@@ -280,14 +281,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPlayStateChanged(int playState,String msg) {
                 switch (playState) {
-                    case ConstantKeys.CurrentState.STATE_IDLE:
+                    case ConstantKeys.CurrentState.STATE_IDLE:{
                         break;
-                    case ConstantKeys.CurrentState.STATE_PREPARED:
+                    }
+                    case ConstantKeys.CurrentState.STATE_PREPARED:{
+//                        videoView.seekTo(500*1000);
+//                        Log.e("asdf","position:"+videoView.getCurrentPosition()+" total:"+videoView.getDuration());
+//                        mLocalProxyVideoControl.seekToCachePosition(500*1000,videoView.getDuration());
                         break;
-                    case ConstantKeys.CurrentState.STATE_ERROR:
+
+                    }
+
+                    case ConstantKeys.CurrentState.STATE_ERROR:{
                         Log.e("", "==error:"+msg);
                         break;
-                    case ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING:
+                    }
+
+                    case ConstantKeys.CurrentState.STATE_BUFFERING_PLAYING:{
                         //设置倍速播放为为上一次的速度
                         if (!TextUtils.isEmpty(speed)) {
                             Toast.makeText(MainActivity.this,"1.5倍速播放",Toast.LENGTH_SHORT).show();
@@ -296,6 +306,8 @@ public class MainActivity extends AppCompatActivity {
 
                         }
                         break;
+                    }
+
                     case ConstantKeys.CurrentState.STATE_PLAYING:
                         break;
                     case ConstantKeys.CurrentState.STATE_PAUSED:

@@ -20,7 +20,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -163,7 +167,7 @@ public class M3U8Utils {
 
                 if (hasKey) {
                     if (encryptionKey == null) {
-                        encryptionKey = parseKey(encryptionKeyUri);
+                        encryptionKey = parseKey(encryptionKeyUri,headers);
                         ts.encryptionKey = encryptionKey;
                     }
                     ts.setHasKey(true);
@@ -208,7 +212,7 @@ public class M3U8Utils {
         }
     }
 
-    public static M3U8 parseLocalM3U8Info(File localM3U8File, String videoUrl) throws Exception {
+    public static M3U8 parseLocalM3U8Info(File localM3U8File, String videoUrl,Map<String,String> header) throws Exception {
         if (!localM3U8File.exists()) {
             throw new VideoCacheException("Local M3U8 File not found");
         }
@@ -295,7 +299,7 @@ public class M3U8Utils {
 
                 if (hasKey) {
                     if (encryptionKey == null) {
-                        encryptionKey = parseKey(encryptionKeyUri);
+                        encryptionKey = parseKey(encryptionKeyUri,header);
                         ts.encryptionKey = encryptionKey;
                     }
                     ts.setHasKey(true);
@@ -344,16 +348,26 @@ public class M3U8Utils {
         }
         return null;
     }
-    public static byte[] parseKey(String url){
+    public static byte[] parseKey(String url,Map<String,String> header){
         if (TextUtils.isEmpty(url))
             return null;
         url = url.trim();
         if (!url.startsWith("http")) {
             return null;
         }
+        if(header==null){
+            header=new HashMap<>();
+        }
+        if (!header.containsKey("User-Agent")) {
+            header.put(
+                    "User-Agent",
+                    "Mozilla/5.0 (Linux; U; Android 10; zh-cn; M2006C3LC Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/79.0.3945.147 Mobile Safari/537.36 XiaoMi/MiuiBrowser/14.7.10"
+            );
+        }
+        InputStream inStream = null;
         try {
-            Response response= OkHttpUtil.getInstance().requestSync(url,null);
-            InputStream inStream = response.body().byteStream();
+            Response response= OkHttpUtil.getInstance().requestSync(url,header);
+            inStream = response.body().byteStream();
             //key只能是16位
             byte[] buffer = new byte[16];
             if ((inStream.read(buffer)) != -1) {
@@ -363,7 +377,15 @@ public class M3U8Utils {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e("","",e);
+        }finally {
+            if(inStream!=null){
+                try {
+                    inStream.close();
+                } catch (IOException e) {
+                    Log.e("","",e);
+                }
+            }
         }
         return null;
     }
@@ -520,7 +542,7 @@ public class M3U8Utils {
      * @param m3u8
      * @throws Exception
      */
-    public static void createLocalM3U8File(File m3u8File, M3U8 m3u8) throws Exception{
+    public static void createLocalM3U8File(File m3u8File, M3U8 m3u8,Map<String,String> header) throws Exception{
 //        if (m3u8File.exists()) {
 //            m3u8File.delete();
 //            //todo 重新创建目录
@@ -548,22 +570,17 @@ public class M3U8Utils {
                     if (m3u8Ts.getKeyUrl() != null) {
                         String keyUri = m3u8Ts.getKeyUrl();
                         key += ",URI=\"" + keyUri + "\"";
-                        URL keyURL = new URL(keyUri);
-                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(keyURL.openStream()));
-                        StringBuilder textBuilder = new StringBuilder();
-                        String line;
-                        while ((line = bufferedReader.readLine()) != null) {
-                            textBuilder.append(line);
-                        }
-                        boolean isMessyStr = VideoCacheUtils.isMessyCode(textBuilder.toString());
+//                        String keyContent=getKey(keyUri,header);
+                        String keyContent= new String(parseKey(keyUri,header), StandardCharsets.UTF_8);;
+
+                        boolean isMessyStr = VideoCacheUtils.isMessyCode(keyContent);
                         m3u8Ts.mIsMessyKey=isMessyStr;
                         if (m3u8File.getParentFile() != null && m3u8File.getParentFile().exists()) {
                             m3u8File.getParentFile().mkdir();
                         }
                         File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
                         FileOutputStream outputStream = new FileOutputStream(keyFile);
-                        outputStream.write(textBuilder.toString().getBytes());
-                        bufferedReader.close();
+                        outputStream.write(keyContent.getBytes());
                         outputStream.close();
                         if (m3u8Ts.getKeyIv() != null) {
                             key += ",IV=" + m3u8Ts.getKeyIv();
@@ -613,21 +630,15 @@ public class M3U8Utils {
                     if (m3u8Ts.getKeyUrl() != null) {
                         String keyUri = m3u8Ts.getKeyUrl();
 
-                        URL keyURL = new URL(keyUri);
-                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(keyURL.openStream()));
-                        StringBuilder textBuilder = new StringBuilder();
-                        String line;
-                        while ((line = bufferedReader.readLine()) != null) {
-                            textBuilder.append(line);
-                        }
-                        m3u8Ts.mIsMessyKey= VideoCacheUtils.isMessyCode(textBuilder.toString());
+//                        String keyContent=getKey(keyUri,headers);
+                        String keyContent= new String(parseKey(keyUri,headers), StandardCharsets.UTF_8);;
+                        m3u8Ts.mIsMessyKey= VideoCacheUtils.isMessyCode(keyContent);
                         if (m3u8File.getParentFile() != null && m3u8File.getParentFile().exists()) {
                             m3u8File.getParentFile().mkdir();
                         }
                         File keyFile = new File(m3u8File.getParentFile().getAbsolutePath(), m3u8Ts.getLocalKeyUri());
                         FileOutputStream outputStream = new FileOutputStream(keyFile);
-                        outputStream.write(textBuilder.toString().getBytes());
-                        bufferedReader.close();
+                        outputStream.write(keyContent.getBytes());
                         outputStream.close();
                         key += ",URI=\"" + keyUri + "\"";
                         if (m3u8Ts.getKeyIv() != null) {
