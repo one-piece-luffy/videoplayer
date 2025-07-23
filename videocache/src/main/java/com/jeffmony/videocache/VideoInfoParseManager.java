@@ -157,6 +157,12 @@ public class VideoInfoParseManager {
         }
     }
 
+    /**
+     * 解析m3u8
+     * 解析结果用于下载
+     * @param videoRequest
+     * @param cacheInfo
+     */
     @WorkerThread
     public void parseProxyM3U8Info(VideoRequest videoRequest, VideoCacheInfo cacheInfo) {
         release();
@@ -167,6 +173,7 @@ public class VideoInfoParseManager {
             parseNetworkM3U8Info(videoRequest, cacheInfo);
         } else {
             PlayerProgressListenerManager.getInstance().log("开始解析代理文件" );
+
             File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
             try {
                 M3U8 m3u8 = M3U8Utils.parseLocalM3U8Info(localM3U8File, cacheInfo.getVideoUrl(),videoRequest.getHeaders());

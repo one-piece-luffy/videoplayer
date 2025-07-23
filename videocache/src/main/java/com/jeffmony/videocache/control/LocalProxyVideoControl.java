@@ -91,8 +91,9 @@ public class LocalProxyVideoControl {
         if(mVideoUrl==null){
             return;
         }
-        VideoProxyCacheManager.getInstance().stopCacheTask(mVideoUrl);   //停止视频缓存任务
+//        VideoProxyCacheManager.getInstance().stopCacheTask(mVideoUrl);   //停止视频缓存任务
         VideoProxyCacheManager.getInstance().releaseProxyReleases(mVideoUrl);
+        releaseAll();//停止视频缓存任务
     }
     public void releaseAll() {
         VideoProxyCacheManager.getInstance().releaseAll();

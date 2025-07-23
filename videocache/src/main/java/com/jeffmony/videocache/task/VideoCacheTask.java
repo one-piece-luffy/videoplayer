@@ -131,6 +131,6 @@ public abstract class VideoCacheTask {
     }
 
     protected void saveVideoInfo() {
-        DefaultExecutor.execute(() -> StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir));
+         StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir);
     }
 }
