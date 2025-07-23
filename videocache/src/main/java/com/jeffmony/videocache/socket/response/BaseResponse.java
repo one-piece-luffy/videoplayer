@@ -36,7 +36,7 @@ public abstract class BaseResponse {
     protected static final int WAIT_TIME = 100;
     protected static final int MAX_WAIT_TIME = 2 * 1000;
 
-    protected static final int TIME_OUT = 40 * 1000; //60s
+    protected static final int TIME_OUT = 45 * 1000; //60s
 
     protected final HttpRequest mRequest;
     protected final String mCachePath;

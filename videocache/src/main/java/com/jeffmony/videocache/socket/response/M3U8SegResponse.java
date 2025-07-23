@@ -250,7 +250,7 @@ public class M3U8SegResponse extends BaseResponse {
         String filename=file.getName();
         File tmpFile = new File(file.getParentFile(), filename + TEMP_POSTFIX);
         try {
-//            PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+mVideoName+" "+filename);
+            PlayerProgressListenerManager.getInstance().log("播放器正在下载:"+mVideoName+" "+filename);
             response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
