@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
            e.printStackTrace();
         }
 //        mUrl="/storage/emulated/0/Download/图片/图片.m3u8";
-
+//        mUrl="https://cdn.wlcdn88.com:777/bf06cb13/index.m3u8";
 
         videoView.release();
         if(mLocalProxyVideoControl!=null){
@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
 
-//
+
         String link=mUrl;
         if(mUrl.contains("m3u8")){
             header.put("type","m3u8");

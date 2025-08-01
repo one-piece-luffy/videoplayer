@@ -25,6 +25,7 @@ public class M3U8 {
 
     public byte[] encryptionKey;
     public String encryptionIV;
+    public Exception exception;
 
     public M3U8(String url) {
         mUrl = url;

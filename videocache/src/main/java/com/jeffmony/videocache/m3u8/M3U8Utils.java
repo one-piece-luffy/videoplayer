@@ -62,146 +62,152 @@ public class M3U8Utils {
             if (responseCode == HttpUtils.RESPONSE_503 && retryCount < HttpUtils.MAX_RETRY_COUNT) {
                 return parseNetworkM3U8Info(parentUrl, videoUrl, headers, retryCount + 1);
             }
-            bufferedReader = new BufferedReader(new InputStreamReader(response.body().byteStream()));
             M3U8 m3u8 = new M3U8(videoUrl);
-            float tsDuration = 0;
-            int targetDuration = 0;
-            int tsIndex = 0;
-            int version = 0;
-            int sequence = 0;
-            boolean hasDiscontinuity = false;
-            boolean hasEndList = false;
-            boolean hasStreamInfo = false;
-            boolean hasKey = false;
-            boolean hasInitSegment = false;
-            String method = null;
-            String encryptionIV = null;
-            String encryptionKeyUri = null;
-            String initSegmentUri = null;
-            String segmentByteRange = null;
-            String line;
-            int errorCount = 0;
-            //从网络读取出来的key
-            byte[] encryptionKey=null;
-            while ((line = bufferedReader.readLine()) != null) {
-                line = line.trim();
-                if (TextUtils.isEmpty(line)) {
-                    continue;
-                }
-                LogUtils.i(TAG, "line = " + line);
-                if (line.startsWith(M3U8Constants.TAG_PREFIX)) {
-                    if (line.startsWith(M3U8Constants.TAG_MEDIA_DURATION)) {
-                        String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_DURATION);
-                        if (!TextUtils.isEmpty(ret)) {
-                            tsDuration = Float.parseFloat(ret);
-                        }
-                    } else if (line.startsWith(M3U8Constants.TAG_TARGET_DURATION)) {
-                        String ret = parseStringAttr(line, M3U8Constants.REGEX_TARGET_DURATION);
-                        if (!TextUtils.isEmpty(ret)) {
-                            targetDuration = Integer.parseInt(ret);
-                        }
-                    } else if (line.startsWith(M3U8Constants.TAG_VERSION)) {
-                        String ret = parseStringAttr(line, M3U8Constants.REGEX_VERSION);
-                        if (!TextUtils.isEmpty(ret)) {
-                            version = Integer.parseInt(ret);
-                        }
-                    } else if (line.startsWith(M3U8Constants.TAG_MEDIA_SEQUENCE)) {
-                        String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_SEQUENCE);
-                        if (!TextUtils.isEmpty(ret)) {
-                            sequence = Integer.parseInt(ret);
-                        }
-                    } else if (line.startsWith(M3U8Constants.TAG_STREAM_INF)) {
-                        hasStreamInfo = true;
-                    } else if (line.startsWith(M3U8Constants.TAG_DISCONTINUITY)) {
-                        hasDiscontinuity = true;
-                    } else if (line.startsWith(M3U8Constants.TAG_ENDLIST)) {
-                        hasEndList = true;
-                    } else if (line.startsWith(M3U8Constants.TAG_KEY)) {
-                        hasKey = true;
-                        method = parseOptionalStringAttr(line, M3U8Constants.REGEX_METHOD);
-                        String keyFormat = parseOptionalStringAttr(line, M3U8Constants.REGEX_KEYFORMAT);
-                        if (!M3U8Constants.METHOD_NONE.equals(method)) {
-                            encryptionIV = parseOptionalStringAttr(line, M3U8Constants.REGEX_IV);
-                            if (M3U8Constants.KEYFORMAT_IDENTITY.equals(keyFormat) || keyFormat == null) {
-                                if (M3U8Constants.METHOD_AES_128.equals(method)) {
-                                    // The segment is fully encrypted using an identity key.
-                                    String tempKeyUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
-                                    if (tempKeyUri != null) {
-                                        encryptionKeyUri = getM3U8AbsoluteUrl(videoUrl, tempKeyUri);
+            if(response.isSuccessful()){
+                bufferedReader = new BufferedReader(new InputStreamReader(response.body().byteStream()));
+
+                float tsDuration = 0;
+                int targetDuration = 0;
+                int tsIndex = 0;
+                int version = 0;
+                int sequence = 0;
+                boolean hasDiscontinuity = false;
+                boolean hasEndList = false;
+                boolean hasStreamInfo = false;
+                boolean hasKey = false;
+                boolean hasInitSegment = false;
+                String method = null;
+                String encryptionIV = null;
+                String encryptionKeyUri = null;
+                String initSegmentUri = null;
+                String segmentByteRange = null;
+                String line;
+                int errorCount = 0;
+                //从网络读取出来的key
+                byte[] encryptionKey=null;
+                while ((line = bufferedReader.readLine()) != null) {
+                    line = line.trim();
+                    if (TextUtils.isEmpty(line)) {
+                        continue;
+                    }
+                    LogUtils.i(TAG, "line = " + line);
+                    if (line.startsWith(M3U8Constants.TAG_PREFIX)) {
+                        if (line.startsWith(M3U8Constants.TAG_MEDIA_DURATION)) {
+                            String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_DURATION);
+                            if (!TextUtils.isEmpty(ret)) {
+                                tsDuration = Float.parseFloat(ret);
+                            }
+                        } else if (line.startsWith(M3U8Constants.TAG_TARGET_DURATION)) {
+                            String ret = parseStringAttr(line, M3U8Constants.REGEX_TARGET_DURATION);
+                            if (!TextUtils.isEmpty(ret)) {
+                                targetDuration = Integer.parseInt(ret);
+                            }
+                        } else if (line.startsWith(M3U8Constants.TAG_VERSION)) {
+                            String ret = parseStringAttr(line, M3U8Constants.REGEX_VERSION);
+                            if (!TextUtils.isEmpty(ret)) {
+                                version = Integer.parseInt(ret);
+                            }
+                        } else if (line.startsWith(M3U8Constants.TAG_MEDIA_SEQUENCE)) {
+                            String ret = parseStringAttr(line, M3U8Constants.REGEX_MEDIA_SEQUENCE);
+                            if (!TextUtils.isEmpty(ret)) {
+                                sequence = Integer.parseInt(ret);
+                            }
+                        } else if (line.startsWith(M3U8Constants.TAG_STREAM_INF)) {
+                            hasStreamInfo = true;
+                        } else if (line.startsWith(M3U8Constants.TAG_DISCONTINUITY)) {
+                            hasDiscontinuity = true;
+                        } else if (line.startsWith(M3U8Constants.TAG_ENDLIST)) {
+                            hasEndList = true;
+                        } else if (line.startsWith(M3U8Constants.TAG_KEY)) {
+                            hasKey = true;
+                            method = parseOptionalStringAttr(line, M3U8Constants.REGEX_METHOD);
+                            String keyFormat = parseOptionalStringAttr(line, M3U8Constants.REGEX_KEYFORMAT);
+                            if (!M3U8Constants.METHOD_NONE.equals(method)) {
+                                encryptionIV = parseOptionalStringAttr(line, M3U8Constants.REGEX_IV);
+                                if (M3U8Constants.KEYFORMAT_IDENTITY.equals(keyFormat) || keyFormat == null) {
+                                    if (M3U8Constants.METHOD_AES_128.equals(method)) {
+                                        // The segment is fully encrypted using an identity key.
+                                        String tempKeyUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
+                                        if (tempKeyUri != null) {
+                                            encryptionKeyUri = getM3U8AbsoluteUrl(videoUrl, tempKeyUri);
+                                        }
+                                    } else {
+                                        // Do nothing. Samples are encrypted using an identity key,
+                                        // but this is not supported. Hopefully, a traditional DRM
+                                        // alternative is also provided.
                                     }
                                 } else {
-                                    // Do nothing. Samples are encrypted using an identity key,
-                                    // but this is not supported. Hopefully, a traditional DRM
-                                    // alternative is also provided.
+                                    // Do nothing.
                                 }
-                            } else {
-                                // Do nothing.
+                            }
+                        } else if (line.startsWith(M3U8Constants.TAG_INIT_SEGMENT)) {
+                            String tempInitSegmentUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
+                            if (!TextUtils.isEmpty(tempInitSegmentUri)) {
+                                hasInitSegment = true;
+                                initSegmentUri = getM3U8AbsoluteUrl(videoUrl, tempInitSegmentUri);
+                                segmentByteRange = parseOptionalStringAttr(line, M3U8Constants.REGEX_ATTR_BYTERANGE);
                             }
                         }
-                    } else if (line.startsWith(M3U8Constants.TAG_INIT_SEGMENT)) {
-                        String tempInitSegmentUri = parseStringAttr(line, M3U8Constants.REGEX_URI);
-                        if (!TextUtils.isEmpty(tempInitSegmentUri)) {
-                            hasInitSegment = true;
-                            initSegmentUri = getM3U8AbsoluteUrl(videoUrl, tempInitSegmentUri);
-                            segmentByteRange = parseOptionalStringAttr(line, M3U8Constants.REGEX_ATTR_BYTERANGE);
-                        }
+                        continue;
                     }
-                    continue;
-                }
-                // It has '#EXT-X-STREAM-INF' tag;
-                if (hasStreamInfo) {
-                    String tempUrl = UrlUtils.getM3U8MasterUrl(videoUrl, line);
-                    Log.e(TAG, "==parseNetworkM3U8Info hasStreamInfo："+tempUrl );
-                    return parseNetworkM3U8Info(parentUrl,getM3U8AbsoluteUrl(videoUrl, line), headers, retryCount+1);
-                }
-                if (Math.abs(tsDuration) < 0.001f) {
-                    continue;
-                }
-                M3U8Seg ts = new M3U8Seg();
-                ts.setParentUrl(parentUrl);
-                String tsUrl = getM3U8AbsoluteUrl(videoUrl, line);
-                ts.setUrl(tsUrl);
-                ts.setDuration(tsDuration);
-                ts.setSegIndex(tsIndex);
-                ts.setHasDiscontinuity(hasDiscontinuity);
+                    // It has '#EXT-X-STREAM-INF' tag;
+                    if (hasStreamInfo) {
+                        String tempUrl = UrlUtils.getM3U8MasterUrl(videoUrl, line);
+                        Log.e(TAG, "==parseNetworkM3U8Info hasStreamInfo："+tempUrl );
+                        return parseNetworkM3U8Info(parentUrl,getM3U8AbsoluteUrl(videoUrl, line), headers, retryCount+1);
+                    }
+                    if (Math.abs(tsDuration) < 0.001f) {
+                        continue;
+                    }
+                    M3U8Seg ts = new M3U8Seg();
+                    ts.setParentUrl(parentUrl);
+                    String tsUrl = getM3U8AbsoluteUrl(videoUrl, line);
+                    ts.setUrl(tsUrl);
+                    ts.setDuration(tsDuration);
+                    ts.setSegIndex(tsIndex);
+                    ts.setHasDiscontinuity(hasDiscontinuity);
 
-                if (hasKey) {
-                    if (encryptionKey == null) {
-                        encryptionKey = parseKey(encryptionKeyUri,headers);
+                    if (hasKey) {
+                        if (encryptionKey == null) {
+                            encryptionKey = parseKey(encryptionKeyUri,headers);
+                            ts.encryptionKey = encryptionKey;
+                        }
+                        ts.setHasKey(true);
                         ts.encryptionKey = encryptionKey;
+                        ts.setMethod(method);
+                        ts.setKeyUrl(encryptionKeyUri);
+                        ts.setKeyIv(encryptionIV);
+                        m3u8.encryptionKey=encryptionKey;
+                        m3u8.encryptionIV=encryptionIV;
                     }
-                    ts.setHasKey(true);
-                    ts.encryptionKey = encryptionKey;
-                    ts.setMethod(method);
-                    ts.setKeyUrl(encryptionKeyUri);
-                    ts.setKeyIv(encryptionIV);
-                    m3u8.encryptionKey=encryptionKey;
-                    m3u8.encryptionIV=encryptionIV;
+                    if (hasInitSegment) {
+                        ts.setInitSegmentInfo(initSegmentUri, segmentByteRange);
+                    }
+                    m3u8.addSeg(ts);
+                    tsIndex++;
+                    tsDuration = 0;
+                    hasStreamInfo = false;
+                    hasDiscontinuity = false;
+                    hasKey = false;
+                    hasInitSegment = false;
+                    method = null;
+                    encryptionKeyUri = null;
+                    encryptionIV = null;
+                    initSegmentUri = null;
+                    segmentByteRange = null;
                 }
-                if (hasInitSegment) {
-                    ts.setInitSegmentInfo(initSegmentUri, segmentByteRange);
-                }
-                m3u8.addSeg(ts);
-                tsIndex++;
-                tsDuration = 0;
-                hasStreamInfo = false;
-                hasDiscontinuity = false;
-                hasKey = false;
-                hasInitSegment = false;
-                method = null;
-                encryptionKeyUri = null;
-                encryptionIV = null;
-                initSegmentUri = null;
-                segmentByteRange = null;
+
+
+                m3u8.setTargetDuration(targetDuration);
+                m3u8.setVersion(version);
+                m3u8.setSequence(sequence);
+                //去掉这个，不然有的m3u8无法下载  https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8
+//            m3u8.setIsLive(!hasEndList);
+                Log.e(TAG, "m3u8解析完毕:"+m3u8.getUrl());
+            } else {
+                m3u8.exception = new Exception("parseNetworkM3U8Info fail code=" + responseCode);
             }
 
-
-            m3u8.setTargetDuration(targetDuration);
-            m3u8.setVersion(version);
-            m3u8.setSequence(sequence);
-            //去掉这个，不然有的m3u8无法下载  https://v5.szjal.cn/20210627/Nmb0o6pZ/index.m3u8
-//            m3u8.setIsLive(!hasEndList);
-            Log.e(TAG, "m3u8解析完毕:"+m3u8.getUrl());
             return m3u8;
         } catch (IOException e) {
             Log.e(TAG,"m3u8解析异常",e);
