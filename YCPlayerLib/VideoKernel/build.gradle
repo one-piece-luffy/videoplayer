@@ -50,7 +50,7 @@ dependencies {
 //    implementation project( ':exolib:vp9')
 
 
-    def media3_version = "1.7.1"
+    def media3_version = "1.8.0"
 
     api "androidx.media3:media3-exoplayer:$media3_version"
     api "androidx.media3:media3-exoplayer-dash:$media3_version"
