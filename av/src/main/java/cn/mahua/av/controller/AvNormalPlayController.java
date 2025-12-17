@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -27,12 +26,12 @@ import cn.mahua.av.controller.view.AvNormalPlayBottomView;
 import cn.mahua.av.controller.view.AvPrepareView;
 import cn.mahua.av.controller.view.AvTitleView;
 import cn.mahua.av.listener.OnLongPressListener;
+import cn.mahua.av.listener.OnSetProgressListener;
 import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.listener.OnSpeedClickListener;
 import cn.mahua.av.listener.OnVisibilityChangedListener;
 import cn.mahua.av.play.ControllerClickListener;
 import cn.mahua.av.utils.AvSharePreference;
-import cn.mahua.av.widget.view.SortVodView;
 
 public class AvNormalPlayController extends GestureVideoController implements View.OnClickListener {
     public AvNormalPlayController(Context context) {
@@ -72,6 +71,7 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     boolean remindSpeed = true;
 
     OnVisibilityChangedListener onVisibilityChangedListener;
+    OnSetProgressListener onSetProgressListener;
 
     @Override
     protected int getLayoutId() {
@@ -369,6 +369,9 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         if (remindSpeed && !isLongPress && !TextUtils.isEmpty(lastSpeed) && !lastSpeed.equals(String.valueOf(mControlWrapper.getSpeed()))) {
             setSpeed(lastSpeed);
         }
+        if (onSetProgressListener != null) {
+            onSetProgressListener.setProgress(duration, position);
+        }
     }
 
     @Override
@@ -525,6 +528,11 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
     public void setOnVisibilityChangedListener(OnVisibilityChangedListener listener){
         onVisibilityChangedListener=listener;
     }
+
+    public void setOnSetProgressListener(OnSetProgressListener onSetProgressListener) {
+        this.onSetProgressListener = onSetProgressListener;
+    }
+
     public void hideFullScreenBtn(){
         if(mAvBottomView!=null){
             mAvBottomView.hideFullScreenBtn();
