@@ -561,6 +561,26 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
     }
 
     /**
+     * 通过id隐藏自定义的view
+     */
+    public void showToolsViewById(int id, boolean show) {
+        if (mBottomToolsLayout != null) {
+            for (int i = 0; i < mBottomToolsLayout.getChildCount(); i++) {
+                View child = mBottomToolsLayout.getChildAt(i);
+                if (child != null && child.getId() == id) {
+                    if (show) {
+                        child.setVisibility(View.VISIBLE);
+                    } else {
+                        child.setVisibility(View.GONE);
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+    
+    /**
      * 设置为竖屏全屏模式，无法横屏
      * @param orientationPortrait
      */

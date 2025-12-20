@@ -446,6 +446,12 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             mAvBottomView.addTools(view);
         }
     }
+
+    public void showToolsViewById(int id,boolean show){
+        if (mAvBottomView != null) {
+            mAvBottomView.showToolsViewById(id,show);
+        }
+    }
     /**
      * 添加自定义Error view
      *
@@ -538,4 +544,6 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
             mAvBottomView.hideFullScreenBtn();
         }
     }
+
+
 }

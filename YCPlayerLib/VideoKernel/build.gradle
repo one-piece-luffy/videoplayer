@@ -50,6 +50,7 @@ dependencies {
 //    implementation project( ':exolib:vp9')
 
 
+//    https://github.com/androidx/media
     def media3_version = "1.8.0"
 
     api "androidx.media3:media3-exoplayer:$media3_version"
