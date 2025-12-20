@@ -1,4 +1,4 @@
-package com.baofu.videoplayer;
+package com.baofu.videoplayer.activity;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +17,8 @@ import com.baofu.base.utils.CommonUtils;
 import com.baofu.cache.downloader.listener.CacheDownloadListener;
 import com.baofu.cache.downloader.model.CacheTaskItem;
 import com.baofu.cache.downloader.rules.CacheDownloadManager;
+import com.baofu.videoplayer.MyModel;
+import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.adapter.MyFragmentStateAdapter;
 import com.baofu.videoplayer.databinding.ActivityViewPagerBinding;
 import com.baofu.videoplayer.utils.Appconstants;

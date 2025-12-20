@@ -1,4 +1,4 @@
-package com.baofu.videoplayer;
+package com.baofu.videoplayer.activity;
 
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,12 +8,14 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
+import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.utils.Appconstants;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
@@ -24,15 +26,14 @@ import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
 import com.yc.video.player.VideoPlayer;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
 import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.controller.AvNormalPlayController;
+import cn.mahua.av.listener.OnSetProgressListener;
 import cn.mahua.av.play.ControllerClickListener;
 
 public class MainActivity extends AppCompatActivity {
@@ -43,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
     //倍速播放速度
     String speed;
     String name;
+    int  mGeneratedId;
+    boolean toolShow=true;
     Handler handler =new Handler(Looper.getMainLooper());
     IPlayerProgressListener iPlayerProgressListener=new IPlayerProgressListener() {
         @Override
@@ -104,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
         //设置标题
         controller.setTitle("海贼王");
         controller.showTcpSpeed(true);
+        //隐藏下一集按钮
+        controller.hideNextBtn();
         //设置缓存提示信息
         controller.setLoadingMessage("正在缓冲，哈哈");
         View view= LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
@@ -111,13 +116,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 CommonUtils.showToast("工具1");
+                toolShow=!toolShow;
+                controller.showToolsViewById(mGeneratedId,toolShow);
             }
         });
-
-        //隐藏下一集按钮
-        controller.hideNextBtn();
         //添加自定义工具
         controller.addTools(view);
+
+        TextView toolView2= (TextView) LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
+        toolView2.setText("工具2");
+        toolView2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CommonUtils.showToast("工具2");
+            }
+        });
+        mGeneratedId= View.generateViewId();
+        toolView2.setId(mGeneratedId);
+        controller.addTools(toolView2);
 
         controller.addErrorViewItem("retry", new View.OnClickListener() {
             @Override
@@ -178,7 +194,12 @@ public class MainActivity extends AppCompatActivity {
 
         setVideoListener();
 
-
+        controller.setOnSetProgressListener(new OnSetProgressListener() {
+            @Override
+            public void setProgress(int duration, int position) {
+                Log.e("aaaa","duration:"+duration+" position:"+position);
+            }
+        });
 
 
         //直接显示加载框

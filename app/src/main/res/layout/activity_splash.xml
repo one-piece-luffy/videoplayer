@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".SplashActivity">
+    tools:context=".activity.SplashActivity">
     <TextView
         android:id="@+id/tvMain"
         android:layout_width="match_parent"
@@ -28,6 +28,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:text="列表"
+        android:gravity="center"
+        />
+    <TextView
+        android:id="@+id/tvDanmu"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:text="弹幕"
         android:gravity="center"
         />
 </LinearLayout>
