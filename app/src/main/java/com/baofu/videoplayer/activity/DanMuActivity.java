@@ -1,5 +1,6 @@
 package com.baofu.videoplayer.activity;
 
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
@@ -133,24 +135,12 @@ public class DanMuActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 CommonUtils.showToast("工具1");
-                toolShow=!toolShow;
-                controller.showToolsViewById(mGeneratedId,toolShow);
+                addSpecialDanmaku();
             }
         });
         //添加自定义工具
         controller.addTools(view);
 
-        TextView toolView2= (TextView) LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
-        toolView2.setText("工具2");
-        toolView2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CommonUtils.showToast("工具2");
-            }
-        });
-        mGeneratedId= View.generateViewId();
-        toolView2.setId(mGeneratedId);
-        controller.addTools(toolView2);
 
         controller.addErrorViewItem("retry", new View.OnClickListener() {
             @Override
@@ -214,10 +204,8 @@ public class DanMuActivity extends AppCompatActivity {
         controller.setOnSetProgressListener(new OnSetProgressListener() {
             @Override
             public void setProgress(int duration, int position) {
-                Log.e("aaaa","duration:"+duration+" position:"+position);
             }
         });
-
 
         //直接显示加载框
 //        controller.showPreviewLoading();
@@ -416,7 +404,6 @@ public class DanMuActivity extends AppCompatActivity {
             play(name);
         });
 
-        danmakuView=findViewById(R.id.danmaku_view);
     }
 
     public String encodeUrl(String url) throws URISyntaxException {
@@ -741,16 +728,22 @@ public class DanMuActivity extends AppCompatActivity {
         // 控制面板显示/隐藏
         btnToggleControls.setOnClickListener(v -> toggleControls());
 
-        // 设置弹幕点击监听
-        danmakuView.setDanmakuClickListener(danmaku -> {
-            Toast.makeText(this,
-                    String.format("点击弹幕: %s\n用户: %s",
-                            danmaku.getText(), danmaku.getUserName()),
-                    Toast.LENGTH_SHORT).show();
-        });
+        if(danmakuView!=null){
+            // 设置弹幕点击监听
+            danmakuView.setDanmakuClickListener(danmaku -> {
+                Toast.makeText(this,
+                        String.format("点击弹幕: %s\n用户: %s",
+                                danmaku.getText(), danmaku.getUserName()),
+                        Toast.LENGTH_SHORT).show();
+            });
+        }
+
     }
 
     private float calculateSpeedFromProgress(int progress) {
+        if(danmakuView==null){
+            return 5;
+        }
         return danmakuView.getMaxSpeed()* progress / 100f;
 //        if (normalized < 0.5f) {
 //            return minSpeed + normalized * 2 * (1.0f - minSpeed);
@@ -852,11 +845,10 @@ public class DanMuActivity extends AppCompatActivity {
     }
 
     private void addSpecialDanmaku() {
-        String[] specialTexts = {"✨ 特殊弹幕 ✨", "🎯 高级弹幕 🎯", "🚀 性能优化 🚀"};
+        String[] specialTexts = {"✨ 特殊弹幕 ✨", "🎯特殊弹幕 高级弹幕 🎯", "🚀特殊弹幕 性能优化 🚀"};
         String text = specialTexts[random.nextInt(specialTexts.length)];
         danmakuView.addDanmaku(text, Color.YELLOW, true);
-
-        Toast.makeText(this, "添加了特殊弹幕", Toast.LENGTH_SHORT).show();
+        CommonUtils.showToast("添加了特殊弹幕");
     }
 
     private void toggleStats() {
@@ -899,7 +891,7 @@ public class DanMuActivity extends AppCompatActivity {
             public void run() {
                 if (!isFinishing()) {
                     addTestDanmakus(1);
-                    handler.postDelayed(this, 2000);
+//                    handler.postDelayed(this, 2000);
                 }
             }
         }, 1000);
