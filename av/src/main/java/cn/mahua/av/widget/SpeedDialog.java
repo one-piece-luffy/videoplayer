@@ -13,6 +13,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -49,27 +50,20 @@ public class SpeedDialog extends Dialog {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.av_dialog_speed_list);
-        Window window = this.getWindow();
-        WindowManager.LayoutParams lp = window.getAttributes();
-        lp.width = getContext().getResources().getDisplayMetrics().widthPixels * 8 / 10;
-        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-        lp.gravity = Gravity.CENTER_VERTICAL;
-        window.setAttributes(lp);
+
+        resetWidth();
 
         setCanceledOnTouchOutside(true);
 
-        recyclerView = findViewById(R.id.rvSelectWorks);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-        linearLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
-        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView = findViewById(R.id.rv);
+
+        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 3, RecyclerView.VERTICAL, false);
+        layoutManager.setOrientation(RecyclerView.VERTICAL);
+        recyclerView.setLayoutManager(layoutManager);
+
         MyAdapter adapter = new MyAdapter(playList);
         recyclerView.setAdapter(adapter);
-        recyclerView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                scrollCurIndex(recyclerView, adapter.curIndex);
-            }
-        },200);
+
     }
 
     class MyAdapter extends RecyclerView.Adapter {
@@ -98,9 +92,11 @@ public class SpeedDialog extends Dialog {
                 float itemSpeed = Float.parseFloat(item);
                 if (curSpeed == itemSpeed) {
                     curIndex=position;
-                    viewHolder.tv.setTextColor(0xffFF7000);
+                    viewHolder.tv.setTextColor(0xffffffff);
+                    viewHolder.root.setBackgroundResource(R.drawable.bg_dialog_speed_select);
                 } else {
                     viewHolder.tv.setTextColor(0xffffffff);
+                    viewHolder.root.setBackgroundResource(R.drawable.bg_dialog_speed);
                 }
                 viewHolder.tv.setText(item);
                 final int temp = position;
@@ -126,27 +122,30 @@ public class SpeedDialog extends Dialog {
 
     class SpeedViewHolder extends RecyclerView.ViewHolder {
         public TextView tv;
+        public ViewGroup root;
 
         public SpeedViewHolder(@NonNull View itemView) {
             super(itemView);
             tv = itemView.findViewById(R.id.tv);
+            root = itemView.findViewById(R.id.root);
         }
     }
 
-    /**
-     * 置顶当前播放的集数
-     *
-     * @param rvLastest
-     */
-    private void scrollCurIndex(RecyclerView rvLastest,int index) {
-        if (rvLastest == null)
-            return;
-        if(index<0){
-            index=0;
-        }
-        rvLastest.scrollToPosition(index);
-        LinearLayoutManager mLayoutManager = (LinearLayoutManager) rvLastest.getLayoutManager();
-        mLayoutManager.scrollToPositionWithOffset(index, 0);
-    }
+    public void resetWidth() {
+        WindowManager.LayoutParams params = getWindow().getAttributes();
+        params.width = getContext().getResources().getDisplayMetrics().widthPixels * 4 / 10;
+        params.height = getContext().getResources().getDisplayMetrics().heightPixels;
+        getWindow().setAttributes(params);
 
+        Window window = getWindow();
+        if (window != null) {
+            // 设置弹窗在底部
+            window.setGravity(Gravity.END);
+
+            // 关键1：取消背景变暗（遮罩透明度设为 0）
+            window.setDimAmount(0.0f);
+            // 关键2：设置 Dialog 窗口背景为透明（避免默认黑色背景）
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+        }
+    }
 }
