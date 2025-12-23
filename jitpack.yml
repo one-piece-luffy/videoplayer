@@ -1,4 +1,4 @@
 jdk:
   - openjdk17
-install:
-  - ./gradlew build --refresh-dependencies
+#install:
+#  - ./gradlew build --refresh-dependencies
