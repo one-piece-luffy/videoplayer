@@ -498,6 +498,10 @@ public class AvNormalPlayBottomView extends FrameLayout implements InterControlV
                 mControlWrapper.setSpeed(3f);
                 setTvSpeed(getResources().getString(R.string.av_speed_3_0));
                 break;
+            case SpeedInterface.sp3_5:
+                mControlWrapper.setSpeed(3.5f);
+                setTvSpeed(getResources().getString(R.string.av_speed_3_5));
+                break;
             case SpeedInterface.sp4_0:
                 mControlWrapper.setSpeed(4f);
                 setTvSpeed(getResources().getString(R.string.av_speed_4_0));

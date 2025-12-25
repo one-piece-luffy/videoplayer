@@ -44,6 +44,7 @@ import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.listener.OnLongPressListener;
 import cn.mahua.av.listener.OnSpeedChangeListener;
 import cn.mahua.av.play.ControllerClickListener;
+import cn.mahua.av.utils.AvSharePreference;
 
 /**
  * 手势控制
@@ -78,6 +79,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
     OnLongPressListener onLongPressListener;
     ControllerClickListener controllerClickListener;
     boolean mIsLock;
+    TextView tvLongSpeed;
     public AvGestureView(@NonNull Context context) {
         super(context);
         init(context);
@@ -109,6 +111,7 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
         mProPercent = view.findViewById(R.id.pro_percent);
         mLongSpeed = view.findViewById(R.id.long_speed);
         mIvQuick = view.findViewById(R.id.iv_quick);
+        tvLongSpeed=view.findViewById(R.id.tvLongSpeed);
 
     }
 
@@ -252,13 +255,17 @@ public class AvGestureView extends FrameLayout implements IGestureComponent {
             onLongPressListener.onLongPress(true);
         }
         isLongPress=true;
-        mControlWrapper.setSpeed(3);
+        String longSpeedStr = AvSharePreference.getLongPressSpeed(getContext());
+        tvLongSpeed.setText("x" + longSpeedStr);
+        float longSpeed = Float.parseFloat(longSpeedStr);
+        mControlWrapper.setSpeed(longSpeed);
+        if (onSpeedChangeListener != null) {
+            onSpeedChangeListener.onChange(longSpeedStr);
+        }
         mLongSpeed.setVisibility(View.VISIBLE);
         mAnimationDrawable = (AnimationDrawable) mIvQuick.getDrawable();
         mAnimationDrawable.start();
-        if (onSpeedChangeListener != null) {
-            onSpeedChangeListener.onChange(SpeedInterface.sp3_0);
-        }
+
     }
 
     @Override

@@ -14,6 +14,7 @@
     <string name="av_speed_1_75"  translatable="false">1.75x</string>
     <string name="av_speed_2_0"  translatable="false">2.00x</string>
     <string name="av_speed_3_0"  translatable="false">3.00x</string>
+    <string name="av_speed_3_5"  translatable="false">3.50x</string>
     <string name="av_speed_4_0"  translatable="false">4.00x</string>
 
     <string name="av_danmaku_et_hint">Say something~</string>
@@ -44,4 +45,5 @@
     <string name="change_source">Change source</string>
     <string name="try_fix">Try fix</string>
     <string name="tv_speed">Speed</string>
+    <string name="long_press_seting">Long press speed</string>
 </resources>

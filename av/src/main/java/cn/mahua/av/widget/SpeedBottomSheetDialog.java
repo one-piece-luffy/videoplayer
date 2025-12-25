@@ -39,6 +39,7 @@ public class SpeedBottomSheetDialog extends BottomSheetDialog {
         mContext = context;
         this.listener = listener;
         playList.add(SpeedInterface.sp4_0);
+        playList.add(SpeedInterface.sp3_5);
         playList.add(SpeedInterface.sp3_0);
         playList.add(SpeedInterface.sp2_0);
         playList.add(SpeedInterface.sp1_75);

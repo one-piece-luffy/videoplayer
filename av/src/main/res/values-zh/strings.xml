@@ -35,5 +35,6 @@
     <string name="av_guide_right_desc">右边上下滑动</string>
     <string name="change_source">切换线路</string>
     <string name="try_fix">尝试修复</string>
-    <string name="tv_speed">播放速度</string>
+    <string name="tv_speed">播放速度设置</string>
+    <string name="long_press_seting">长按倍速设置</string>
 </resources>

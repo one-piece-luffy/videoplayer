@@ -23,17 +23,24 @@ import java.util.List;
 import cn.mahua.av.R;
 import cn.mahua.av.SpeedInterface;
 import cn.mahua.av.listener.OnSpeedClickListener;
+import cn.mahua.av.utils.AvSharePreference;
 
 public class SpeedDialog extends Dialog {
     List<String> playList = new ArrayList();
-    String speed;
+    String mSpeed;
     OnSpeedClickListener listener;
+    //播放速度rv
     RecyclerView recyclerView;
+    //长按倍速rv
+    RecyclerView recyclerView2;
+    TextView tvLongSpeed;
     Context mContext;
+    ViewGroup normalLayout;
+    ViewGroup secondLayout;
 
     public SpeedDialog(@NonNull Context context, String speed, OnSpeedClickListener listener) {
         super(context, R.style.PlayListDialogStyle);
-        this.speed = speed;
+        this.mSpeed = speed;
         mContext = context;
         this.listener = listener;
         playList.add(SpeedInterface.sp0_75);
@@ -43,6 +50,7 @@ public class SpeedDialog extends Dialog {
         playList.add(SpeedInterface.sp1_75);
         playList.add(SpeedInterface.sp2_0);
         playList.add(SpeedInterface.sp3_0);
+        playList.add(SpeedInterface.sp3_5);
         playList.add(SpeedInterface.sp4_0);
     }
 
@@ -56,23 +64,66 @@ public class SpeedDialog extends Dialog {
         setCanceledOnTouchOutside(true);
 
         recyclerView = findViewById(R.id.rv);
+        recyclerView2 = findViewById(R.id.rv2);
+        tvLongSpeed = findViewById(R.id.tvLongSpeed);
+        normalLayout = findViewById(R.id.normalLayout);
+        secondLayout = findViewById(R.id.secondLayout);
+        tvLongSpeed.setText("x"+AvSharePreference.getLongPressSpeed(getContext()));
 
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 3, RecyclerView.VERTICAL, false);
         layoutManager.setOrientation(RecyclerView.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
-
-        MyAdapter adapter = new MyAdapter(playList);
+        MyAdapter adapter = new MyAdapter(playList,mSpeed,true,listener);
         recyclerView.setAdapter(adapter);
+
+        MyAdapter adapter2 = new MyAdapter(playList,AvSharePreference.getLongPressSpeed(getContext())+"",false, new OnSpeedClickListener() {
+            @Override
+            public void onSpeedClick(String speed) {
+                try {
+                    AvSharePreference.saveLongPressSpeed(getContext(),speed);
+                    tvLongSpeed.setText("x"+speed);
+
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        });
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 3, RecyclerView.VERTICAL, false);
+        gridLayoutManager.setOrientation(RecyclerView.VERTICAL);
+        recyclerView2.setLayoutManager(gridLayoutManager);
+        recyclerView2.setAdapter(adapter2);
+
+        findViewById(R.id.longSpeedLayout).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                secondLayout.setVisibility(View.VISIBLE);
+                normalLayout.setVisibility(View.GONE);
+            }
+        });
+        findViewById(R.id.back).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                secondLayout.setVisibility(View.GONE);
+                normalLayout.setVisibility(View.VISIBLE);
+            }
+        });
 
     }
 
     class MyAdapter extends RecyclerView.Adapter {
 
         public List<String> list;
+        public String speed;
         public int curIndex;
-
-        public MyAdapter(List<String> list) {
+        //一级页面
+        boolean firstPage;
+        OnSpeedClickListener onSpeedClickListener;
+        public MyAdapter(List<String> list,String speed,  boolean firstPage,  OnSpeedClickListener listener) {
             this.list = list;
+            this.speed=speed;
+            this.firstPage=firstPage;
+            this.onSpeedClickListener=listener;
         }
 
         @NonNull
@@ -104,9 +155,14 @@ public class SpeedDialog extends Dialog {
                     @Override
                     public void onClick(View v) {
                         speed = list.get(temp);
-                        listener.onSpeedClick(speed);
+                        if(firstPage){
+                            dismiss();
+                        }
+                        if(onSpeedClickListener!=null){
+                            onSpeedClickListener.onSpeedClick(speed);
+                        }
+
                         notifyDataSetChanged();
-                        dismiss();
                     }
                 });
             } catch (Exception e) {
@@ -133,7 +189,7 @@ public class SpeedDialog extends Dialog {
 
     public void resetWidth() {
         WindowManager.LayoutParams params = getWindow().getAttributes();
-        params.width = getContext().getResources().getDisplayMetrics().widthPixels * 4 / 10;
+        params.width = (int) (getContext().getResources().getDisplayMetrics().widthPixels * 3.5 / 10);
         params.height = getContext().getResources().getDisplayMetrics().heightPixels;
         getWindow().setAttributes(params);
 

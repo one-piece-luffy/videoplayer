@@ -2,6 +2,7 @@ package cn.mahua.av;
 
 public interface SpeedInterface {
     public String sp4_0 = "4.0";
+    public String sp3_5 = "3.5";
     public String sp3_0 = "3.0";
     public String sp2_0 = "2.0";
     public String sp1_75 = "1.75";
