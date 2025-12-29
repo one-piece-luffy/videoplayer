@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
@@ -25,6 +26,7 @@ import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.baofu.videoplayer.danmu.FixedDanmakuView;
 import com.baofu.videoplayer.R;
+import com.baofu.videoplayer.utils.AppUtils;
 import com.baofu.videoplayer.utils.Appconstants;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
@@ -58,6 +60,9 @@ public class DanMuActivity extends AppCompatActivity {
     String name;
     int  mGeneratedId;
     boolean toolShow=true;
+    //发送的弹幕的颜色
+    final String SEND_COLOR="#FF7000";
+    EditText etSend;
     Handler handler =new Handler(Looper.getMainLooper());
     IPlayerProgressListener iPlayerProgressListener=new IPlayerProgressListener() {
         @Override
@@ -130,18 +135,50 @@ public class DanMuActivity extends AppCompatActivity {
         controller.hideNextBtn();
         //设置缓存提示信息
         controller.setLoadingMessage("正在缓冲，哈哈");
-        View view= LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
+        TextView view= (TextView) LayoutInflater.from(this).inflate(R.layout.av_tools_item,null);
+        view.setText("发送特殊弹幕");
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CommonUtils.showToast("工具1");
+                CommonUtils.showToast("发送特殊弹幕");
                 addSpecialDanmaku();
             }
         });
         //添加自定义工具
         controller.addTools(view);
 
+        View controlDanMuView = LayoutInflater.from(this).inflate(R.layout.view_control_danmu, null);
+        int generateDanMuViewId = View.generateViewId();
+        controlDanMuView.setId(generateDanMuViewId);
+        //有些系统单纯在xml配置，键盘不会显示发送，代码在配置一下兜底
+        etSend = controlDanMuView.findViewById(R.id.danmuSend);
+        // 1. 强制设置imeOptions
+        etSend.setImeOptions(EditorInfo.IME_ACTION_SEND | EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_FULLSCREEN);
+        etSend.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                CommonUtils.showToast(hasFocus);
+                if(hasFocus){
+                    //禁用自动隐藏控制器视图
+                    controller.setFadeOutSwitch(false);
+                }
 
+            }
+        });
+        // 3. 监听发送按钮点击
+        etSend.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                String content = v.getText().toString().trim();
+                if (!TextUtils.isEmpty(content)) {
+                    v.setText("");
+                    danmakuView.addUserDanmaku(content, AppUtils.hexToIntSupportAlpha(SEND_COLOR));
+                }
+                AppUtils.hideKeyboardFrom(DanMuActivity.this,v);
+                return true;
+            }
+            return false;
+        });
+        controller.addTools(controlDanMuView);
         controller.addErrorViewItem("retry", new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -478,7 +515,6 @@ public class DanMuActivity extends AppCompatActivity {
 
     // 开关
     private SwitchCompat switchClick;
-    private SwitchCompat switchBackground;
     private SwitchCompat switchClickThrough;
     private SwitchCompat switchUnlimitedLines;
     private SwitchCompat switchSpeed;
@@ -530,7 +566,6 @@ public class DanMuActivity extends AppCompatActivity {
 
         // 开关
         switchClick = findViewById(R.id.switch_click);
-        switchBackground = findViewById(R.id.switch_background);
         switchClickThrough = findViewById(R.id.switch_clickthrough);
         switchUnlimitedLines = findViewById(R.id.switch_unlimited_lines);
         switchSpeed = findViewById(R.id.switch_speed);
@@ -571,7 +606,6 @@ public class DanMuActivity extends AppCompatActivity {
 
         // 设置初始值
         switchClick.setChecked(true);
-        switchBackground.setChecked(false);
         switchClickThrough.setChecked(false);
         switchUnlimitedLines.setChecked(false);
         switchSpeed.setChecked(false);
@@ -620,8 +654,6 @@ public class DanMuActivity extends AppCompatActivity {
         switchClick.setOnCheckedChangeListener((v, isChecked) ->
                 danmakuView.setEnableClick(isChecked));
 
-        switchBackground.setOnCheckedChangeListener((v, isChecked) ->
-                danmakuView.setShowBackground(isChecked));
 
         switchClickThrough.setOnCheckedChangeListener((v, isChecked) ->
                 danmakuView.setClickThroughEnabled(isChecked));
@@ -809,7 +841,7 @@ public class DanMuActivity extends AppCompatActivity {
                     random.nextInt(256)
             );
 
-            danmakuView.addDanmaku(text, color, clickable);
+            danmakuView.addUserDanmaku(text, color);
             etDanmakuInput.setText("");
         }
     }
@@ -830,24 +862,23 @@ public class DanMuActivity extends AppCompatActivity {
                     random.nextInt(256)
             );
 
-            boolean clickable = !text.contains("穿透");
-            danmakuView.addDanmaku(text, color, clickable);
+            danmakuView.addDanmaku(text, color,System.currentTimeMillis(),null,0,0);
         }
     }
 
 
     private void addClickTestDanmakus() {
-        danmakuView.addDanmaku("✅ 可点击弹幕 - 点击我试试！", Color.GREEN, true);
-        danmakuView.addDanmaku("🚫 不可点击弹幕 - 我会穿透", Color.argb(100, 255, 0, 0), false);
-        danmakuView.addDanmaku("🔍 半透明弹幕 - 可能穿透", Color.argb(150, 0, 150, 255), true);
 
+        danmakuView.addDanmaku("✅ 可点击弹幕 - 点击我试试！", Color.GREEN,System.currentTimeMillis(),null,0,0);
+        danmakuView.addDanmaku("🚫 不可点击弹幕 - 我会穿透",  Color.argb(100, 255, 0, 0),System.currentTimeMillis(),null,0,0);
+        danmakuView.addDanmaku("🔍 半透明弹幕 - 可能穿透", Color.argb(150, 0, 150, 255),System.currentTimeMillis(),null,0,0);
         Toast.makeText(this, "添加了点击测试弹幕", Toast.LENGTH_SHORT).show();
     }
 
     private void addSpecialDanmaku() {
         String[] specialTexts = {"✨ 特殊弹幕 ✨", "🎯特殊弹幕 高级弹幕 🎯", "🚀特殊弹幕 性能优化 🚀"};
         String text = specialTexts[random.nextInt(specialTexts.length)];
-        danmakuView.addDanmaku(text, Color.YELLOW, true);
+        danmakuView.addSystemDanmaku(text);
         CommonUtils.showToast("添加了特殊弹幕");
     }
 

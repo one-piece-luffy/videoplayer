@@ -230,6 +230,8 @@ public abstract class GestureVideoController extends BaseVideoController impleme
         if (isInPlaybackState()) {
             //切换显示/隐藏状态
             mControlWrapper.toggleShowState();
+            //开启隐藏视图倒计时
+            setFadeOutSwitch(true);
         }
         return true;
     }

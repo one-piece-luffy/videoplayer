@@ -96,6 +96,7 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
 
     private Animation mShowAnim;
     private Animation mHideAnim;
+    private boolean fadeOutSwitch = true;
 
     public BaseVideoController(@NonNull Context context) {
         //创建
@@ -321,9 +322,12 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
      */
     @Override
     public void startFadeOut() {
-        //重新开始计时
-        stopFadeOut();
-        postDelayed(mFadeOut, mDefaultTimeout);
+        if(fadeOutSwitch){
+            //重新开始计时
+            stopFadeOut();
+            postDelayed(mFadeOut, mDefaultTimeout);
+        }
+
     }
 
     /**
@@ -342,7 +346,9 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
     protected final Runnable mFadeOut = new Runnable() {
         @Override
         public void run() {
-            hide();
+            if(fadeOutSwitch){
+                hide();
+            }
         }
     };
 
@@ -744,5 +750,12 @@ public abstract class BaseVideoController extends FrameLayout implements InterVi
 
     }
 
-    //------------------------ end handle event change ------------------------//
+    /**
+     * 隐藏播放视图倒计时
+     * @param fadeOutSwitch
+     */
+    public void setFadeOutSwitch(boolean fadeOutSwitch) {
+        this.fadeOutSwitch = fadeOutSwitch;
+    }
+//------------------------ end handle event change ------------------------//
 }

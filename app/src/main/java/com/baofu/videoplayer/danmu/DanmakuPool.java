@@ -34,6 +34,15 @@ public class DanmakuPool {
             item.setColor(color);
             item.setSpeed(speed);
             item.setMeasured(false);
+            // ==================== 重置背景属性,需要确保背景属性在回收时被重置 ====================
+            item.setShowBackground(false);
+            item.setBackgroundColor(0);
+            item.setBackgroundPadding(0);
+            item.setBackgroundRadius(0);
+            item.setUserOwned(false);
+            item.setPriority(0);
+
+            item.clearGradient();
         }
 
         item.setX(0);

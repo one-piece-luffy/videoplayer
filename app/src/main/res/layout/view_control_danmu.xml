@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingBottom="20dp"
+    android:orientation="horizontal">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/inputLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/shape_danmu_edit_bg">
+            <EditText
+                android:id="@+id/danmuSend"
+                android:layout_width="150dp"
+                android:layout_height="26dp"
+                android:maxHeight="26dp"
+                android:paddingHorizontal="12dp"
+                android:background="@null"
+                android:hint="发个友善的弹幕！"
+                android:maxLines="1"
+                android:inputType="text"
+                android:imeOptions="actionSend|flagNoExtractUi|flagNoFullscreen"
+                android:imeActionLabel="发送"
+                android:textColor="#ffffff"
+                android:textColorHint="#A0A0A0"
+                android:textSize="14dp" />
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+
+
+</LinearLayout>
