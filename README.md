@@ -1,6 +1,6 @@
 # videoplayer
 
-test demo
+包含弹幕、边下边播
 
 混淆：
 

@@ -310,9 +310,32 @@ public class M3U8SegResponse extends BaseResponse {
 //                    Log.i(TAG, "解密ts");
                     FileOutputStream fileOutputStream = null;
                     try {
-                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
-                        if (result == null) {
-                            //todo下载失败
+//                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
+//                        if (result == null) {
+//                            //todo下载失败
+//                            PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:"+ts.getSegName());
+//                            try {
+//                                Thread.sleep(5000);
+//                            } catch (InterruptedException e) {
+//                                Thread.currentThread().interrupt(); // 恢复中断状态
+//                                // 处理中断逻辑，例如退出循环或任务
+//                            }
+//                            return;
+//                        } else {
+//                            //这里写入的是临时文件
+//                            fileOutputStream = new FileOutputStream(tmpFile);
+//                            fileOutputStream.write(result);
+//                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
+//                            contentLength = tmpFile.length();
+////                            Log.i(TAG, "ts下载完成"+filename);
+//                            FileUtils.handleRename(tmpFile, file);
+//                        }
+                        File tempDecryptedFile = new File(tmpFile.getParent(), "decrypted_" + tmpFile.getName());
+                        if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
+                            FileUtils.handleRename(tempDecryptedFile, file);
+                            contentLength = file.length();
+                        } else {
+                            // 解密失败处理
                             PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:"+ts.getSegName());
                             try {
                                 Thread.sleep(5000);
@@ -321,15 +344,8 @@ public class M3U8SegResponse extends BaseResponse {
                                 // 处理中断逻辑，例如退出循环或任务
                             }
                             return;
-                        } else {
-                            //这里写入的是临时文件
-                            fileOutputStream = new FileOutputStream(tmpFile);
-                            fileOutputStream.write(result);
-                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
-                            contentLength = tmpFile.length();
-//                            Log.i(TAG, "ts下载完成"+filename);
-                            FileUtils.handleRename(tmpFile, file);
                         }
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {

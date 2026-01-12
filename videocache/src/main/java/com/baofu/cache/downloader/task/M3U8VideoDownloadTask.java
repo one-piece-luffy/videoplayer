@@ -16,7 +16,9 @@ import com.baofu.cache.downloader.utils.HttpUtils;
 import com.baofu.cache.downloader.utils.OkHttpUtil;
 import com.baofu.cache.downloader.utils.VideoDownloadUtils;
 import com.baofu.cache.downloader.utils.VideoStorageUtils;
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.utils.AES128Utils;
+import com.jeffmony.videocache.utils.FileUtils;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -478,8 +480,27 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
 
                     FileOutputStream fileOutputStream = null;
                     try {
-                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
-                        if (result == null) {
+//                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tsInitSegmentFile), encryptionKey, iv);
+//                        if (result == null) {
+//                            // aes解密失败,这里的失败不用重试，重试也是失败
+//                            ts.failed = true;
+//                            ts.setRetryCount(ts.getRetryCount()+1);
+//                            mErrorTsCont.incrementAndGet();
+//                            String err = "aes dencryption  fail";
+//                            if (errMsgMap.size() < MAX_ERR_MAP_COUNT) {
+//                                errMsgMap.put(err, err);
+//                            }
+//                        } else {
+//                            fileOutputStream = new FileOutputStream(file);
+//                            fileOutputStream.write(result);
+//                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
+//                            contentLength = file.length();
+//                        }
+
+                        if (AES128Utils.decryptFile(tsInitSegmentFile, file, encryptionKey, iv)) {
+                            contentLength = file.length();
+                        } else {
+                            // 解密失败处理
                             // aes解密失败,这里的失败不用重试，重试也是失败
                             ts.failed = true;
                             ts.setRetryCount(ts.getRetryCount()+1);
@@ -488,12 +509,8 @@ public class M3U8VideoDownloadTask extends VideoDownloadTask {
                             if (errMsgMap.size() < MAX_ERR_MAP_COUNT) {
                                 errMsgMap.put(err, err);
                             }
-                        } else {
-                            fileOutputStream = new FileOutputStream(file);
-                            fileOutputStream.write(result);
-                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
-                            contentLength = file.length();
                         }
+
                     } catch (Exception e) {
                         Log.e(TAG, "发生异常: ", e); 
                         ts.setRetryCount(ts.getRetryCount() + 1);

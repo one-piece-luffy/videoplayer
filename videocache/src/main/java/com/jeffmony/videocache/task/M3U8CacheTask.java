@@ -333,20 +333,33 @@ public class M3U8CacheTask extends VideoCacheTask {
 
                     FileOutputStream fileOutputStream = null;
                     try {
-                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
-                        if (result == null) {
-                            //todo 失败
-//                            Log.e(TAG,"task ts下载失败:"+ts.getSegName());
-                            PlayerProgressListenerManager.getInstance().log("task aes dencry fail:"+ts.getSegName());
-                            ts.setRetryCount(ts.getRetryCount() + 1);
-                            return;
+//                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
+//                        if (result == null) {
+//                            //todo 失败
+////                            Log.e(TAG,"task ts下载失败:"+ts.getSegName());
+//                            PlayerProgressListenerManager.getInstance().log("task aes dencry fail:"+ts.getSegName());
+//                            ts.setRetryCount(ts.getRetryCount() + 1);
+//                            return;
+//                        } else {
+//                            fileOutputStream = new FileOutputStream(tmpFile);//todo oom
+//                            fileOutputStream.write(result);
+//                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
+//                            contentLength = tmpFile.length();
+//                            FileUtils.handleRename(tmpFile, file);
+//                        }
+
+                        File tempDecryptedFile = new File(tmpFile.getParent(), "decrypted_" + tmpFile.getName());
+                        if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
+                            FileUtils.handleRename(tempDecryptedFile, file);
+                            contentLength = file.length();
                         } else {
-                            fileOutputStream = new FileOutputStream(tmpFile);//todo oom
-                            fileOutputStream.write(result);
-                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
-                            contentLength = tmpFile.length();
-                            FileUtils.handleRename(tmpFile, file);
+                            // 解密失败处理
+                            ts.setRetryCount(ts.getRetryCount() + 1);
+                            PlayerProgressListenerManager.getInstance().log("task aes dencry fail:"+ts.getSegName());
+                            return;
                         }
+
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
