@@ -173,7 +173,7 @@ public class M3U8SegResponse extends BaseResponse {
     /**
      * 下载TS片段
      */
-    private void downloadSegment() throws IOException {
+    private void downloadSegment()  {
         LogUtils.i(TAG, "开始下载TS: segIndex=" + mSegIndex + ", file=" + mFileName);
 
         // 确保目录存在
@@ -195,7 +195,11 @@ public class M3U8SegResponse extends BaseResponse {
         }
 
         // 下载文件
-        downloadAndProcessFile(ts);
+        try {
+            downloadAndProcessFile(ts);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -217,7 +221,7 @@ public class M3U8SegResponse extends BaseResponse {
     /**
      * 下载并处理文件
      */
-    private void downloadAndProcessFile(M3U8Seg ts) throws IOException {
+    private void downloadAndProcessFile(M3U8Seg ts)  {
         File tempFile = new File(mSegFile.getParentFile(), mFileName + TEMP_POSTFIX);
 
         try {
@@ -237,6 +241,8 @@ public class M3U8SegResponse extends BaseResponse {
                 handleHttpError(responseCode, ts);
             }
 
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             // 清理临时文件
             cleanupTempFile(tempFile);
@@ -336,7 +342,9 @@ public class M3U8SegResponse extends BaseResponse {
         if (AES128Utils.decryptFile(tempFile, decryptedTempFile, key, iv)) {
             FileUtils.handleRename(decryptedTempFile, mSegFile);
         } else {
-            throw new IOException("Decryption failed for " + mFileName);
+            String error="Decryption failed for " + mFileName;
+            PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + error);
+            throw new IOException(error);
         }
     }
 
@@ -441,12 +449,14 @@ public class M3U8SegResponse extends BaseResponse {
      */
     private String parseM3U8Md5(String str) throws VideoCacheException {
         if (str == null || str.length() < 2) {
+            PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + "Invalid file name: " + str);
             throw new VideoCacheException("Invalid file name: " + str);
         }
 
         str = str.substring(1);
         int index = str.indexOf("/");
         if (index == -1) {
+            PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + "Cannot find MD5 in: " + str);
             throw new VideoCacheException("Cannot find MD5 in: " + str);
         }
         return str.substring(0, index);
