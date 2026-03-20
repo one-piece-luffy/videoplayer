@@ -13,12 +13,19 @@ import android.graphics.Shader;
 import android.graphics.SweepGradient;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+
+import com.baofu.videoplayer.danmu.DanmakuClickListener;
+import com.baofu.videoplayer.danmu.DanmakuItem;
+import com.baofu.videoplayer.danmu.DanmakuLongClickListener;
+import com.baofu.videoplayer.danmu.DanmakuPool;
+import com.baofu.videoplayer.danmu.DanmakuSpatialGrid;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,8 +83,8 @@ public class FixedDanmakuView extends SurfaceView
 
     // ==================== 保留默认背景设置作为备用 ====================
     private int defaultBackgroundColor = Color.argb(100, 0, 0, 0);
-    private float defaultBackgroundPadding = dp2px(getContext(), 5);
-    private float defaultBackgroundRadius = dp2px(getContext(), 8);
+    private float defaultBackgroundPadding = DanmuUtils.dp2px(getContext(), 5);
+    private float defaultBackgroundRadius = DanmuUtils.dp2px(getContext(), 8);
 
     // ==================== 默认渐变色设置 ====================
     private int[] defaultGradientColors = null;
@@ -90,7 +97,7 @@ public class FixedDanmakuView extends SurfaceView
 
     // 行数控制
     private int maxLines = 15;
-    private float lineHeight = dp2px(getContext(), 40);
+    private float lineHeight = DanmuUtils.dp2px(getContext(), 40);
     private boolean[] lineOccupied;
     private int calculatedMaxLines;
 
@@ -109,7 +116,7 @@ public class FixedDanmakuView extends SurfaceView
 
     // 文字大小调整控制
     private volatile boolean isTextSizeChanging = false;
-    private int currentTextSize = dp2px(getContext(), 16);
+    private int currentTextSize = DanmuUtils.dp2px(getContext(), 16);
 
     // 性能统计
     private long totalUpdateTime = 0;
@@ -120,7 +127,7 @@ public class FixedDanmakuView extends SurfaceView
 
     // ==================== 新增：解决重叠问题的关键字段 ====================
     private Map<Integer, Queue<DanmakuItem>> waitingQueues = new HashMap<>();
-    private long maxWaitTime = 3000;
+    private long maxWaitTime = 5000;
     private long maxDanmakuLife = 8000;
     private Handler delayHandler;
     private boolean isQueueChecking = false;
@@ -132,11 +139,11 @@ public class FixedDanmakuView extends SurfaceView
     private Map<Integer, Long> lastDanmakuTimePerLine = new HashMap<>();
     private float minIntervalBetweenDanmakus = 100;
     private float danmakuSpacingRatio = 0.05f;
-    private float minDanmakuSpacing = dp2px(getContext(), 10);
-    private float maxDanmakuSpacing = dp2px(getContext(), 50);
+    private float minDanmakuSpacing = DanmuUtils.dp2px(getContext(), 10);
+    private float maxDanmakuSpacing = DanmuUtils.dp2px(getContext(), 50);
 
     // 分别定义水平和垂直的默认padding
-    private float defaultBackgroundHorizontalPadding = dp2px(getContext(), 5);
+    private float defaultBackgroundHorizontalPadding = DanmuUtils.dp2px(getContext(), 5);
     private float defaultBackgroundVerticalPaddingRatio = 0.3f; // 垂直padding占水平的30%
 
     // 弹幕添加同步锁（解决同时添加多条弹幕重叠的关键）
@@ -221,14 +228,14 @@ public class FixedDanmakuView extends SurfaceView
      * 系统弹幕
      * @param text
      */
-    public void addSystemDanmaku(String text) {
+    public void addSystemDanmaku(String text,String scheme) {
         //随机颜色
 //        addDanmaku(text, Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)),true,System.currentTimeMillis(),
 //                null,0,false);
 
-        addDanmaku(text, 0xffffffff, false, System.currentTimeMillis(),
+        addDanmaku(text, 0xffffffff, !TextUtils.isEmpty(scheme),scheme, System.currentTimeMillis(),
                 null, 0, false, DanmakuItem.MAX_PRIORITY, true, 0xAAAC4718, defaultBackgroundPadding, defaultBackgroundRadius,
-                DanmakuItem.GRADIENT_SUNSET, null, DanmakuItem.GRADIENT_LINEAR, getAngleForDirection(DanmakuItem.DIRECTION_LEFT_TO_RIGHT), false);
+                DanmakuItem.GRADIENT_SUNSET, null, DanmakuItem.GRADIENT_LINEAR, getAngleForDirection(DanmakuItem.DIRECTION_LEFT_TO_RIGHT), false,null);
     }
 
 
@@ -238,29 +245,29 @@ public class FixedDanmakuView extends SurfaceView
      * @param color
      */
     public void addUserDanmaku(String text, int color) {
-        addDanmaku(text, color, true, System.currentTimeMillis(), null, 0, true, DanmakuItem.MAX_PRIORITY,
+        addDanmaku(text, color, true,null, System.currentTimeMillis(), null, 0, true, DanmakuItem.MAX_PRIORITY,
                 false, defaultBackgroundColor, defaultBackgroundPadding, defaultBackgroundRadius,
-                null, null, DanmakuItem.GRADIENT_NONE, 0, false);
+                null, null, DanmakuItem.GRADIENT_NONE, 0, false,null);
     }
 
     /**
      * 常规弹幕
      */
-    public void addDanmaku(String text, int color,  long showTime,String id,int like_count,int priority
+    public void addDanmaku(String text, int color,  long showTime,String id,int like_count,int priority,DanmakuItem.OnLikeClickListener onLikeClickListener
     ) {
-        addDanmaku(text, color, true, showTime, id, like_count, false, priority, false, defaultBackgroundColor, defaultBackgroundPadding, defaultBackgroundRadius,
-                null, null, DanmakuItem.GRADIENT_NONE, 0, false);
+        addDanmaku(text, color, true,null, showTime, id, like_count, false, priority, false, defaultBackgroundColor, defaultBackgroundPadding, defaultBackgroundRadius,
+                null, null, DanmakuItem.GRADIENT_NONE, 0, false,onLikeClickListener);
     }
 
 
     /**
      * 添加弹幕（线程安全版本，解决重叠问题）
      */
-    public void addDanmaku(String text, int color, boolean clickable,  long showTime,String id,int like_count,
+    public void addDanmaku(String text, int color, boolean clickable,String scheme,  long showTime,String id,int like_count,
                            boolean isUserOwned, int priority,boolean showBackground, int backgroundColor,
                            float backgroundPadding, float backgroundRadius,
                            int[] gradientColors, float[] gradientPositions,
-                           int gradientType, float gradientAngle, boolean gradientReversed) {
+                           int gradientType, float gradientAngle, boolean gradientReversed,DanmakuItem.OnLikeClickListener onLikeClickListener) {
         if (text == null || text.isEmpty()) {
             return;
         }
@@ -276,8 +283,15 @@ public class FixedDanmakuView extends SurfaceView
         danmaku.setCreateTime(System.currentTimeMillis());
         danmaku.setClickable(clickable);
         danmaku.id=id;
+        danmaku.scheme=scheme;
         danmaku.show_time=showTime;
-        danmaku.like_count=like_count;
+        danmaku.setLikeCount(like_count);
+
+        danmaku.setOnLikeClickListener(onLikeClickListener);
+
+// 自定义点赞数样式
+        danmaku.setLikeTextColor(Color.YELLOW);
+        danmaku.setLikePrefix(" ❤️ "); // 使用心形符号
         if (isUserOwned) {
             danmaku.markAsUserOwned();
         }
@@ -441,6 +455,7 @@ public class FixedDanmakuView extends SurfaceView
         } else {
             // 添加到等待队列
             if (addToWaitingQueue(danmaku, actualLine)) {
+//                Log.d("Danmaku","添加到等待队列："+danmaku.getText());
                 scheduleQueueCheck();
             }
         }
@@ -572,6 +587,7 @@ public class FixedDanmakuView extends SurfaceView
                     if (itemRight > -screenWidth * 0.1f && itemRight < screenWidth + requiredSpace) {
                         float spaceNeeded = itemRight + requiredSpace;
                         if (spaceNeeded > screenWidth) {
+//                            Log.e("Danmaku","itemRight:"+itemRight+" screenWidth:"+screenWidth+" requiredSpace:"+requiredSpace);
                             return false;
                         }
                     }
@@ -593,6 +609,7 @@ public class FixedDanmakuView extends SurfaceView
         }
 
         synchronized (activeDanmakus) {
+//            Log.e("Danmaku","显示弹幕："+danmaku.getText());
             activeDanmakus.add(danmaku);
         }
 
@@ -741,7 +758,6 @@ public class FixedDanmakuView extends SurfaceView
             for (Map.Entry<Integer, Queue<DanmakuItem>> entry : waitingQueues.entrySet()) {
                 int line = entry.getKey();
                 Queue<DanmakuItem> queue = entry.getValue();
-
                 if (!queue.isEmpty()) {
                     // ==================== 修改：优先处理用户弹幕 ====================
                     // 检查队列中是否有用户弹幕
@@ -762,6 +778,7 @@ public class FixedDanmakuView extends SurfaceView
                     DanmakuItem danmakuToProcess = userDanmaku != null ? userDanmaku : regularDanmaku;
 
                     if (danmakuToProcess == null) {
+                        Log.d("Danmaku", "弹幕为空 " );
                         continue;
                     }
 
@@ -769,7 +786,7 @@ public class FixedDanmakuView extends SurfaceView
                     if (currentTime - danmakuToProcess.getCreateTime() > maxWaitTime) {
                         // 从队列中移除
                         queue.remove(danmakuToProcess);
-
+                        Log.d("Danmaku", "移除过期弹幕: "+danmakuToProcess.getText() );
                         if (enableObjectPool && danmakuPool != null) {
                             danmakuPool.recycle(danmakuToProcess);
                         }
@@ -784,6 +801,8 @@ public class FixedDanmakuView extends SurfaceView
                             showDanmakuImmediately(danmakuToProcess, line);
                             hasProcessed = true;
                         }
+                    }else {
+//                        Log.d("Danmaku", "距离不够会重叠，等待添加: "+danmakuToProcess.getText() );
                     }
                 }
             }
@@ -831,14 +850,14 @@ public class FixedDanmakuView extends SurfaceView
                         if (enableObjectPool && danmakuPool != null) {
                             danmakuPool.recycle(danmaku);
                         }
-//                        Log.d("DanmakuQueue", "清理过期弹幕: " + danmaku.getText());
+                        Log.d("Danmaku", "清理过期弹幕: " + danmaku.getText());
                     }
                 }
             }
         }
 
         if (cleanedCount > 0) {
-            Log.d("DanmakuQueue", "清理了 " + cleanedCount + " 个过期弹幕");
+            Log.d("Danmaku", "清理了 " + cleanedCount + " 个过期弹幕");
         }
     }
 
@@ -960,22 +979,28 @@ public class FixedDanmakuView extends SurfaceView
 
                 // 检查是否点击到了弹幕
                 DanmakuItem clickedDanmaku = findDanmakuAtPoint(x, y);
-                if (clickedDanmaku != null && !shouldClickThrough(clickedDanmaku)) {
-                    // 点击到了弹幕，开始处理
-                    lastTouchX = x;
-                    lastTouchY = y;
-                    isTouching = true;
-                    touchDownTime = System.currentTimeMillis();
-                    currentTouchDanmaku = clickedDanmaku;
 
-                    // 设置长按监听
-                    uiHandler.postDelayed(longPressRunnable, longPressThreshold);
-                    return true; // 消费事件
-                } else {
-                    // 点击到空白区域，不消费事件，让事件穿透
-                    isTouching = false; // 确保状态重置
-                    return false;
+                if (clickedDanmaku != null) {
+                    // 检查是否点击了点赞区域
+                    boolean isLikeArea = clickedDanmaku.isLikeArea(x, y);
+
+                    if (!shouldClickThrough(clickedDanmaku) || isLikeArea) {
+                        lastTouchX = x;
+                        lastTouchY = y;
+                        isTouching = true;
+                        touchDownTime = System.currentTimeMillis();
+                        currentTouchDanmaku = clickedDanmaku;
+
+                        // 标记是否点击了点赞区域
+                        currentTouchIsLikeArea = isLikeArea;
+
+                        uiHandler.postDelayed(longPressRunnable, longPressThreshold);
+                        return true;
+                    }
                 }
+
+                // 点击到空白区域
+                return false;
 
             case MotionEvent.ACTION_MOVE:
                 if (isTouching && currentTouchDanmaku != null) {
@@ -991,7 +1016,6 @@ public class FixedDanmakuView extends SurfaceView
 
             case MotionEvent.ACTION_UP:
                 if (isTouching && currentTouchDanmaku != null) {
-                    // 处理弹幕点击
                     uiHandler.removeCallbacks(longPressRunnable);
 
                     long touchDuration = System.currentTimeMillis() - touchDownTime;
@@ -1000,19 +1024,22 @@ public class FixedDanmakuView extends SurfaceView
                             Math.abs(x - lastTouchX) < touchSlop &&
                             Math.abs(y - lastTouchY) < touchSlop) {
 
-                        // 触发点击事件
-                        if (danmakuClickListener != null) {
-                            danmakuClickListener.onDanmakuClick(currentTouchDanmaku);
+                        // 判断是否点击了点赞区域
+                        if (currentTouchIsLikeArea) {
+                            // 点赞区域点击：点赞数+1
+                            handleLikeClick(currentTouchDanmaku);
+                        } else {
+                            // 普通弹幕点击
+                            if (danmakuClickListener != null) {
+                                danmakuClickListener.onDanmakuClick(currentTouchDanmaku);
+                            }
+                            showClickFeedback(currentTouchDanmaku);
                         }
-                        //震动
-//                        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-                        showClickFeedback(currentTouchDanmaku);
                     }
 
                     handleTouchCancel();
                     return true;
                 }
-                // 空白区域的抬起，不处理，让事件穿透
                 return false;
 
             case MotionEvent.ACTION_CANCEL:
@@ -1023,7 +1050,45 @@ public class FixedDanmakuView extends SurfaceView
         // 默认不消费事件，让事件穿透
         return false;
     }
+    // 添加成员变量
+    private boolean currentTouchIsLikeArea = false;
 
+    /**
+     * 新增：处理点赞点击
+     */
+    private void handleLikeClick(DanmakuItem danmaku) {
+        if (danmaku == null) return;
+
+        // 点赞数+1
+        danmaku.incrementLike();
+
+        // 触发点赞监听器
+        DanmakuItem.OnLikeClickListener listener = danmaku.getOnLikeClickListener();
+        if (listener != null) {
+            listener.onLikeClick(danmaku);
+        }
+
+        // 视觉反馈
+        showLikeFeedback(danmaku);
+
+        Log.d("Danmaku", "弹幕点赞: " + danmaku.getText() +
+                ", 当前点赞数: " + danmaku.getLikeCount());
+    }
+
+    /**
+     * 新增：点赞视觉反馈
+     */
+    private void showLikeFeedback(DanmakuItem danmaku) {
+        // 临时改变点赞数字体颜色
+        final int originalColor = danmaku.likeTextColor;
+        danmaku.setLikeTextColor(Color.WHITE);
+        invalidate();
+
+        uiHandler.postDelayed(() -> {
+            danmaku.setLikeTextColor(originalColor);
+            invalidate();
+        }, 300);
+    }
     /**
      * 修改 dispatchTouchEvent 确保事件正确传递
      */
@@ -1074,12 +1139,19 @@ public class FixedDanmakuView extends SurfaceView
     public DanmakuItem findDanmakuAtPoint(float x, float y) {
         if (!clickEnabled) return null;
 
-        // 从后往前检查（最后添加的弹幕在最上层）
         synchronized (activeDanmakus) {
             for (int i = activeDanmakus.size() - 1; i >= 0; i--) {
                 DanmakuItem item = activeDanmakus.get(i);
 
-                if (item.isClickable() && isPointInDanmaku(x, y, item)) {
+                if (!item.isClickable()) continue;
+
+                // 先检查点赞区域（点赞区域优先级更高）
+                if (item.isShowLikeCount() && item.isLikeArea(x, y)) {
+                    return item;
+                }
+
+                // 再检查主弹幕区域
+                if (isPointInDanmaku(x, y, item)) {
                     return item;
                 }
             }
@@ -1439,8 +1511,117 @@ public class FixedDanmakuView extends SurfaceView
 
         // 绘制主文字
         canvas.drawText(text, x, y, textPaint);
+        // ==================== 新增：绘制点赞数 ====================
+        if (danmaku.isShowLikeCount()) {
+            drawLikeCount(canvas, danmaku, x, y, textPaint);
+        }
     }
+    /**
+     * 新增：绘制点赞数
+     */
+    private void drawLikeCount(Canvas canvas, DanmakuItem danmaku,
+                               float baseX, float baseY, Paint basePaint) {
 
+        // 获取点赞数字体和文字
+        Paint likePaint = danmaku.getLikePaint(basePaint);
+        String likeText = danmaku.getLikeText();
+
+        // 计算点赞数的位置（主文字右侧）
+        float spacing = basePaint.getTextSize() * 0.3f;
+        float likeX = baseX + danmaku.getWidth() - danmaku.likeTextWidth;
+
+        // 绘制点赞数背景（可选）
+        if (danmaku.showLikeBackground) {
+            Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            bgPaint.setColor(danmaku.likeBackgroundColor);
+            bgPaint.setStyle(Paint.Style.FILL);
+
+            RectF likeBgRect = danmaku.getLikeClickArea();
+            if (likeBgRect != null && !likeBgRect.isEmpty()) {
+                canvas.drawRoundRect(
+                        likeBgRect,
+                        danmaku.likeBackgroundRadius,
+                        danmaku.likeBackgroundRadius,
+                        bgPaint
+                );
+            }
+        }
+
+        // 绘制点赞数字
+        canvas.drawText(likeText, likeX, baseY, likePaint);
+
+        // 可选：绘制点赞数边框，表示可点击
+//        if (danmaku.isShowLikeCount()) {
+//            Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+//            borderPaint.setStyle(Paint.Style.STROKE);
+//            borderPaint.setColor(Color.WHITE);
+//            borderPaint.setStrokeWidth(1);
+//            borderPaint.setAlpha(100);
+//
+//            RectF likeArea = danmaku.getLikeClickArea();
+//            if (likeArea != null && !likeArea.isEmpty()) {
+//                canvas.drawRoundRect(
+//                        likeArea,
+//                        danmaku.likeBackgroundRadius,
+//                        danmaku.likeBackgroundRadius,
+//                        borderPaint
+//                );
+//            }
+//        }
+    }
+    /**
+     * 新增：绘制弹幕背景（包括点赞数区域）
+     */
+    private void drawDanmakuBackground(Canvas canvas, DanmakuItem danmaku,
+                                       Paint textPaint, float baseX, float baseY) {
+
+        Paint bgPaint = new Paint(baseBackgroundPaint);
+
+        // 获取文字的实际边界
+        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+        float textTop = baseY + fontMetrics.ascent;
+        float textBottom = baseY + fontMetrics.descent;
+
+        // 水平padding
+        float horizontalPadding = danmaku.getBackgroundPadding();
+        if (horizontalPadding <= 0) {
+            horizontalPadding = defaultBackgroundHorizontalPadding;
+        }
+
+        // 垂直padding（使用比例）
+        float verticalPadding = calculateVerticalPadding(horizontalPadding);
+
+        // 计算整个弹幕的背景矩形（包括主文字和点赞数）
+        float bgTop = textTop - verticalPadding;
+        float bgBottom = textBottom + verticalPadding;
+        float bgLeft = baseX - horizontalPadding;
+        float bgRight = baseX + danmaku.getWidth() + horizontalPadding;
+
+        RectF bgRect = new RectF(bgLeft, bgTop, bgRight, bgBottom);
+
+        // 设置背景颜色或渐变
+        if (danmaku.hasGradient()) {
+            Shader gradientShader = createGradientShader(danmaku, bgRect);
+            if (gradientShader != null) {
+                bgPaint.setShader(gradientShader);
+            } else {
+                int bgColor = danmaku.getBackgroundColor() != 0 ?
+                        danmaku.getBackgroundColor() : defaultBackgroundColor;
+                bgPaint.setColor(bgColor);
+                bgPaint.setShader(null);
+            }
+        } else {
+            int bgColor = danmaku.getBackgroundColor() != 0 ?
+                    danmaku.getBackgroundColor() : defaultBackgroundColor;
+            bgPaint.setColor(bgColor);
+            bgPaint.setShader(null);
+        }
+
+        // 绘制背景
+        float radius = danmaku.getBackgroundRadius() > 0 ?
+                danmaku.getBackgroundRadius() : defaultBackgroundRadius;
+        canvas.drawRoundRect(bgRect, radius, radius, bgPaint);
+    }
     // 辅助方法：计算垂直padding
     private float calculateVerticalPadding(float horizontalPadding) {
         return horizontalPadding * defaultBackgroundVerticalPaddingRatio;
@@ -1604,7 +1785,7 @@ public class FixedDanmakuView extends SurfaceView
 
     public void setTextSize(int textSize) {
         if (textSize <= 0 || Math.abs(textSize - currentTextSize) < 0.1f) return;
-        final int size = dp2px(getContext(), textSize);
+        final int size = DanmuUtils.dp2px(getContext(), textSize);
 
         uiHandler.post(() -> {
             isTextSizeChanging = true;
@@ -1802,13 +1983,6 @@ public class FixedDanmakuView extends SurfaceView
         }
     }
 
-    public int dp2px(Context context, float dpValue) {
-        if (context == null) {
-            return 0;
-        }
-        final float scale = context.getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
-    }
 
     public float getMaxSpeed() {
         return maxSpeed;

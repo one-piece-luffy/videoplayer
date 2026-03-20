@@ -1,5 +1,9 @@
 package com.baofu.videoplayer.danmu;
 
+import android.graphics.RectF;
+
+import com.baofu.videoplayer.danmu.DanmakuItem;
+
 import java.util.LinkedList;
 import java.util.Locale;
 import java.util.Queue;
@@ -41,7 +45,6 @@ public class DanmakuPool {
             item.setBackgroundRadius(0);
             item.setUserOwned(false);
             item.setPriority(0);
-
             item.clearGradient();
         }
 
@@ -51,7 +54,8 @@ public class DanmakuPool {
         item.setLineNumber(-1);
         item.setTag(null);
         item.setCreateTime(System.currentTimeMillis());
-
+        item.likeClickArea = new RectF();
+        item.likeTextSize = 0; // 将在测量时使用默认值
         return item;
     }
 

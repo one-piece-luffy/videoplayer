@@ -2,6 +2,8 @@ package com.baofu.videoplayer.danmu;
 
 import android.graphics.RectF;
 
+import com.baofu.videoplayer.danmu.DanmakuItem;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;

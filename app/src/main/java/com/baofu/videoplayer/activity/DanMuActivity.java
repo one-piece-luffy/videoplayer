@@ -24,6 +24,7 @@ import androidx.appcompat.widget.SwitchCompat;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
+import com.baofu.videoplayer.danmu.DanmakuItem;
 import com.baofu.videoplayer.danmu.FixedDanmakuView;
 import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.utils.AppUtils;
@@ -862,23 +863,38 @@ public class DanMuActivity extends AppCompatActivity {
                     random.nextInt(256)
             );
 
-            danmakuView.addDanmaku(text, color,System.currentTimeMillis(),null,0,0);
+            danmakuView.addDanmaku(text, color, System.currentTimeMillis(), null, 10, 0, new DanmakuItem.OnLikeClickListener() {
+                @Override
+                public void onLikeClick(DanmakuItem danmaku) {
+                    CommonUtils.showToast("赞+1");
+                }
+            });
         }
     }
 
 
     private void addClickTestDanmakus() {
 
-        danmakuView.addDanmaku("✅ 可点击弹幕 - 点击我试试！", Color.GREEN,System.currentTimeMillis(),null,0,0);
-        danmakuView.addDanmaku("🚫 不可点击弹幕 - 我会穿透",  Color.argb(100, 255, 0, 0),System.currentTimeMillis(),null,0,0);
-        danmakuView.addDanmaku("🔍 半透明弹幕 - 可能穿透", Color.argb(150, 0, 150, 255),System.currentTimeMillis(),null,0,0);
+        danmakuView.addDanmaku("✅ 可点击弹幕 - 点击我试试！", Color.GREEN, System.currentTimeMillis(), null, 0, 0, new DanmakuItem.OnLikeClickListener() {
+            @Override
+            public void onLikeClick(DanmakuItem danmaku) {
+                CommonUtils.showToast("赞+1");
+            }
+        });
+        danmakuView.addDanmaku("🚫 不可点击弹幕 - 我会穿透",  Color.argb(100, 255, 0, 0),System.currentTimeMillis(),null,0,0,null);
+        danmakuView.addDanmaku("🔍 半透明弹幕 - 可能穿透", Color.argb(150, 0, 150, 255), System.currentTimeMillis(), null, 0, 0, new DanmakuItem.OnLikeClickListener() {
+            @Override
+            public void onLikeClick(DanmakuItem danmaku) {
+                CommonUtils.showToast("赞+1");
+            }
+        });
         Toast.makeText(this, "添加了点击测试弹幕", Toast.LENGTH_SHORT).show();
     }
 
     private void addSpecialDanmaku() {
         String[] specialTexts = {"✨ 特殊弹幕 ✨", "🎯特殊弹幕 高级弹幕 🎯", "🚀特殊弹幕 性能优化 🚀"};
         String text = specialTexts[random.nextInt(specialTexts.length)];
-        danmakuView.addSystemDanmaku(text);
+        danmakuView.addSystemDanmaku(text,null);
         CommonUtils.showToast("添加了特殊弹幕");
     }
 

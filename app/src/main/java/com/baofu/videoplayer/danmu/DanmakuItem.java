@@ -10,6 +10,7 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
 
+
 // DanmakuItem.java
 public class DanmakuItem {
     private String text;
@@ -28,8 +29,9 @@ public class DanmakuItem {
     private int userId;
     private String userName;
     public long show_time;
-    public int like_count;
+    private int like_count;
     public String id;
+    public String scheme;
     private boolean isUserOwned = false;  // 默认不是用户自己的弹幕
     private int priority = 0;  // 优先级（0-10），数值越大越优先展示（用户弹幕可设为更高优先级）
     public static final int MAX_PRIORITY=10;  //最高优先级
@@ -61,6 +63,31 @@ public class DanmakuItem {
     public static final int DIRECTION_DIAGONAL_BOTTOMRIGHT_TO_TOPLEFT = 7;
     // 新增方法：单独设置垂直padding的比例
     private float verticalPaddingRatio = 0.3f; // 垂直padding占水平padding的比例
+    // ==================== 新增：点赞数显示相关 ====================
+    private boolean showLikeCount = false;
+    public float likeTextWidth = 0;
+    public RectF likeClickArea = new RectF(); // 点赞区域的点击区域
+
+    // 点赞数显示的样式
+    public int likeTextColor = Color.YELLOW;//点赞的数字颜色
+    public float likeTextSize = 0; // 0表示使用默认文字大小的90%
+    private String likePrefix = "+"; // 点赞数前缀
+    private String likeSuffix = "";  // 点赞数后缀
+
+    // 点赞数背景（可选）
+    public boolean showLikeBackground = false;
+    public int likeBackgroundColor = Color.argb(0, 0, 0, 0); // 半透明红色
+    public float likeBackgroundPadding = 20;
+    public float likeBackgroundRadius = 8;
+
+    // 点赞监听器
+    private OnLikeClickListener onLikeClickListener;
+
+    // 新增接口
+    public interface OnLikeClickListener {
+        void onLikeClick(DanmakuItem danmaku);
+    }
+
 
     public DanmakuItem(String text, int color, float speed) {
         this.text = text;
@@ -86,6 +113,8 @@ public class DanmakuItem {
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(color);
         paint.setTextSize(40);
+        this.likeClickArea = new RectF();
+        this.likeTextSize = 0; // 将在测量时使用默认值
     }
     // 拷贝构造函数
     public DanmakuItem(DanmakuItem other) {
@@ -108,6 +137,7 @@ public class DanmakuItem {
         this.show_time=other.show_time;
         this.like_count=other.like_count;
         this.id=other.id;
+        this.scheme=other.scheme;
         this.isUserOwned = other.isUserOwned;
         this.priority = other.priority;
         this.showBackground = other.showBackground;
@@ -123,20 +153,79 @@ public class DanmakuItem {
         this.gradientType = other.gradientType;
         this.gradientAngle = other.gradientAngle;
         this.gradientReversed = other.gradientReversed;
+
+        this.showLikeCount = other.showLikeCount;
+        this.likeTextColor = other.likeTextColor;
+        this.likeTextSize = other.likeTextSize;
+        this.likePrefix = other.likePrefix;
+        this.likeSuffix = other.likeSuffix;
+        this.showLikeBackground = other.showLikeBackground;
+        this.likeBackgroundColor = other.likeBackgroundColor;
+        this.likeBackgroundPadding = other.likeBackgroundPadding;
+        this.likeBackgroundRadius = other.likeBackgroundRadius;
+        if (other.likeClickArea != null) {
+            this.likeClickArea = new RectF(other.likeClickArea);
+        }
+    }
+    /**
+     * 设置点赞数
+     */
+    public void setLikeCount(int count) {
+        this.like_count = Math.max(0, count);
+        this.showLikeCount = (this.like_count > 0);
+        this.isMeasured = false; // 需要重新测量
     }
 
+    public int getLikeCount() {
+        return like_count;
+    }
+
+    /**
+     * 增加点赞数
+     */
+    public void incrementLike() {
+        this.like_count++;
+        this.showLikeCount = true;
+        this.isMeasured = false;
+    }
+
+    public boolean isShowLikeCount() {
+        return showLikeCount && like_count > 0;
+    }
 
     public void measure(Paint referencePaint) {
         if (!isMeasured || referencePaint == null) {
-            // 确保使用参考画笔的文本大小
+            // 设置文字大小
             float originalSize = paint.getTextSize();
             float targetSize = referencePaint.getTextSize();
-
             if (Math.abs(originalSize - targetSize) > 0.1f) {
                 paint.setTextSize(targetSize);
             }
 
+            // 测量主文字宽度
             width = paint.measureText(text);
+
+            // 测量点赞数文字宽度
+            if (showLikeCount && like_count > 0) {
+                // 创建临时画笔用于测量点赞数
+                Paint likePaint = new Paint(paint);
+                if (likeTextSize > 0) {
+                    likePaint.setTextSize(likeTextSize);
+                } else {
+                    // 默认使用主文字大小的90%
+                    likePaint.setTextSize(targetSize * 0.9f);
+                }
+
+                String likeText = likePrefix + like_count + likeSuffix;
+                likeTextWidth = likePaint.measureText(likeText);
+
+                // 总宽度 = 主文字宽度 + 间距 + 点赞数宽度
+                float spacing = targetSize * 0.3f; // 文字间距
+                width = width + spacing + likeTextWidth;
+            } else {
+                likeTextWidth = 0;
+            }
+
             isMeasured = true;
         }
     }
@@ -183,11 +272,95 @@ public class DanmakuItem {
     }
 
     /**
+     * 获取点赞数文字（用于绘制）
+     */
+    public String getLikeText() {
+        if (like_count <= 0) return "";
+        return likePrefix + like_count + likeSuffix;
+    }
+
+    /**
+     * 获取绘制点赞数用的画笔
+     */
+    public Paint getLikePaint(Paint basePaint) {
+        Paint likePaint = new Paint(basePaint);
+
+        if (likeTextSize > 0) {
+            likePaint.setTextSize(likeTextSize);
+        } else {
+            likePaint.setTextSize(basePaint.getTextSize() * 0.9f);
+        }
+
+        likePaint.setColor(likeTextColor);
+
+        // 可以加粗显示
+        likePaint.setFakeBoldText(true);
+
+        return likePaint;
+    }
+    /**
      * 设置弹幕的点击区域
      */
     public void updateClickArea() {
-        updateClickAreaExact();
+        // 更新主弹幕点击区域
+        Rect textBounds = new Rect();
+        paint.getTextBounds(text, 0, text.length(), textBounds);
 
+        float textTop = y + textBounds.top;
+        float textBottom = y + textBounds.bottom;
+        float textLeft = x + textBounds.left;
+        float textRight = x + textBounds.right;
+
+        float padding = Math.min(3f, Math.min(width, Math.abs(textBounds.height())) * 0.05f);
+
+        clickArea.set(
+                textLeft - padding,
+                textTop - padding,
+                textRight + padding,
+                textBottom + padding
+        );
+
+        // 更新点赞数点击区域
+        if (showLikeCount && like_count > 0 && likeTextWidth > 0) {
+            // 点赞数位于主弹幕右侧
+            float spacing = paint.getTextSize() * 0.3f;
+            float likeStartX = x + width - likeTextWidth; // 点赞数起始X
+
+            // 获取点赞数字体的高度
+            Paint.FontMetrics likeMetrics = paint.getFontMetrics();
+            if (likeTextSize > 0) {
+                Paint tempPaint = new Paint();
+                tempPaint.setTextSize(likeTextSize);
+                likeMetrics = tempPaint.getFontMetrics();
+            }
+
+            float likeTop = y + likeMetrics.top;
+            float likeBottom = y + likeMetrics.bottom;
+
+            // 点赞数背景区域
+            float likeLeft = likeStartX - likeBackgroundPadding;
+            float likeRight = likeStartX + likeTextWidth + likeBackgroundPadding;
+            // 左右各扩大15px，上下各扩大10px，让点击更容错
+            float horizontalExpand = 15;
+            float verticalExpand = 10;
+            float textHeight = textBounds.height();
+            float textCenterY = y + (textBounds.top + textBounds.bottom) / 2;
+//            likeClickArea.set(
+//                    likeLeft,
+//                    likeTop - likeBackgroundPadding,
+//                    likeRight,
+//                    likeBottom + likeBackgroundPadding
+//            );
+
+            likeClickArea.set(
+                    likeStartX - horizontalExpand,                          // 左边界向左扩大
+                    textCenterY - textHeight/2 - verticalExpand,           // 上边界向上扩大
+                    likeStartX + likeTextWidth + horizontalExpand*2,         // 右边界向右扩大
+                    textCenterY + textHeight/2 + verticalExpand            // 下边界向下扩大
+            );
+        } else {
+            likeClickArea.setEmpty();
+        }
     }
 
     /**
@@ -802,5 +975,61 @@ public class DanmakuItem {
     // 使用比例计算垂直padding
     private float calculateVerticalPadding(float horizontalPadding) {
         return horizontalPadding * verticalPaddingRatio;
+    }
+
+    /**
+     * 检查点击的是否是点赞区域
+     */
+    public boolean isLikeArea(float x, float y) {
+        return showLikeCount && like_count > 0 && likeClickArea.contains(x, y);
+    }
+
+    public RectF getLikeClickArea() {
+        return likeClickArea;
+    }
+
+    public void setOnLikeClickListener(OnLikeClickListener listener) {
+        this.onLikeClickListener = listener;
+    }
+
+    public OnLikeClickListener getOnLikeClickListener() {
+        return onLikeClickListener;
+    }
+
+    // ==================== 点赞数样式设置方法 ====================
+
+    public void setLikeTextColor(int color) {
+        this.likeTextColor = color;
+    }
+
+    public void setLikeTextSize(float size) {
+        this.likeTextSize = size;
+        this.isMeasured = false;
+    }
+
+    public void setLikePrefix(String prefix) {
+        this.likePrefix = prefix;
+        this.isMeasured = false;
+    }
+
+    public void setLikeSuffix(String suffix) {
+        this.likeSuffix = suffix;
+        this.isMeasured = false;
+    }
+
+    public void setShowLikeBackground(boolean show) {
+        this.showLikeBackground = show;
+    }
+
+    public void setLikeBackgroundColor(int color) {
+        this.likeBackgroundColor = color;
+    }
+
+    public void setLikeBackgroundPadding(float padding) {
+        this.likeBackgroundPadding = padding;
+    }
+
+    public void setLikeBackgroundRadius(float radius) {
+        this.likeBackgroundRadius = radius;
     }
 }
