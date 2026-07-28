@@ -281,17 +281,122 @@ public class M3U8SegResponse extends BaseResponse {
     /**
      * 下载到临时文件
      */
+    /**
+     * 下载到临时文件（带循环校验的零拷贝方案）
+     *
+     * 使用 FileChannel.transferFrom() 实现零拷贝传输，性能最优。
+     * 通过循环读取解决网络不稳定导致的单次传输不完整问题。
+     *
+     * @param inputStream     HTTP响应体输入流
+     * @param tempFile        临时文件（下载中）
+     * @param expectedLength  期望的文件大小（来自Content-Length头）
+     * @throws IOException    下载失败或文件大小不匹配时抛出
+     */
     private void downloadToTempFile(InputStream inputStream, File tempFile, long expectedLength)
             throws IOException {
 
+        // 使用try-with-resources自动管理资源
+        // ReadableByteChannel：从输入流读取数据的通道
+        // FileOutputStream：写入临时文件
+        // FileChannel：文件通道，支持零拷贝传输
         try (ReadableByteChannel rbc = Channels.newChannel(inputStream);
              FileOutputStream fos = new FileOutputStream(tempFile);
              FileChannel foutc = fos.getChannel()) {
 
-            foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
+            // totalRead：累计已读取的字节数
+            long totalRead = 0;
 
-            // 验证文件大小
-            validateFileSize(tempFile, expectedLength);
+            // consecutiveZeroReads：连续读取为0的次数计数器
+            // 用于检测数据流是否已经结束
+            int consecutiveZeroReads = 0;
+
+            // 最大允许连续零次读取的次数
+            // 超过此次数认为数据流已结束
+            final int MAX_ZERO_READS = 5;
+
+            // 循环条件：
+            // 1. 如果expectedLength <= 0（未知大小），持续读取直到流结束
+            // 2. 如果expectedLength > 0，读取到达到期望大小为止
+            while (expectedLength <= 0 || totalRead < expectedLength) {
+
+                // 计算本次最多还能读取多少字节
+                // 如果expectedLength <= 0，remaining = Long.MAX_VALUE（无限制）
+                // 否则 remaining = 期望大小 - 已读大小
+                long remaining = expectedLength > 0 ? expectedLength - totalRead : Long.MAX_VALUE;
+
+                /**
+                 * transferFrom() 核心方法：
+                 * - 将数据从 ReadableByteChannel 直接传输到 FileChannel
+                 * - 利用操作系统的零拷贝特性，数据不经过用户空间
+                 * - 参数：src通道，文件中的起始位置，最大传输字节数
+                 * - 返回值：实际传输的字节数（可能小于请求的字节数）
+                 */
+                long transferred = foutc.transferFrom(rbc, totalRead, remaining);
+
+                // 判断是否读取到数据
+                if (transferred == 0) {
+                    // 未读取到数据，可能原因：
+                    // 1. 网络延迟，数据还没到达
+                    // 2. 数据流已经结束
+                    // 3. 服务器响应缓慢
+                    consecutiveZeroReads++;
+
+                    // 如果连续多次未读取到数据，认为流已结束
+                    if (consecutiveZeroReads >= MAX_ZERO_READS) {
+                        LogUtils.w(TAG, "No more data available after " +
+                                MAX_ZERO_READS + " attempts for " + tempFile.getName());
+                        break;
+                    }
+
+                    // 短暂等待后重试，给网络缓冲时间
+                    // 使用200ms等待，避免过于频繁的重试浪费CPU
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        // 恢复中断状态，让上层处理中断
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                    // 继续下一次循环尝试读取
+                    continue;
+                }
+
+                // 成功读取到数据，累加已读字节数
+                totalRead += transferred;
+
+                // 重置连续零次读取计数器
+                consecutiveZeroReads = 0;
+
+                /**
+                 * 进度日志（优化性能）
+                 * 每读取1MB打印一次日志，避免高频日志影响性能
+                 * 条件：totalRead % 1MB < transferred 表示刚越过了一个MB边界
+                 * 这样既能看到进度，又不会日志泛滥
+                 */
+                final long MB = 1024 * 1024;
+                if (expectedLength > 0 && (totalRead % MB) < transferred) {
+                    int progress = (int) (totalRead * 100 / expectedLength);
+                    LogUtils.d(TAG, String.format("Downloading %s: %d/%d bytes (%d%%)",
+                            tempFile.getName(), totalRead, expectedLength, progress));
+                }
+            }
+
+            /**
+             * 最终验证：文件大小校验
+             * 只有当expectedLength > 0时才进行严格校验
+             * 如果expectedLength <= 0，说明服务器未返回Content-Length，跳过校验
+             */
+            if (expectedLength > 0 && !VideoCacheUtils.sizeSimilar(totalRead,expectedLength)) {
+                // 构造详细的错误信息，方便排查问题
+                String error = String.format(
+                        "File size mismatch: expected=%d, actual=%d, file=%s",
+                        expectedLength, totalRead, tempFile.getName());
+                PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + error);
+                // 抛出异常，上层会处理（清理临时文件等）
+                throw new IOException(error);
+
+            }
+
         }
     }
 

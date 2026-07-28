@@ -670,4 +670,23 @@ public class VideoDownloadUtils {
 
         return result;
     }
+
+    /**
+     * 判断两个文件大小是否近似
+     * 允许有5kb误差
+     */
+    public static boolean sizeSimilar(long size1,long size2){
+
+        long difference = Math.abs(size1 - size2);
+
+        if (difference <= 5 * 1024) {
+//            System.out.println("两个文件大小相差在5KB以内");
+
+            return true;
+        } else {
+//            System.out.println("两个文件大小相差超过5KB");
+//            Log.e(TAG,"两个文件大小相差:"+difference);
+            return false;
+        }
+    }
 }
