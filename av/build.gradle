@@ -4,7 +4,6 @@ apply plugin: 'com.android.library'
 
 android {
     namespace 'cn.mahua.av'
-
     defaultConfig {
         versionCode 1
         versionName "1.0"
