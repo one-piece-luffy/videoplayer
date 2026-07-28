@@ -424,9 +424,9 @@ public class DanMuActivity extends AppCompatActivity {
             play(name);
         });
         findViewById(R.id.shaohua).setOnClickListener(v -> {
-            Log.e("asdf","========韶华若锦==========");
-            mUrl=Appconstants.ShaoHuaRuoJIn;
-            name="韶华若锦";
+            Log.e("asdf","========兵自风中来==========");
+            mUrl=Appconstants.BingZiFengZhongLai;
+            name="兵自风中来";
             play(name);
         });
         findViewById(R.id.luohua).setOnClickListener(v -> {

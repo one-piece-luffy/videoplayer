@@ -76,7 +76,7 @@
                 android:id="@+id/shaohua"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="韶华若锦-U线路"
+                android:text="兵自风中来"
                 android:layout_marginStart="5dp"
                 />
         </LinearLayout>

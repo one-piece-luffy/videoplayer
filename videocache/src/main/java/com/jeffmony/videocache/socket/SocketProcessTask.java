@@ -115,17 +115,7 @@ public class SocketProcessTask implements Runnable {
         } finally {
             ProxyCacheUtils.close(outputStream);
             ProxyCacheUtils.close(inputStream);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                ProxyCacheUtils.close(mSocket);
-            } else {
-                if (mSocket != null) {
-                    try {
-                        mSocket.close();
-                    } catch (IOException e) {
-                        LogUtils.e(TAG,"close " + mSocket + " failed, exception = " + e);
-                    }
-                }
-            }
+            ProxyCacheUtils.close(mSocket);
             int count = sRequestCountAtomic.decrementAndGet();
             LogUtils.i(TAG, "finally Socket solve count = " + count);
         }
