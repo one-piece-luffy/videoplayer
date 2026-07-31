@@ -81,7 +81,6 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void startCacheTask() {
-        //todo
         if (isTaskRunning()) {
             return;
         }
@@ -293,151 +292,92 @@ public class M3U8CacheTask extends VideoCacheTask {
         if(!isRunning.get()){
             return;
         }
-//        Log.i(TAG,"队列开始下载ts:"+file.getName());
-        String fileName=file.getName();
-//        PlayerProgressListenerManager.getInstance().log("=task开始下载:"+" "+mVideoName+" "+fileName+" "+ts.getSegName());
+        String fileName = file.getName();
         InputStream inputStream = null;
-
         ReadableByteChannel rbc = null;
         FileOutputStream fos = null;
         FileChannel foutc = null;
-        Response response=null;
+        Response response = null;
         File tmpFile = new File(file.getParentFile(), fileName + TEMP_POSTFIX);
 
         try {
-            response = OkHttpUtil.getInstance().requestSync(videoUrl,mHeaders);
+            response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
             int responseCode = response.code();
             if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
                 ts.setRetryCount(0);
                 inputStream = response.body().byteStream();
-                long contentLength =  response.body().contentLength();
+                long contentLength = response.body().contentLength();
 
+                // ✅ 下载到临时文件，获取实际下载大小（内部不重试，一次性读取）
+                long actualDownloadSize = downloadToTempFile(inputStream, tmpFile, contentLength);
+
+                // ✅ 验证文件完整性
+                if (!isDownloadComplete(contentLength, actualDownloadSize, tmpFile)) {
+                    String error = String.format("File incomplete: expected=%d, actual=%d, file=%s",
+                            contentLength, actualDownloadSize, tmpFile.getName());
+                    Log.e(TAG, error);
+                    PlayerProgressListenerManager.getInstance().log("task 下载不完整:" + fileName);
+                    FileUtils.deleteFile(tmpFile);
+                    // ✅ 触发外部重试
+                    onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception(error));
+                    return;
+                }
+
+                // 处理加密
                 byte[] encryptionKey = ts.encryptionKey == null ? mM3U8.encryptionKey : ts.encryptionKey;
-//                String a=new String(encryptionKey);
                 String iv = ts.encryptionKey == null ? mM3U8.encryptionIV : ts.getKeyIv();
-                if ( encryptionKey != null) {
 
-                    rbc = Channels.newChannel(inputStream);
-                    fos = new FileOutputStream(tmpFile);
-                    foutc = fos.getChannel();
-                    foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
-
-                    if (contentLength <= 0) {
-                        contentLength = tmpFile.length();
-                    } else if (!VideoCacheUtils.sizeSimilar(contentLength, tmpFile.length())) {
-                        String log=tmpFile.getName() + " file length:" + tmpFile.length() + " content length:" + contentLength;
-                        Log.e(TAG, log);
-                        onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception(log));
-                        return;
-                    }
-
-                    FileOutputStream fileOutputStream = null;
-                    try {
-//                        byte[] result = AES128Utils.dencryption(AES128Utils.readFile(tmpFile), encryptionKey, iv);
-//                        if (result == null) {
-//                            //todo 失败
-////                            Log.e(TAG,"task ts下载失败:"+ts.getSegName());
-//                            PlayerProgressListenerManager.getInstance().log("task aes dencry fail:"+ts.getSegName());
-//                            ts.setRetryCount(ts.getRetryCount() + 1);
-//                            return;
-//                        } else {
-//                            fileOutputStream = new FileOutputStream(tmpFile);//todo oom
-//                            fileOutputStream.write(result);
-//                            //解密后文件的大小和content-length不一致，所以直接赋值为文件大小
-//                            contentLength = tmpFile.length();
-//                            FileUtils.handleRename(tmpFile, file);
-//                        }
-
-                        File tempDecryptedFile = new File(tmpFile.getParent(), "decrypted_" + tmpFile.getName());
-                        if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
+                if (encryptionKey != null) {
+                    File tempDecryptedFile = new File(tmpFile.getParent(), "decrypted_" + tmpFile.getName());
+                    if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
+                        if (tempDecryptedFile.exists() && tempDecryptedFile.length() > 0) {
                             FileUtils.handleRename(tempDecryptedFile, file);
                             contentLength = file.length();
                         } else {
-                            // 解密失败处理
-                            ts.setRetryCount(ts.getRetryCount() + 1);
-                            PlayerProgressListenerManager.getInstance().log("task aes dencry fail:"+ts.getSegName());
+                            PlayerProgressListenerManager.getInstance().log("task 解密后文件为空:" + ts.getSegName());
+                            FileUtils.deleteFile(tmpFile);
+                            FileUtils.deleteFile(tempDecryptedFile);
+                            onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("Decrypted file is empty"));
                             return;
                         }
-
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (fileOutputStream != null) {
-                            fileOutputStream.close();
-                        }
+                    } else {
+                        PlayerProgressListenerManager.getInstance().log("task aes decrypt fail:" + ts.getSegName());
                         FileUtils.deleteFile(tmpFile);
+                        onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("AES decrypt failed"));
+                        return;
                     }
                 } else {
-                    rbc = Channels.newChannel(inputStream);
-                    fos = new FileOutputStream(tmpFile);
-                    foutc = fos.getChannel();
-                    foutc.transferFrom(rbc, 0, Long.MAX_VALUE);
-                    if (contentLength <= 0) {
-                        contentLength = tmpFile.length();
-                    } else if (!VideoCacheUtils.sizeSimilar(contentLength, tmpFile.length())) {
-                        String log=tmpFile.getName() + " file length:" + tmpFile.length() + " content length:" + contentLength;
-                        Log.e(TAG, log);
-                        onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception(log));
-                        return;
-
-                    }
-                    /**
-                     *  todo
-                     *  这里需要引入临时文件，下载完成后再重命名为原来的名字，不然 M3U8SegResponse的sendBody()的判断会出问题
-                     *  sendBody 监听文件是否存在，只要文件存在就将数据发给播放器，这时候的文件可能是不完整的。所以这里等全部下载完成再重命名。
-                     *  这时候sendBody监听到的就是完整的文件。
-                     */
-                    FileUtils.handleRename(tmpFile,file);
+                    FileUtils.handleRename(tmpFile, file);
                     if (contentLength <= 0) {
                         contentLength = file.length();
                     }
                 }
 
-
                 ts.setContentLength(contentLength);
-                Log.i(TAG,"队列ts下载完成:"+ts.getSegName());
-                PlayerProgressListenerManager.getInstance().log("=task ts下载完成:"+ts.getSegName());
+                Log.i(TAG, "队列ts下载完成:" + ts.getSegName());
+                PlayerProgressListenerManager.getInstance().log("=task ts下载完成:" + ts.getSegName());
+
                 if (ts.getSegIndex() == 0) {
                     if (PlayerProgressListenerManager.getInstance().getListener() != null) {
                         PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(fileName);
                     }
-//                    Log.e(TAG, "首个片段已经下载 " + fileName+ ", url=" + ts.getUrl());
                 }
-//                Log.e(TAG, "已经下载 " + file.getAbsolutePath()+ ", url=" + ts.getUrl()+" exits:"+file.exists());
             } else {
-                onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("response code="+responseCode));
+                Log.e(TAG, "HTTP error: " + responseCode + " for " + fileName);
+                PlayerProgressListenerManager.getInstance().log("=task " + fileName + " HTTP错误:" + responseCode);
+                // ✅ 触发外部重试
+                onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("HTTP " + responseCode));
             }
-
-
-        } catch (InterruptedIOException e) {
-            //被中断了，使用stop时会抛出这个，不需要处理
-            Log.i(TAG, "InterruptedIOException");
-
-        } catch (ClosedByInterruptException e) {
-            Log.i(TAG, "ClosedByInterruptException");
-        }  catch (Exception e) {
-
-            if (e instanceof FileNotFoundException || e instanceof NoSuchFileException) {
-                //父目录
-                File file1 = file.getParentFile();
-                if (file1 != null && !file1.exists()) {
-                    PlayerProgressListenerManager.getInstance().log("文件不存在，终止任务");
-                    stopCacheTask();
-                    //子线程
-                    PlayerProgressListenerManager.getInstance().parseM3u8Fail("文件不存在，终止任务");
-                    return;
-                }
-            }
-            PlayerProgressListenerManager.getInstance().log("=task "+fileName+"下载出错:"+e.getMessage());
-            ts.setRetryCount(ts.getRetryCount() + 1);
-//            if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-////                Log.i(TAG, "====retry, exception=" + e.getMessage());
-//                downloadFile(ts, file, videoUrl);//todo oom
-////                Log.i("asdf","重试");
-//            }else {
-////                Log.i("asdf","失败");
-//            }
+        } catch (InterruptedIOException | ClosedByInterruptException e) {
+            Log.i(TAG, "Download interrupted: " + fileName);
+            FileUtils.deleteFile(tmpFile);
+            // 中断不重试，直接返回
+        } catch (Exception e) {
+            Log.e(TAG, "Download error for " + fileName, e);
+            PlayerProgressListenerManager.getInstance().log("=task " + fileName + "下载出错:" + e.getMessage());
+            FileUtils.deleteFile(tmpFile);
+            // ✅ 触发外部重试
+            onDownloadFileErr(ts, file, videoUrl, 0, e);
         } finally {
             ProxyCacheUtils.close(inputStream);
             ProxyCacheUtils.close(fos);
@@ -445,25 +385,83 @@ public class M3U8CacheTask extends VideoCacheTask {
             ProxyCacheUtils.close(rbc);
             ProxyCacheUtils.close(foutc);
         }
-
-
     }
 
-    private void onDownloadFileErr(M3U8Seg ts, File file, String videoUrl, int responseCode, Exception exception){
+    /**
+     * ✅ 下载到临时文件（不带重试，一次性读取）
+     * 如果网络中断或读取失败，直接抛出异常
+     */
+    private long downloadToTempFile(InputStream inputStream, File tmpFile, long expectedLength)
+            throws IOException {
+        try (ReadableByteChannel rbc = Channels.newChannel(inputStream);
+             FileOutputStream fos = new FileOutputStream(tmpFile);
+             FileChannel foutc = fos.getChannel()) {
+
+            long totalRead = 0;
+
+            // ✅ 没有重试逻辑，直接尝试一次性读取所有数据
+            while (expectedLength <= 0 || totalRead < expectedLength) {
+                long remaining = expectedLength > 0 ? expectedLength - totalRead : Long.MAX_VALUE;
+                long transferred = foutc.transferFrom(rbc, totalRead, remaining);
+
+                // ⚠️ 如果 transferFrom 返回 0，说明流已结束或网络问题
+                // 直接跳出循环，不重试
+                if (transferred == 0) {
+                    Log.w(TAG, "transferFrom returned 0, stream may be ended");
+                    break;
+                }
+
+                totalRead += transferred;
+            }
+
+            // 确保数据写入磁盘
+            foutc.force(true);
+            return totalRead;
+        }
+    }
+
+    /**
+     * expectedLength 精确大小
+     * actualLength 实际下载大小
+     * ✅ 检查下载是否完整
+     */
+    private boolean isDownloadComplete(long expectedLength, long actualLength, File file) {
+        if (!file.exists() || file.length() == 0) {
+            return false;
+        }
+
+        if (expectedLength > 0) {
+            return VideoCacheUtils.sizeSimilar(actualLength, expectedLength);
+        }
+
+        // 如果不知道预期大小，至少确保下载了数据
+        return actualLength > 0;
+    }
+
+    /**
+     * ✅ 保留外部重试逻辑
+     */
+    private void onDownloadFileErr(M3U8Seg ts, File file, String videoUrl, int responseCode, Exception exception) {
         ts.setRetryCount(ts.getRetryCount() + 1);
-        if (responseCode == com.baofu.cache.downloader.utils.HttpUtils.RESPONSE_503 || responseCode == com.baofu.cache.downloader.utils.HttpUtils.RESPONSE_429) {
+
+        if (responseCode == com.baofu.cache.downloader.utils.HttpUtils.RESPONSE_503 ||
+                responseCode == com.baofu.cache.downloader.utils.HttpUtils.RESPONSE_429) {
             if (ts.getRetryCount() <= MAX_RETRY_COUNT_503) {
-                //遇到503，延迟[4,24]秒后再重试，区间间隔不能太小
+                // 遇到503，延迟[4,24]秒后再重试
                 int ran = 4000 + (int) (Math.random() * 20000);
                 try {
                     Thread.sleep(ran);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    Thread.currentThread().interrupt();
+                    return;
                 }
                 downloadFile(ts, file, videoUrl);
             }
         } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
             downloadFile(ts, file, videoUrl);
+        } else {
+            Log.e(TAG, "Max retry count reached for " + file.getName());
+            PlayerProgressListenerManager.getInstance().log("task " + file.getName() + "重试次数已用完");
         }
     }
 

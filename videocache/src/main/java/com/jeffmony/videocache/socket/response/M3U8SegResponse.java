@@ -99,7 +99,7 @@ public class M3U8SegResponse extends BaseResponse {
             // 等待文件就绪或超时
             waitForFileReady(lock);
 
-            if (shouldSendResponse(socket, mM3U8Md5) && mSegFile.exists()) {
+            if (shouldSendResponse(socket, mM3U8Md5) && isFileValidAndComplete()) {
                 sendFileContent(outputStream);
             } else {
                 outputStream.write(null, 0, 0);
@@ -111,40 +111,87 @@ public class M3U8SegResponse extends BaseResponse {
             cancelDownloadTask();
         }
     }
+    /**
+     * 检查文件是否有效且完整
+     */
+    private boolean isFileValidAndComplete() {
+        if (!mSegFile.exists()) {
+            return false;
+        }
 
+        long fileLength = mSegFile.length();
+        if (fileLength == 0) {
+            return false;
+        }
+
+        // 如果有预期的长度，检查是否匹配
+        if (mSegLength > 0) {
+            return VideoCacheUtils.sizeSimilar(fileLength, mSegLength);
+        }
+
+        // 如果没有预期长度，尝试从文件命名或其他方式获取
+        // 或者从缓存信息中获取
+        M3U8 m3u8 = VideoInfoParseManager.getInstance().m3u8;
+        if (m3u8 != null && m3u8.getSegList() != null) {
+            for (M3U8Seg seg : m3u8.getSegList()) {
+                if (seg.getSegName().equals(mFileName)) {
+                    long expectedLength = seg.getContentLength();
+                    if (expectedLength > 0) {
+                        return VideoCacheUtils.sizeSimilar(fileLength, expectedLength);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // 如果无法验证，认为文件有效（但这是有风险的）
+        // 更好的做法是记录下载时的文件大小
+        return true;
+    }
     /**
      * 等待文件就绪（带超时）
+     */
+    /**
+     * 等待文件就绪（改进版）
      */
     private void waitForFileReady(Object lock) throws InterruptedException, IOException {
         final long timeout = TIME_OUT;
         final long waitInterval = WAIT_TIME;
         long waited = 0;
 
-        while (!mSegFile.exists() && waited < timeout) {
-            // 如果文件不存在且没有在下载，则启动下载
-            if (isDownloading.compareAndSet(false, true)) {
+        while (waited < timeout) {
+            // 启动下载（如果未开始）
+            if (!mSegFile.exists() && isDownloading.compareAndSet(false, true)) {
                 startDownloadTask();
             }
 
-            // 等待一段时间
+            // 检查文件是否完整
+            if (mSegFile.exists() && isFileValidAndComplete()) {
+                return;
+            }
+
+            // 如果文件存在但不完整，说明下载有问题，重新下载
+            if (mSegFile.exists() && !isFileValidAndComplete()) {
+                LogUtils.w(TAG, "File exists but incomplete, deleting and redownload: " + mFileName);
+                FileUtils.deleteFile(mSegFile);
+                if (isDownloading.compareAndSet(false, true)) {
+                    startDownloadTask();
+                }
+            }
+
+            // 等待
             synchronized (lock) {
                 lock.wait(waitInterval);
             }
-
             waited += waitInterval;
-
-            // 检查文件是否完整下载
-            if (isFileDownloadComplete()) {
-                break;
-            }
         }
 
         // 超时处理
-        if (!mSegFile.exists()) {
-            LogUtils.e(TAG, "Timeout waiting for file: " + mFileName +
+        if (!isFileValidAndComplete()) {
+            LogUtils.e(TAG, "Timeout waiting for complete file: " + mFileName +
                     " (waited " + waited + "ms)");
             PlayerProgressListenerManager.getInstance().log(
-                    "==timeout " + mFileName + "  " + waited + " ms==");
+                    "==timeout/incomplete " + mFileName + "  " + waited + " ms==");
         }
     }
 
@@ -312,7 +359,7 @@ public class M3U8SegResponse extends BaseResponse {
 
             // 最大允许连续零次读取的次数
             // 超过此次数认为数据流已结束
-            final int MAX_ZERO_READS = 5;
+            final int MAX_ZERO_READS = 2;
 
             // 循环条件：
             // 1. 如果expectedLength <= 0（未知大小），持续读取直到流结束
@@ -528,14 +575,10 @@ public class M3U8SegResponse extends BaseResponse {
     /**
      * 检查文件是否下载完整
      */
-    private boolean isFileDownloadComplete() {
-        return isFileDownloadComplete(mSegFile);
-    }
-
     private boolean isFileDownloadComplete(File file) {
         if (!file.exists()) return false;
 
-        return (mSegLength > 0 && file.length() == mSegLength) ||
+        return (mSegLength > 0 && VideoCacheUtils.sizeSimilar(file.length(),mSegLength)) ||
                 (mSegLength == -1 && file.length() > 0);
     }
 
