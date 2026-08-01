@@ -1,14 +1,9 @@
 package com.jeffmony.videocache.task;
 
-import static com.baofu.cache.downloader.common.VideoDownloadConstants.MAX_RETRY_COUNT_503;
-
-import android.text.TextUtils;
 import android.util.Log;
 
-import com.baofu.cache.downloader.rules.CacheDownloadManager;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
-import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.m3u8.M3U8;
 import com.jeffmony.videocache.m3u8.M3U8Seg;
 import com.jeffmony.videocache.model.VideoCacheInfo;
@@ -19,17 +14,14 @@ import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.OkHttpUtil;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
-import com.jeffmony.videocache.utils.StorageUtils;
+import com.jeffmony.videocache.utils.TsMetaDataManager;
 import com.jeffmony.videocache.utils.VideoCacheUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.nio.channels.Channels;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
@@ -42,7 +34,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import kotlin.io.NoSuchFileException;
 import okhttp3.Response;
 
 /**
@@ -56,18 +47,16 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     //太多会导致OOM
     private static final int THREAD_POOL_COUNT = 5;
-    private static final int CONTINUOUS_SUCCESS_TS_THRESHOLD = 6;
-    private volatile int mM3U8DownloadPoolCount;
 
     private int mCachedSegCount;
     private int mTotalSegCount;
-    private Map<Integer, Long> mSegLengthMap;
     private List<M3U8Seg> mSegList;
     M3U8 mM3U8;
     final static int MAX_RETRY_COUNT=1;
     private final static int MAX_RETRY_COUNT_503 = 3;//遇到503的重试次数
     private String mVideoName;
     AtomicBoolean isRunning = new AtomicBoolean(false);//任务是否正在运行中
+    private TsMetaDataManager metaDataManager;
 
     public M3U8CacheTask(VideoCacheInfo cacheInfo, Map<String, String> headers, M3U8 m3u8) {
         super(cacheInfo, headers);
@@ -77,6 +66,8 @@ public class M3U8CacheTask extends VideoCacheTask {
         mCachedSegCount = cacheInfo.getCachedTs();
         mHeaders.put("Connection", "close");
         mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get(CacheConstants.HEADER_KEY_NAME));
+        // 初始化元数据管理器
+        metaDataManager = TsMetaDataManager.getInstance(mSaveDir);
     }
 
     @Override
@@ -99,17 +90,34 @@ public class M3U8CacheTask extends VideoCacheTask {
         long tempCachedSize = 0;
         int tempCachedTs = 0;
 
+        // ✅ 一次性从元数据管理器加载所有大小信息
         for (int index = 0; index < mSegList.size(); index++) {
             M3U8Seg ts = mSegList.get(index);
             File tempTsFile = new File(mSaveDir, ts.getSegName());
+
             if (tempTsFile.exists() && tempTsFile.length() > 0) {
-                ts.setFileSize(tempTsFile.length());
-                tempCachedSize += tempTsFile.length();
-                tempCachedTs++;
-            } else {
-                break;
+                // ✅ 从内存缓存中获取预期大小
+                long expectedSize = metaDataManager.getTsMetaData(ts.getSegName());
+
+                if (expectedSize > 0) {
+                    // 有元数据，验证文件大小
+                    if (VideoCacheUtils.sizeSimilar(tempTsFile.length(), expectedSize)) {
+                        ts.setFileSize(tempTsFile.length());
+                        tempCachedSize += tempTsFile.length();
+                        tempCachedTs++;
+                    } else {
+                        // 文件不完整，删除
+                        LogUtils.w(TAG, "Found incomplete file, deleting: " + tempTsFile.getName());
+                        FileUtils.deleteFile(tempTsFile);
+                        metaDataManager.removeTsMetaData(ts.getSegName());
+                    }
+                } else {
+                    LogUtils.w(TAG, "Invalid TS file, deleting: " + tempTsFile.getName());
+                    FileUtils.deleteFile(tempTsFile);
+                }
             }
         }
+
         mCachedSegCount = tempCachedTs;
         mCachedSize = tempCachedSize;
         if (mCachedSegCount == mTotalSegCount) {
@@ -140,6 +148,10 @@ public class M3U8CacheTask extends VideoCacheTask {
         isRunning.set(false);
         DefaultExecutor.execute(() -> {
             try {
+                // ✅ 应用退出时保存元数据
+                if (metaDataManager != null) {
+                    metaDataManager.flushOnExit();
+                }
                 if (mTaskExecutor != null) {
                     mTaskExecutor.shutdownNow();
                 }
@@ -354,13 +366,18 @@ public class M3U8CacheTask extends VideoCacheTask {
                 }
 
                 ts.setContentLength(contentLength);
-                Log.i(TAG, "队列ts下载完成:" + ts.getSegName());
+//                Log.i(TAG, "队列ts下载完成:" + ts.getSegName());
                 PlayerProgressListenerManager.getInstance().log("=task ts下载完成:" + ts.getSegName());
 
                 if (ts.getSegIndex() == 0) {
                     if (PlayerProgressListenerManager.getInstance().getListener() != null) {
                         PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(fileName);
                     }
+                }
+                // ✅ 下载完成后保存元数据
+                if (file.exists() && file.length() > 0) {
+                    ts.setContentLength(contentLength);
+                    metaDataManager.saveTsMetaData(file.getName(), contentLength);
                 }
             } else {
                 Log.e(TAG, "HTTP error: " + responseCode + " for " + fileName);

@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
         controller.setOnSetProgressListener(new OnSetProgressListener() {
             @Override
             public void setProgress(int duration, int position) {
-                Log.e("aaaa","duration:"+duration+" position:"+position);
+//                Log.e("aaaa","duration:"+duration+" position:"+position);
             }
         });
 
