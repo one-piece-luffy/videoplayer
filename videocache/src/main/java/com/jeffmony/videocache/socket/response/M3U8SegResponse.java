@@ -19,6 +19,7 @@ import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.OkHttpUtil;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
+import com.jeffmony.videocache.utils.TsFileValidator;
 import com.jeffmony.videocache.utils.TsMetaDataManager;
 import com.jeffmony.videocache.utils.VideoCacheUtils;
 
@@ -29,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -116,7 +118,22 @@ public class M3U8SegResponse extends BaseResponse {
             waitForFileReady(lock);
 
             if (shouldSendResponse(socket, mM3U8Md5) && isFileValidAndComplete()) {
+                // ✅ 轻量级验证：只检查TS文件开头和结尾（<1ms）
+                // ✅ 只验证一次，失败就失败，不重试
+                // 因为文件下载过程已经验证过了，这里只是兜底
+//                if (!TsFileValidator.isValidTsFile(mSegFile)) {
+////                    LogUtils.e(TAG, "SendBody found invalid file (shouldn't happen): " + mFileName);
+//                    PlayerProgressListenerManager.getInstance().log("task TS文件无效,没有0x47开头:" + mFileName);
+//                    // 删除文件，但不重试，让播放器报错
+//                    FileUtils.deleteFile(mSegFile);
+//                    metaDataManager.removeTsMetaData(mFileName);
+//                    outputStream.write(null, 0, 0);
+//                    return;
+//                }
+                //把ts校验下放到播放器的重试去进行，避免因为检验方法不对导致无法播放
+
                 sendFileContent(outputStream);
+
             } else {
                 outputStream.write(null, 0, 0);
                 LogUtils.w(TAG, "Cannot send file, socket closed or file missing: " + mFileName);
@@ -294,6 +311,8 @@ public class M3U8SegResponse extends BaseResponse {
 
         } catch (Exception e) {
             e.printStackTrace();
+            PlayerProgressListenerManager.getInstance().log(
+                    "播放器下载失败:" + mVideoName + " " + mFileName+" "+e.getMessage());
         } finally {
             // 清理临时文件
             cleanupTempFile(tempFile);
@@ -323,12 +342,23 @@ public class M3U8SegResponse extends BaseResponse {
                 return;
             }
 
+
             // 解密处理（如果需要）
             if (shouldDecrypt(ts)) {
                 decryptAndSave(tmpFile, ts);
+                FileUtils.deleteFile(tmpFile);
             } else {
                 FileUtils.handleRename(tmpFile, mSegFile);
             }
+            // ✅ 验证TS文件格式（使用FileChannel，只检查开头和结尾）
+//            if (!TsFileValidator.isValidTsFile(mSegFile)) {
+//                String error = "Invalid TS file: " + tmpFile.getName();
+//                Log.e(TAG, error);
+//                PlayerProgressListenerManager.getInstance().log("task TS文件无效,没有0x47开头:" + tmpFile.getName());
+//                FileUtils.deleteFile(tmpFile);
+//                FileUtils.deleteFile(mSegFile);
+//                return;
+//            }
             long fileLength=mSegFile.length();
             // 更新片段信息
             updateTsInfo(ts, fileLength);
@@ -343,6 +373,7 @@ public class M3U8SegResponse extends BaseResponse {
 
         } catch (Exception e) {
             LogUtils.e(TAG, "Failed to process response for " + mFileName, e);
+            PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + mFileName+" "+e.getMessage());
             throw new IOException("Failed to process TS file", e);
         }
     }
@@ -594,7 +625,7 @@ public class M3U8SegResponse extends BaseResponse {
             } else {
                 // 删除不完整的文件
                 if (!tempFile.delete()) {
-                    LogUtils.w(TAG, "Failed to delete temp file: " + tempFile.getName());
+                    LogUtils.e(TAG, "Failed to delete temp file: " + tempFile.getName());
                 }
             }
         }
@@ -620,6 +651,8 @@ public class M3U8SegResponse extends BaseResponse {
             LogUtils.d(TAG, "Sent TS file: " + mFileName + " (" + offset + " bytes)");
         }
     }
+
+
 
     /**
      * 检查文件是否下载完整

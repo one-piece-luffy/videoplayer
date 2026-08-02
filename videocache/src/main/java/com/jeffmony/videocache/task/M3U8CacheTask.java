@@ -14,6 +14,7 @@ import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.OkHttpUtil;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
+import com.jeffmony.videocache.utils.TsFileValidator;
 import com.jeffmony.videocache.utils.TsMetaDataManager;
 import com.jeffmony.videocache.utils.VideoCacheUtils;
 
@@ -52,7 +53,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     private int mTotalSegCount;
     private List<M3U8Seg> mSegList;
     M3U8 mM3U8;
-    final static int MAX_RETRY_COUNT=1;
+    final static int MAX_RETRY_COUNT=2;
     private final static int MAX_RETRY_COUNT_503 = 3;//遇到503的重试次数
     private String mVideoName;
     AtomicBoolean isRunning = new AtomicBoolean(false);//任务是否正在运行中
@@ -344,6 +345,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                     if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
                         if (tempDecryptedFile.exists() && tempDecryptedFile.length() > 0) {
                             FileUtils.handleRename(tempDecryptedFile, file);
+                            FileUtils.deleteFile(tmpFile);
                             contentLength = file.length();
                         } else {
                             PlayerProgressListenerManager.getInstance().log("task 解密后文件为空:" + ts.getSegName());
@@ -364,7 +366,15 @@ public class M3U8CacheTask extends VideoCacheTask {
                         contentLength = file.length();
                     }
                 }
-
+                // ✅ 验证TS文件格式（使用FileChannel，只检查开头和结尾）
+//                if (!TsFileValidator.isValidTsFile(file)) {
+//                    String error = "Invalid TS file: " + tmpFile.getName();
+//                    Log.e(TAG, error);
+//                    PlayerProgressListenerManager.getInstance().log("task TS文件无效,没有0x47开头:" + tmpFile.getName());
+//                    FileUtils.deleteFile(tmpFile);
+//                    FileUtils.deleteFile(file);
+//                    return;
+//                }
                 ts.setContentLength(contentLength);
 //                Log.i(TAG, "队列ts下载完成:" + ts.getSegName());
                 PlayerProgressListenerManager.getInstance().log("=task ts下载完成:" + ts.getSegName());
@@ -478,7 +488,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             downloadFile(ts, file, videoUrl);
         } else {
             Log.e(TAG, "Max retry count reached for " + file.getName());
-            PlayerProgressListenerManager.getInstance().log("task " + file.getName() + "重试次数已用完");
+            PlayerProgressListenerManager.getInstance().log("task " + file.getName() + "重试"+ts.getRetryCount()+"次 次数已用完");
         }
     }
 

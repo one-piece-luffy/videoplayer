@@ -17,18 +17,24 @@ import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.utils.Appconstants;
+import com.baofu.videoplayer.utils.TsFileFinderSmart;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
 import com.jeffmony.videocache.listener.IPlayerProgressListener;
+import com.jeffmony.videocache.utils.FileUtils;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
+import com.jeffmony.videocache.utils.TsFileValidator;
+import com.jeffmony.videocache.utils.VideoCacheUtils;
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.player.OnVideoStateListener;
 import com.yc.video.player.VideoPlayer;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import cn.mahua.av.SpeedInterface;
@@ -138,6 +144,20 @@ public class MainActivity extends AppCompatActivity {
         controller.addErrorViewItem("retry", new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //删除不合标准的ts文件后重播
+                long start=System.currentTimeMillis();
+                File cacheDirectory= VideoCacheUtils.getCacheFilePath(mUrl);
+                if(cacheDirectory.exists()){
+                    List<String>  list= TsFileFinderSmart.getTsFiles(cacheDirectory.getAbsolutePath());
+                    for(String path:list){
+                        File file=new File(path);
+                        if (!TsFileValidator.isValidTsFile(file)) {
+                            FileUtils.deleteFile(file);
+                        }
+                    }
+                    long end=System.currentTimeMillis()-start;
+                    Log.e("asdfg","ts 检验时间:"+end+" 文件长度:"+list.size());
+                }
                 videoView.replay(false);
             }
         });
@@ -267,6 +287,10 @@ public class MainActivity extends AppCompatActivity {
         videoView.setUrl(link, header);
         //开始播放
         videoView.start();
+
+
+
+
     }
 
 

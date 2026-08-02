@@ -42,7 +42,9 @@ public class FileUtils {
             }
 
         }else {
-//            Log.e(TAG,"rename suc");
+            if (!old.delete()) {
+                Log.e(TAG, "删除临时文件失败: " + old.getAbsolutePath());
+            }
         }
     }
 
@@ -53,13 +55,29 @@ public class FileUtils {
      * @param file 最终文件
      */
     public static void handleRename(File tmpFile, File file) {
-        //
-        if (file.exists() && VideoCacheUtils.sizeSimilar(file.length(),tmpFile.length())) {
+        if (file.exists() && VideoCacheUtils.sizeSimilar(file.length(), tmpFile.length())) {
             deleteFile(tmpFile);
-            Log.e(TAG,"文件已存在，删除临时文件:"+tmpFile.getName());
+            Log.e(TAG, "文件已存在，删除临时文件:" + tmpFile.getName());
             return;
         }
-        FileUtils.rename(tmpFile, file);
+
+        try {
+            // ✅ 直接使用 Files.move，更可靠
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Files.move(tmpFile.toPath(), file.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } else {
+                // API < 26 降级方案
+                if (!tmpFile.renameTo(file)) {
+                    Log.e(TAG, "文件重命名失败 " );
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "文件移动失败: " + e.getMessage());
+            // ✅ 确保删除临时文件
+            deleteFile(tmpFile);
+        }
     }
 
 

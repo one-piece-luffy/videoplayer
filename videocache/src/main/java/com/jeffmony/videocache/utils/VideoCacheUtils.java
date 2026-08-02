@@ -1,20 +1,30 @@
 package com.jeffmony.videocache.utils;
 
 
+import android.os.Build;
 import android.text.TextUtils;
 
 import com.jeffmony.videocache.model.VideoCacheInfo;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class VideoCacheUtils {
 
@@ -256,4 +266,12 @@ public class VideoCacheUtils {
             return false;
         }
     }
+
+    public static File getCacheFilePath(String url){
+        String md5 = ProxyCacheUtils.computeMD5(url);
+        File saveDir = new File(ProxyCacheUtils.getConfig().getFilePath(), md5);
+        return saveDir;
+    }
+
+
 }
