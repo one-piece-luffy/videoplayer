@@ -419,6 +419,9 @@ public class VideoPlayer<P extends AbstractVideoPlayer> extends FrameLayout
      * 开始准备播放（直接播放）
      */
     protected void startPrepare(boolean reset) {
+        if(mMediaPlayer==null){
+            initPlayer();
+        }
         if (reset) {
             mMediaPlayer.reset();
             //重新设置option，media player reset之后，option会失效

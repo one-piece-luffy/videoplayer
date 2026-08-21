@@ -17,6 +17,7 @@ import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.utils.Appconstants;
+import com.baofu.videoplayer.utils.DefaultExecutor;
 import com.baofu.videoplayer.utils.TsFileFinderSmart;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
@@ -144,21 +145,33 @@ public class MainActivity extends AppCompatActivity {
         controller.addErrorViewItem("retry", new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //删除不合标准的ts文件后重播
-                long start=System.currentTimeMillis();
-                File cacheDirectory= VideoCacheUtils.getCacheFilePath(mUrl);
-                if(cacheDirectory.exists()){
-                    List<String>  list= TsFileFinderSmart.getTsFiles(cacheDirectory.getAbsolutePath());
-                    for(String path:list){
-                        File file=new File(path);
-                        if (!TsFileValidator.isValidTsFile(file)) {
-                            FileUtils.deleteFile(file);
+                DefaultExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        //删除不合标准的ts文件后重播
+                        long start=System.currentTimeMillis();
+                        File cacheDirectory= VideoCacheUtils.getCacheFilePath(mUrl);
+                        if(cacheDirectory.exists()){
+                            List<String>  list= TsFileFinderSmart.getTsFiles(cacheDirectory.getAbsolutePath());
+                            for(String path:list){
+                                File file=new File(cacheDirectory+File.separator+path);
+                                if (!TsFileValidator.isValidTsFile(file)) {
+                                    FileUtils.deleteFile(file);
+                                }
+                            }
+                            long end=System.currentTimeMillis()-start;
+                            Log.e("asdfg","ts 检验时间:"+end+" 文件长度:"+list.size());
                         }
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                videoView.replay(false);
+                            }
+                        });
                     }
-                    long end=System.currentTimeMillis()-start;
-                    Log.e("asdfg","ts 检验时间:"+end+" 文件长度:"+list.size());
-                }
-                videoView.replay(false);
+                });
+
+
             }
         });
         controller.addErrorViewItem("fix", new View.OnClickListener() {

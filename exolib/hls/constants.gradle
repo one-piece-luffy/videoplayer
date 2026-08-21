@@ -27,7 +27,7 @@ project.ext {
     checkerframeworkVersion = '3.3.0'
     checkerframeworkCompatVersion = '2.5.0'
     jsr305Version = '3.0.2'
-    kotlinAnnotationsVersion = '1.8.0'
+    kotlinAnnotationsVersion = '2.2.10'
     androidxAnnotationVersion = '1.1.0'
     androidxAppCompatVersion = '1.1.0'
     androidxCollectionVersion = '1.1.0'
