@@ -153,7 +153,7 @@ public class VideoInfoParseManager {
             Log.e(TAG,"解析m3u8出错：",e);
 
 
-            videoRequest.getVideoInfoParsedListener().onM3U8ParsedFailed(new VideoCacheException("parseM3U8Info failed, " + e), cacheInfo);
+            videoRequest.getVideoInfoParsedListener().onM3U8ParsedFailed(new VideoCacheException("parseM3U8Info failed, " + e.getMessage()), cacheInfo);
         }
     }
 
@@ -172,7 +172,7 @@ public class VideoInfoParseManager {
 
             parseNetworkM3U8Info(videoRequest, cacheInfo);
         } else {
-            PlayerProgressListenerManager.getInstance().log("开始解析代理文件" );
+            PlayerProgressListenerManager.getInstance().log("开始解析本地代理文件" );
 
             File localM3U8File = new File(cacheInfo.getSavePath(), cacheInfo.getMd5() + StorageUtils.LOCAL_M3U8_SUFFIX);
             try {

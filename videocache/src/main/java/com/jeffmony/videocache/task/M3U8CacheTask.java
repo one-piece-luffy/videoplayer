@@ -203,12 +203,13 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startRequestVideoRange(int curTs) {
+        PlayerProgressListenerManager.getInstance().log("startRequestVideoRange");
         isRunning.set(true);
         DefaultExecutor.execute(() -> {
             saveVideoInfo();
-            PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
             if (mCacheInfo.isCompleted()) {
                 notifyOnTaskCompleted();
+                PlayerProgressListenerManager.getInstance().log("mCacheInfo isCompleted");
                 return;
             }
             try {
@@ -333,6 +334,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                     FileUtils.deleteFile(tmpFile);
                     // ✅ 触发外部重试
                     onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception(error));
+                    PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+error);
                     return;
                 }
 
@@ -352,12 +354,14 @@ public class M3U8CacheTask extends VideoCacheTask {
                             FileUtils.deleteFile(tmpFile);
                             FileUtils.deleteFile(tempDecryptedFile);
                             onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("Decrypted file is empty"));
+                            PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"Decrypted file is empty");
                             return;
                         }
                     } else {
                         PlayerProgressListenerManager.getInstance().log("task aes decrypt fail:" + ts.getSegName());
                         FileUtils.deleteFile(tmpFile);
                         onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("AES decrypt failed"));
+                        PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"AES decrypt failed");
                         return;
                     }
                 } else {
@@ -394,6 +398,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                 PlayerProgressListenerManager.getInstance().log("=task " + fileName + " HTTP错误:" + responseCode);
                 // ✅ 触发外部重试
                 onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("HTTP " + responseCode));
+                PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"HTTP " + responseCode);
             }
         } catch (InterruptedIOException | ClosedByInterruptException e) {
             Log.i(TAG, "Download interrupted: " + fileName);

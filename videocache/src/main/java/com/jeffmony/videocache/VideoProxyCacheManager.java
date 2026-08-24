@@ -94,6 +94,7 @@ public class VideoProxyCacheManager {
         mListener = new IVideoInfoParsedListener() {
             @Override
             public void onM3U8ParsedFinished(VideoRequest videoRequest, M3U8 m3u8, VideoCacheInfo cacheInfo) {
+                PlayerProgressListenerManager.getInstance().log("m3u8解析完成");
                 try {
                     //                Log.e(TAG,"onM3U8ParsedFinished:开始下载");
                     //下载任务准备好才通知可以回复
@@ -112,7 +113,7 @@ public class VideoProxyCacheManager {
 
             @Override
             public void onM3U8ParsedFailed(VideoCacheException e, VideoCacheInfo cacheInfo) {
-                PlayerProgressListenerManager.getInstance().log(e.getMessage());
+                PlayerProgressListenerManager.getInstance().log("m3u8解析失败:"+e.getMessage());
                 notifyLocalProxyLock(VideoLockManager.getInstance().getLock(cacheInfo.getMd5()));
                 mMainHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_ERROR, new VideoResult(cacheInfo, e.getMessage())).sendToTarget();
             }
@@ -434,10 +435,12 @@ public class VideoProxyCacheManager {
                     videoCacheInfo = new VideoCacheInfo(videoUrl);
                     videoCacheInfo.setMd5(md5);
                     videoCacheInfo.setSavePath(saveDir.getAbsolutePath());
+                    PlayerProgressListenerManager.getInstance().log("缓存不存在开始解析网络m3u8 parseVideoInfoByOkHttp" );
                     VideoInfoParseManager.getInstance().parseVideoInfoByOkHttp(videoRequest, videoCacheInfo);
                 } else {
                     if (videoCacheInfo.getVideoType() == VideoType.M3U8_TYPE) {
                         //说明视频类型是M3U8类型
+                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析本地m3u8 parseProxyM3U8Info" );
                         VideoInfoParseManager.getInstance().parseProxyM3U8Info(videoRequest, videoCacheInfo);
                     } else if (videoCacheInfo.getVideoType() == VideoType.M3U8_LIVE_TYPE) {
                         //说明是直播
@@ -445,6 +448,7 @@ public class VideoProxyCacheManager {
                         mMainHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_FORBIDDEN, new VideoResult(videoCacheInfo)).sendToTarget();
                         PlayerProgressListenerManager.getInstance().log("这是直播类型");
                     } else {
+                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析 mp4" );
                         startNonM3U8Task(videoCacheInfo, headers);
                     }
                 }
@@ -464,13 +468,16 @@ public class VideoProxyCacheManager {
     private void startM3U8Task(M3U8 m3u8, VideoCacheInfo cacheInfo, Map<String, String> headers) {
         //todo 只保留一个请求
         if (!cacheInfo.getVideoUrl().equals(mCurl)) {
-            Log.i(TAG,"不是当前请求:"+ProxyCacheUtils.decodeUriWithBase64(headers.get(CacheConstants.HEADER_KEY_NAME))+" "+cacheInfo.getVideoUrl());
+            String message="不是当前请求:"+ProxyCacheUtils.decodeUriWithBase64(headers.get(CacheConstants.HEADER_KEY_NAME))+" "+cacheInfo.getVideoUrl();
+            Log.i(TAG,message);
+            PlayerProgressListenerManager.getInstance().log(message);
             return;
         }
         VideoCacheTask cacheTask = mCacheTaskMap.get(cacheInfo.getVideoUrl());
         if (cacheTask != null) {
             cacheTask.stopCacheTask();
         }
+        PlayerProgressListenerManager.getInstance().log("startM3U8Task");
         cacheTask = ProxyCacheUtils.getConfig().getSourceCreator().createM3U8CacheTask(cacheInfo, headers, m3u8, mthreadHandler);
         mCacheTaskMap.put(cacheInfo.getVideoUrl(), cacheTask);
         startVideoCacheTask(cacheTask, cacheInfo);

@@ -3,6 +3,7 @@ package com.jeffmony.videocache.m3u8;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.common.VideoCacheException;
 import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
@@ -205,12 +206,14 @@ public class M3U8Utils {
 //            m3u8.setIsLive(!hasEndList);
                 Log.e(TAG, "m3u8解析完毕:"+m3u8.getUrl());
             } else {
-                m3u8.exception = new Exception("parseNetworkM3U8Info fail code=" + responseCode);
+                String message="parseNetworkM3U8Info fail code=" + responseCode;
+                m3u8.exception = new Exception(message);
             }
 
             return m3u8;
         } catch (IOException e) {
             Log.e(TAG,"m3u8解析异常",e);
+            PlayerProgressListenerManager.getInstance().log("m3u8utils解析异常:"+e.getMessage());
             throw e;
         } finally {
             ProxyCacheUtils.close(response.body());

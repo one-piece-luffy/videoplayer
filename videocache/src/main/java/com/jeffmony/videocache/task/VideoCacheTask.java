@@ -3,6 +3,7 @@ package com.jeffmony.videocache.task;
 
 import androidx.annotation.NonNull;
 
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.StorageManager;
 import com.jeffmony.videocache.listener.IVideoCacheTaskListener;
 import com.jeffmony.videocache.model.VideoCacheInfo;
@@ -131,6 +132,7 @@ public abstract class VideoCacheTask {
     }
 
     protected void saveVideoInfo() {
+        PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
          StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir);
     }
 }
