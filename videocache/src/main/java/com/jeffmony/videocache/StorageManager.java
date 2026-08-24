@@ -15,7 +15,6 @@ import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.StorageUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -30,7 +29,6 @@ public class StorageManager {
 
     private static final int MSG_INIT_CACHE = 1;
     private static final int MSG_CHECK_CACHE = 2;
-    private static final int MSG_CLEAR_ALL_CACHE = 3;
 
     private static volatile StorageManager sInstance = null;
 
@@ -68,12 +66,6 @@ public class StorageManager {
                 case MSG_CHECK_CACHE:
                     String filePath = (String) msg.obj;
                     checkCacheInternal(filePath);
-                    trimCacheData();
-                    break;
-                case MSG_CLEAR_ALL_CACHE:
-                    String path = (String) msg.obj;
-                    checkCacheInternal(path);
-                    removeAllCacheData();
                     break;
                 default:
                     break;
@@ -211,57 +203,11 @@ public class StorageManager {
                         count++;
                         //不会存在多线程的操作情况
                         iterator.remove();
-                    } else {
-                        try {
-                            StorageUtils.delete(file);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
                     }
                 }
-                PlayerProgressListenerManager.getInstance().log("缓存超限清理:"+count);
+                PlayerProgressListenerManager.getInstance().log("存储超限清理:"+count);
                 if (!iterator.hasNext()) break;
             }
-        }
-    }
-
-    /**
-     * 清空所有缓存
-     */
-    public void removeAllCacheData() {
-        Log.i(TAG, "=========mCurrentSize:" + (mCurrentSize / 1024 / 1024) + "MB");
-            Iterator<Map.Entry<String, CacheFileInfo>> iterator = mLruCache.entrySet().iterator();
-            if (!iterator.hasNext()) return;
-
-            int count=0;
-            while (iterator.hasNext()) {
-                Map.Entry<String, CacheFileInfo> item = iterator.next();
-
-                //最多保留一个,不能删除正在播放的视频
-                String filePath = item.getKey();
-                if (!TextUtils.isEmpty(VideoProxyCacheManager.getInstance().getPlayingUrlMd5())
-                        && filePath.contains(VideoProxyCacheManager.getInstance().getPlayingUrlMd5())) {
-                    LogUtils.i(TAG, "trimCacheData ignore playing video");
-                    PlayerProgressListenerManager.getInstance().log("trimCacheData ignore playing video");
-                } else {
-                    CacheFileInfo cacheFileInfo = item.getValue();
-                    File file = new File(filePath);
-                    boolean deleted = StorageUtils.deleteFile(file);
-                    if (deleted) {
-                        mCurrentSize -= cacheFileInfo.mSize;
-                        count++;
-                        //不会存在多线程的操作情况
-                        iterator.remove();
-                    } else {
-                        try {
-                            StorageUtils.delete(file);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-                PlayerProgressListenerManager.getInstance().log("缓存清空:"+count);
-                if (!iterator.hasNext()) break;
         }
     }
 
@@ -291,5 +237,6 @@ public class StorageManager {
 
         CacheFileInfo cacheFileInfo = new CacheFileInfo(filePath, file.lastModified(), StorageUtils.getTotalSize(file));
         addCache(filePath, cacheFileInfo);
+        trimCacheData();
     }
 }
