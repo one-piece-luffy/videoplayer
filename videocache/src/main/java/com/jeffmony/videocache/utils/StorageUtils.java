@@ -123,7 +123,7 @@ public class StorageUtils {
         return false;
     }
 
-    private static void delete(File file) throws IOException {
+    public static void delete(File file) throws IOException {
         try {
             if (file.isFile() &&file.exists()) {
                 Path path = null;
