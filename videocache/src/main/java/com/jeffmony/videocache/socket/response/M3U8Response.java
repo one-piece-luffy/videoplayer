@@ -3,6 +3,7 @@ package com.jeffmony.videocache.socket.response;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoLockManager;
 import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.jeffmony.videocache.common.VideoCacheException;
@@ -42,6 +43,7 @@ public class M3U8Response extends BaseResponse {
     @Override
     public void sendBody(Socket socket, OutputStream outputStream, long pending) throws Exception {
         if (TextUtils.isEmpty(mMd5)) {
+            PlayerProgressListenerManager.getInstance().log("Get md5 failed");
             throw new VideoCacheException("Get md5 failed");
         }
         Object lock = VideoLockManager.getInstance().getLock(mMd5);
@@ -64,6 +66,7 @@ public class M3U8Response extends BaseResponse {
         }
         if (!mFile.exists() || !VideoProxyCacheManager.getInstance().isM3U8LocalProxyReady(mMd5)) {
             LogUtils.e(TAG, "m3u8 parse timeout");
+            PlayerProgressListenerManager.getInstance().log("M3U8Response m3u8 parse timeout");
             return;
         }
         RandomAccessFile randomAccessFile = null;

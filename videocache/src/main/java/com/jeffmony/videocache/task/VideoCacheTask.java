@@ -132,7 +132,6 @@ public abstract class VideoCacheTask {
     }
 
     protected void saveVideoInfo() {
-        PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
-         StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir);
+        StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir);
     }
 }

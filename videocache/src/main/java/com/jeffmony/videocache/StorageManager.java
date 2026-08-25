@@ -176,6 +176,16 @@ public class StorageManager {
     }
 
     /**
+     *
+     * @param filePath 缓存路径
+     * @return 缓存大小 单位：MB
+     */
+    public long getCacheSize(String filePath){
+        checkCacheInternal(filePath);
+        return mCurrentSize / 1024 / 1024;
+    }
+
+    /**
      * 清理存储超限的缓存
      */
     private void trimCacheData() {
