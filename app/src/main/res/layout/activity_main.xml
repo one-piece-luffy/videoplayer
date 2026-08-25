@@ -1,107 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".activity.MainActivity">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <com.yc.video.player.VideoPlayer
-        android:id="@+id/videoView"
+    <data>
+
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintDimensionRatio="16:9"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@+id/videoView">
+        android:layout_height="match_parent"
+        tools:context=".activity.MainActivity">
+
+        <com.yc.video.player.VideoPlayer
+            android:id="@+id/videoView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintDimensionRatio="16:9"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/selectNum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@+id/videoView">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/fr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="凡人"
+                    android:layout_marginStart="5dp" />
+
+                <Button
+                    android:id="@+id/hzw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="海贼王"
+                    android:layout_marginStart="5dp" />
+
+                <Button
+                    android:id="@+id/jsc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="镜双城"
+                    android:layout_marginStart="5dp" />
+
+                <Button
+                    android:id="@+id/hjh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="画江湖"
+                    android:layout_marginStart="5dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/shixiong"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="师兄啊师兄"
+                    android:layout_marginStart="5dp" />
+
+                <Button
+                    android:id="@+id/canghaizhuan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="藏海传-ts加密"
+                    android:layout_marginStart="5dp" />
+
+                <Button
+                    android:id="@+id/shaohua"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="兵自风中来"
+                    android:layout_marginStart="5dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/luohua"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="落花时节又逢君"
+                    android:layout_marginStart="5dp" />
+
+                <Button
+                    android:id="@+id/langKeXing"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="浪客行"
+                    android:layout_marginStart="5dp" />
+            </LinearLayout>
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            >
-            <Button
-                android:id="@+id/fr"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="凡人"
-                android:layout_marginStart="5dp"
-                />
-            <Button
-                android:id="@+id/hzw"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="海贼王"
-                android:layout_marginStart="5dp"
-                />
-            <Button
-                android:id="@+id/jsc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="镜双城"
-                android:layout_marginStart="5dp"
-                />
-            <Button
-                android:id="@+id/hjh"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="画江湖"
-                android:layout_marginStart="5dp"
-                />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            >
-            <Button
-                android:id="@+id/shixiong"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="师兄啊师兄"
-                android:layout_marginStart="5dp"
-                />
-            <Button
-                android:id="@+id/canghaizhuan"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="藏海传-ts加密"
-                android:layout_marginStart="5dp"
-                />
-            <Button
-                android:id="@+id/shaohua"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="兵自风中来"
-                android:layout_marginStart="5dp"
-                />
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            >
-            <Button
-                android:id="@+id/luohua"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="落花时节又逢君"
-                android:layout_marginStart="5dp"
-                />
-            <Button
-                android:id="@+id/langKeXing"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="浪客行"
-                android:layout_marginStart="5dp"
-                />
-        </LinearLayout>
-    </LinearLayout>
+            android:layout_marginTop="20dp"
 
+            app:layout_constraintTop_toBottomOf="@+id/selectNum">
+            <Button
+                android:id="@+id/shut"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="关闭代理服务"
+                android:layout_marginStart="5dp" />
 
+            <Button
+                android:id="@+id/create"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="重建服务"
+                android:layout_marginStart="5dp" />
+        </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

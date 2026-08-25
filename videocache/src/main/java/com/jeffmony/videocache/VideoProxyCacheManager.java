@@ -70,7 +70,8 @@ public class VideoProxyCacheManager {
     private String mPlayingUrlMd5;   //设置当前正在播放的视频url的MD5值
 
     private final IVideoInfoParsedListener mListener;
-
+    //新增成员变量保存代理实例
+    public LocalProxyVideoServer mLocalProxyServer;
 
     private String mCurl;
 
@@ -346,8 +347,11 @@ public class VideoProxyCacheManager {
 
     public void initProxyConfig(@NonNull VideoCacheConfig config) {
         ProxyCacheUtils.setVideoCacheConfig(config);
-        new LocalProxyVideoServer();  //初始化本地代理服务
-
+//        new LocalProxyVideoServer();  //初始化本地代理服务
+        //避免重复创建代理服务
+        if(mLocalProxyServer == null) {
+            mLocalProxyServer = new LocalProxyVideoServer();
+        }
         NetworkConfig networkConfig = new NetworkConfig(config.getReadTimeOut(), config.getConnTimeOut(), config.ignoreCert());
         OkHttpManager.getInstance().initConfig(networkConfig, mHttpPipelineListener);
 
@@ -418,9 +422,9 @@ public class VideoProxyCacheManager {
                 headers(headers).
                 extraParams(extraParams).
                 videoInfoParsedListener(mListener).build();
-        try {
-            DefaultExecutor.execute(() -> {
 
+        DefaultExecutor.execute(() -> {
+            try {
                 StorageManager.getInstance().initCacheInfo();
                 String md5 = ProxyCacheUtils.computeMD5(videoRequest.getVideoUrl());
                 File saveDir = new File(ProxyCacheUtils.getConfig().getFilePath(), md5);
@@ -435,12 +439,12 @@ public class VideoProxyCacheManager {
                     videoCacheInfo = new VideoCacheInfo(videoUrl);
                     videoCacheInfo.setMd5(md5);
                     videoCacheInfo.setSavePath(saveDir.getAbsolutePath());
-                    PlayerProgressListenerManager.getInstance().log("缓存不存在开始解析网络m3u8 parseVideoInfoByOkHttp" );
+                    PlayerProgressListenerManager.getInstance().log("缓存不存在开始解析网络m3u8 parseVideoInfoByOkHttp");
                     VideoInfoParseManager.getInstance().parseVideoInfoByOkHttp(videoRequest, videoCacheInfo);
                 } else {
                     if (videoCacheInfo.getVideoType() == VideoType.M3U8_TYPE) {
                         //说明视频类型是M3U8类型
-                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析本地m3u8 parseProxyM3U8Info" );
+                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析本地m3u8 parseProxyM3U8Info");
                         VideoInfoParseManager.getInstance().parseProxyM3U8Info(videoRequest, videoCacheInfo);
                     } else if (videoCacheInfo.getVideoType() == VideoType.M3U8_LIVE_TYPE) {
                         //说明是直播
@@ -448,14 +452,16 @@ public class VideoProxyCacheManager {
                         mMainHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_FORBIDDEN, new VideoResult(videoCacheInfo)).sendToTarget();
                         PlayerProgressListenerManager.getInstance().log("这是直播类型");
                     } else {
-                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析 mp4" );
+                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析 mp4");
                         startNonM3U8Task(videoCacheInfo, headers);
                     }
                 }
-            });
-        }catch (Exception e){
-            Log.e("asdf","异常",e);
-        }
+            } catch (Exception e) {
+                Log.e("asdf", "异常", e);
+                PlayerProgressListenerManager.getInstance().log("startRequestVideoInfo异常"+ e);
+            }
+        });
+
 
     }
 
@@ -866,5 +872,12 @@ public class VideoProxyCacheManager {
             this.videoCacheInfo = videoCacheInfo;
             this.msg = msg;
         }
+    }
+
+    public void shutdown(){
+        if(mLocalProxyServer!=null){
+            mLocalProxyServer.shutdown();
+        }
+        mLocalProxyServer=null;
     }
 }

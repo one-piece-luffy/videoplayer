@@ -1,5 +1,7 @@
 package com.baofu.videoplayer.activity;
 
+import static com.jeffmony.videocache.utils.ProxyCacheUtils.VIDEO_PROXY_SPLIT_STR;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,15 +14,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 
 import com.allfootball.news.imageloader.ImageLoader;
 import com.baofu.base.utils.CommonUtils;
 import com.baofu.videoplayer.R;
+import com.baofu.videoplayer.databinding.ActivityMainBinding;
 import com.baofu.videoplayer.utils.Appconstants;
 import com.baofu.videoplayer.utils.DefaultExecutor;
 import com.baofu.videoplayer.utils.TsFileFinderSmart;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
+import com.jeffmony.videocache.StorageManager;
+import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.jeffmony.videocache.control.LocalProxyVideoControl;
 import com.jeffmony.videocache.listener.IPlayerProgressListener;
 import com.jeffmony.videocache.utils.FileUtils;
@@ -54,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     int  mGeneratedId;
     boolean toolShow=true;
     Handler handler =new Handler(Looper.getMainLooper());
+    ActivityMainBinding binding;
     IPlayerProgressListener iPlayerProgressListener=new IPlayerProgressListener() {
         @Override
         public void onTaskFirstTsDownload(String filename) {
@@ -99,8 +106,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         initPlayer();
         init();
     }
@@ -269,15 +275,18 @@ public class MainActivity extends AppCompatActivity {
 
             //开启视频缓存
             link = ProxyCacheUtils.getProxyUrl(Uri.parse(mUrl).toString(), header, null);
-            new Thread() {
-                @Override
-                public void run() {
-                    super.run();
-                    //开始缓存
-                    mLocalProxyVideoControl = new LocalProxyVideoControl();
-                    mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name,header, null);
-                }
-            }.start();
+            if (link.startsWith(ProxyCacheUtils.LOCAL_PROXY_URL)) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        super.run();
+                        //开始缓存
+                        mLocalProxyVideoControl = new LocalProxyVideoControl();
+                        mLocalProxyVideoControl.startRequestVideoInfo(mUrl, name, header, null);
+                    }
+                }.start();
+            }
+
 //            VideoProxyCacheManager.getInstance().addSocketListener(mUrl, new ISocketListener() {
 //                @Override
 //                public void timeout() {
@@ -435,6 +444,18 @@ public class MainActivity extends AppCompatActivity {
             name="浪客行";
             play(name);
         });
+        binding.shut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                VideoProxyCacheManager.getInstance().shutdown();
+            }
+        });
+        binding.create.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                VideoProxyCacheManager.getInstance().initProxyConfig(ProxyCacheUtils.getConfig());
+            }
+        });
     }
 
     public String encodeUrl(String url) throws URISyntaxException {
@@ -460,6 +481,14 @@ public class MainActivity extends AppCompatActivity {
             videoView.resume();
 
         }
+        if(VideoProxyCacheManager.getInstance().mLocalProxyServer!=null){
+            Log.e("asdf","thread oom:"+VideoProxyCacheManager.getInstance().mLocalProxyServer.isThreadOOM());
+            Log.e("asdf","isServerObjAlive:"+VideoProxyCacheManager.getInstance().mLocalProxyServer.isServerObjAlive());
+            Log.e("asdf","ping:"+VideoProxyCacheManager.getInstance().mLocalProxyServer.pingProxyHealth());
+            Log.e("asdf","ping:"+ProxyCacheUtils.isServerAlive());
+//        VideoProxyCacheManager.getInstance().mLocalProxyServer.shutdown();
+        }
+        Log.e("asdf","ping:"+ StorageManager.getInstance().getCacheSize(getExternalCacheDir().getAbsolutePath()));
     }
 
     @Override
