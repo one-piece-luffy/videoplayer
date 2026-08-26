@@ -392,22 +392,9 @@ public class VideoProxyCacheManager {
         mVideoSeekMd5PositionMap.clear();
     }
 
-    /**
-     *
-     * @param videoUrl  视频url
-     */
-    public void startRequestVideoInfo(String videoUrl) {
-        startRequestVideoInfo(videoUrl, new HashMap<>());
-    }
 
-    /**
-     *
-     * @param videoUrl 视频url
-     * @param headers  请求的头部信息
-     */
-    public void startRequestVideoInfo(String videoUrl, Map<String, String> headers) {
-        startRequestVideoInfo(videoUrl, headers, new HashMap<>());
-    }
+
+
 
     /**
      *
@@ -417,12 +404,13 @@ public class VideoProxyCacheManager {
      *                    详情见VideoParams
      */
     public void startRequestVideoInfo(final String videoUrl, Map<String, String> headers, Map<String, Object> extraParams) {
+        PlayerProgressListenerManager.getInstance().log(TAG+" startRequestVideoInfo  1");
         mCurl = videoUrl;
         VideoRequest videoRequest = new VideoRequest.Builder(videoUrl).
                 headers(headers).
                 extraParams(extraParams).
                 videoInfoParsedListener(mListener).build();
-
+        PlayerProgressListenerManager.getInstance().log(TAG+" startRequestVideoInfo  2");
         DefaultExecutor.execute(() -> {
             try {
                 StorageManager.getInstance().initCacheInfo();

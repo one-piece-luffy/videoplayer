@@ -2,6 +2,7 @@ package com.jeffmony.videocache.control;
 
 import android.util.Log;
 
+import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.VideoProxyCacheManager;
 import com.jeffmony.videocache.common.VideoParams;
 import com.jeffmony.videocache.listener.IVideoCacheListener;
@@ -53,12 +54,15 @@ public class LocalProxyVideoControl {
 
     public void startRequestVideoInfo(String videoUrl, String videoName,Map<String, String> headers, Map<String, Object> extraParams) {
         if(videoUrl==null){
+            PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo url null");
             return;
         }
         mVideoUrl = videoUrl;
+        PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo");
         VideoProxyCacheManager.getInstance().addCacheListener(videoUrl, mListener);
         VideoProxyCacheManager.getInstance().setPlayingUrlMd5(ProxyCacheUtils.computeMD5(videoUrl));
         VideoProxyCacheManager.getInstance().startRequestVideoInfo(videoUrl, headers, extraParams);
+        PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo2");
     }
 
     public void pauseLocalProxyTask() {

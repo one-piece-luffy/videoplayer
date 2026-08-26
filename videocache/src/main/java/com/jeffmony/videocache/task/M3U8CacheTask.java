@@ -1,5 +1,6 @@
 package com.jeffmony.videocache.task;
 
+import android.os.Looper;
 import android.util.Log;
 
 import com.jeffmony.videocache.CacheConstants;
@@ -128,7 +129,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     @Override
     public void pauseCacheTask() {
-        Log.e(TAG, "====pauseCacheTask");
+        Log.e(TAG, "====pauseCacheTask:"+isMainThread());
         isRunning.set(false);
         DefaultExecutor.execute(() -> {
             try {
@@ -142,10 +143,12 @@ public class M3U8CacheTask extends VideoCacheTask {
         });
 
     }
-
+    public  boolean isMainThread() {
+        return Looper.getMainLooper().getThread() == Thread.currentThread();
+    }
     @Override
     public void stopCacheTask() {
-        Log.e(TAG, "=====stopCacheTask");
+        Log.e(TAG, "=====stopCacheTask:"+isMainThread());
         isRunning.set(false);
         DefaultExecutor.execute(() -> {
             try {
@@ -178,6 +181,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     public void seekToCacheTaskFromClient(float percent) {
         int segIndex= (int) (mSegList.size()*percent);
         LogUtils.e(TAG, "====seekToCacheTaskFromClient=" + segIndex+" percent:"+percent);
+        PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromClient:"+segIndex);
         PlayerProgressListenerManager.getInstance().onSeek(segIndex);
         pauseCacheTask();
         startRequestVideoRange(segIndex);
@@ -192,6 +196,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     @Override
     public void seekToCacheTaskFromServerByM3u8(int segIndex) {
         LogUtils.e(TAG, "====seekToCacheTaskFromServerByM3u8 " + segIndex);
+        PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromServerByM3u8:"+segIndex);
         PlayerProgressListenerManager.getInstance().onSeek(segIndex);
         pauseCacheTask();
         startRequestVideoRange(segIndex);
@@ -203,7 +208,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     private void startRequestVideoRange(int curTs) {
-        PlayerProgressListenerManager.getInstance().log("startRequestVideoRange");
+        PlayerProgressListenerManager.getInstance().log("startRequestVideoRange:"+curTs);
         isRunning.set(true);
         DefaultExecutor.execute(() -> {
             saveVideoInfo();
