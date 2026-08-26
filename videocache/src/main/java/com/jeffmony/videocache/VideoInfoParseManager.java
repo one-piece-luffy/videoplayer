@@ -113,6 +113,7 @@ public class VideoInfoParseManager {
                 //说明M3U8是直播
                 videoRequest.getVideoInfoParsedListener().onM3U8LiveCallback(cacheInfo);
             } else if (m3u8.getSegList().isEmpty()) {
+                PlayerProgressListenerManager.getInstance().log("parseNetworkM3U8Info failed 1, " );
                 videoRequest.getVideoInfoParsedListener().onM3U8ParsedFailed(new VideoCacheException(m3u8.exception==null?"parseM3U8Info failed, zero ts":m3u8.exception.getMessage()), cacheInfo);
             } else {
                 cacheInfo.setVideoType(VideoType.M3U8_TYPE);
@@ -151,7 +152,7 @@ public class VideoInfoParseManager {
             }
         } catch (Exception e) {
             Log.e(TAG,"解析m3u8出错：",e);
-
+            PlayerProgressListenerManager.getInstance().log("parseNetworkM3U8Info failed 2, " + e.getMessage());
 
             videoRequest.getVideoInfoParsedListener().onM3U8ParsedFailed(new VideoCacheException("parseM3U8Info failed, " + e.getMessage()), cacheInfo);
         }

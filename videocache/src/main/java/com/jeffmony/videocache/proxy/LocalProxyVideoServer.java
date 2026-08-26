@@ -177,18 +177,22 @@ public class LocalProxyVideoServer {
         }
         return false;
     }
+    public String isThreadInfo(){
+        ThreadPoolExecutor pool = ((ThreadPoolExecutor)mSocketPool);
+        int active = pool.getActiveCount();       //正在干活的活跃线程
+        int queueSize = pool.getQueue().size();   //排队任务数
+        int max = pool.getMaximumPoolSize();
+
+//告警条件：活跃线程达到最大线程，同时队列持续增长 → 大概率线程卡死泄漏
+        return "活跃数:"+active+" 排队数:"+queueSize+" max:"+max;
+    }
     /**
      * 访问本地代理ping接口，真正验证代理服务完整可用
      * @return true 代理正常；false代理失效
      * 和ProxyCacheUtils.isServerAlive()一直，可以直接替代
      */
     public boolean pingProxyHealth() {
-        boolean alive = Pinger.ping(2,100);
-//        if(!alive) {
-//            // 代理已经故障，执行重建逻辑 releaseAll + initProxyConfig
-//            return true;
-//        }
-        return alive;
+        return Pinger.ping(2,100);
     }
 
 }
