@@ -22,6 +22,7 @@ import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.adapter.MyFragmentStateAdapter;
 import com.baofu.videoplayer.databinding.ActivityViewPagerBinding;
 import com.baofu.videoplayer.utils.Appconstants;
+import com.baofu.videoplayer.utils.LocalLink;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.listener.IPlayerProgressListener;
 
@@ -106,11 +107,10 @@ public class ViewPagerActivity extends AppCompatActivity {
 
         viewPager = findViewById(R.id.pager);
         List<MyModel> list = new ArrayList<>();
-        list.add(new MyModel("镜双城",Appconstants.jsc));
-        list.add(new MyModel("海贼王",Appconstants.hzw));
-        list.add(new MyModel("画江湖",Appconstants.huajianghu));
-        list.add(new MyModel("师兄啊师兄",Appconstants.shixiong));
-        list.add(new MyModel("凡人修仙",Appconstants.fanren));
+        list.add(new MyModel(LocalLink.link1.NAME,LocalLink.link1.LINK));
+        list.add(new MyModel(LocalLink.link2.NAME,LocalLink.link2.LINK));
+        list.add(new MyModel(LocalLink.link3.NAME,LocalLink.link3.LINK));
+        list.add(new MyModel(LocalLink.link4.NAME,LocalLink.link4.LINK));
         adapter = new MyFragmentStateAdapter(this);
         viewPager.setAdapter(adapter);
         adapter.setData(list);

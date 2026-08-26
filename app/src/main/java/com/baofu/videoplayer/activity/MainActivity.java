@@ -1,7 +1,5 @@
 package com.baofu.videoplayer.activity;
 
-import static com.jeffmony.videocache.utils.ProxyCacheUtils.VIDEO_PROXY_SPLIT_STR;
-
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +20,7 @@ import com.baofu.videoplayer.R;
 import com.baofu.videoplayer.databinding.ActivityMainBinding;
 import com.baofu.videoplayer.utils.Appconstants;
 import com.baofu.videoplayer.utils.DefaultExecutor;
+import com.baofu.videoplayer.utils.LocalLink;
 import com.baofu.videoplayer.utils.TsFileFinderSmart;
 import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
@@ -389,59 +388,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init(){
-
-        findViewById(R.id.fr).setOnClickListener(v -> {
-            Log.e("asdf","========凡人=========");
-            mUrl= Appconstants.fanren;
-            name="凡人";
+        binding.link1.setText(LocalLink.link1.NAME);
+        binding.link2.setText(LocalLink.link2.NAME);
+        binding.link3.setText(LocalLink.link3.NAME);
+        binding.link4.setText(LocalLink.link4.NAME);
+        binding.link1.setOnClickListener(v -> {
+            Log.e("asdf","========"+LocalLink.link1.NAME+"=========");
+            mUrl = LocalLink.link1.LINK;
+            name = LocalLink.link1.NAME;
             play(name);
         });
-        findViewById(R.id.jsc).setOnClickListener(v -> {
-            Log.e("asdf","========镜双城=========");
-            mUrl=Appconstants.jsc;
-            name="镜双城";
+        binding.link2.setOnClickListener(v -> {
+            Log.e("asdf","========"+LocalLink.link2.NAME+"=========");
+            mUrl = LocalLink.link2.LINK;
+            name = LocalLink.link2.NAME;
             play(name);
         });
-        findViewById(R.id.hzw).setOnClickListener(v -> {
-            Log.e("asdf","========海贼王=========");
-            mUrl=Appconstants.hzw;
-            name="海贼王";
+        binding.link3.setOnClickListener(v -> {
+            Log.e("asdf","========"+LocalLink.link3.NAME+"=========");
+            mUrl = LocalLink.link3.LINK;
+            name = LocalLink.link3.NAME;
             play(name);
         });
-        findViewById(R.id.hjh).setOnClickListener(v -> {
-            Log.e("asdf","========画江湖==========");
-            mUrl=Appconstants.huajianghu;
-            name="画江湖";
-            play(name);
-        });
-        findViewById(R.id.shixiong).setOnClickListener(v -> {
-            Log.e("asdf","========师兄啊师兄==========");
-            mUrl=Appconstants.shixiong;
-            name="师兄啊师兄";
-            play(name);
-        });
-        findViewById(R.id.canghaizhuan).setOnClickListener(v -> {
-            Log.e("asdf","========藏海传==========");
-            mUrl=Appconstants.canghaizhuan;
-            name="藏海传";
-            play(name);
-        });
-        findViewById(R.id.shaohua).setOnClickListener(v -> {
-            Log.e("asdf","========兵自风中来==========");
-            mUrl=Appconstants.BingZiFengZhongLai;
-            name="兵自风中来";
-            play(name);
-        });
-        findViewById(R.id.luohua).setOnClickListener(v -> {
-            Log.e("asdf","========落花时节又逢君==========");
-            mUrl=Appconstants.LuoHua;
-            name="落花时节又逢君";
-            play(name);
-        });
-        findViewById(R.id.langKeXing).setOnClickListener(v -> {
-            Log.e("asdf","========浪客行==========");
-            mUrl=Appconstants.LangKeXing;
-            name="浪客行";
+        binding.link4.setOnClickListener(v -> {
+            Log.e("asdf","========"+LocalLink.link4.NAME+"=========");
+            mUrl = LocalLink.link4.LINK;
+            name = LocalLink.link4.NAME;
             play(name);
         });
         binding.shut.setOnClickListener(new View.OnClickListener() {
