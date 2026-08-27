@@ -2,6 +2,7 @@ package com.jeffmony.videocache.proxy;
 
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.socket.SocketProcessTask;
+import com.jeffmony.videocache.utils.DefaultExecutor;
 import com.jeffmony.videocache.utils.LogUtils;
 import com.jeffmony.videocache.utils.Pinger;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
@@ -177,7 +178,7 @@ public class LocalProxyVideoServer {
         }
         return false;
     }
-    public String isThreadInfo(){
+    public String getServerThreadInfo(){
         ThreadPoolExecutor pool = ((ThreadPoolExecutor)mSocketPool);
         int active = pool.getActiveCount();       //正在干活的活跃线程
         int queueSize = pool.getQueue().size();   //排队任务数
@@ -185,6 +186,19 @@ public class LocalProxyVideoServer {
 
 //告警条件：活跃线程达到最大线程，同时队列持续增长 → 大概率线程卡死泄漏
         return "活跃数:"+active+" 排队数:"+queueSize+" max:"+max;
+    }
+    public String getDefaultThreadInfo(){
+        ExecutorService executor = DefaultExecutor.getExecutorService();
+        boolean shut=executor.isShutdown() || executor.isTerminated();
+
+        ThreadPoolExecutor pool = ((ThreadPoolExecutor)executor);
+        int active = pool.getActiveCount();       //正在干活的活跃线程
+        int queueSize = pool.getQueue().size();   //排队任务数
+        int max = pool.getMaximumPoolSize();
+        DefaultExecutor.startMonitorThread();
+
+//告警条件：活跃线程达到最大线程，同时队列持续增长 → 大概率线程卡死泄漏
+        return "ExecutorService isShutdown:"+shut+" 活跃数:"+active+" 排队数:"+queueSize+" 队列："+DefaultExecutor.sPoolWorkQueue.size()+" max:"+max;
     }
     /**
      * 访问本地代理ping接口，真正验证代理服务完整可用

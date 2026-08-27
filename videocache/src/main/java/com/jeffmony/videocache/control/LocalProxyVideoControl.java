@@ -58,11 +58,21 @@ public class LocalProxyVideoControl {
             return;
         }
         mVideoUrl = videoUrl;
-        PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo");
         VideoProxyCacheManager.getInstance().addCacheListener(videoUrl, mListener);
         VideoProxyCacheManager.getInstance().setPlayingUrlMd5(ProxyCacheUtils.computeMD5(videoUrl));
         VideoProxyCacheManager.getInstance().startRequestVideoInfo(videoUrl, headers, extraParams);
         PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo2");
+    }
+    public void startRequestVideoInfoByHandle(String videoUrl, String videoName,Map<String, String> headers, Map<String, Object> extraParams) {
+        if(videoUrl==null){
+            PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfoByHandle url null");
+            return;
+        }
+        mVideoUrl = videoUrl;
+        VideoProxyCacheManager.getInstance().addCacheListener(videoUrl, mListener);
+        VideoProxyCacheManager.getInstance().setPlayingUrlMd5(ProxyCacheUtils.computeMD5(videoUrl));
+        VideoProxyCacheManager.getInstance().startRequestVideoInfoByHandle(videoUrl, headers, extraParams);
+        PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfoByHandle2");
     }
 
     public void pauseLocalProxyTask() {
