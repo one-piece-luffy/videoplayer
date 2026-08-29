@@ -56,9 +56,9 @@ public class VideoProxyCacheManager {
     private static final String TAG = "VideoProxyCacheManager";
 
     private static volatile VideoProxyCacheManager sInstance = null;
-    private Handler mthreadHandler; //用于内部通信
+    private final Handler mthreadHandler; //用于内部通信
     private final Handler mMainHandler; //用于回调用户监听接口
-    private HandlerThread handlerThread;  // 保存引用
+
     private final Map<String, VideoCacheTask> mCacheTaskMap = new ConcurrentHashMap<>();
     private final Map<String, VideoCacheInfo> mCacheInfoMap = new ConcurrentHashMap<>();
     private final Map<String, IVideoCacheListener> mCacheListenerMap = new ConcurrentHashMap<>();
@@ -88,7 +88,7 @@ public class VideoProxyCacheManager {
     }
 
     private VideoProxyCacheManager() {
-        handlerThread = new HandlerThread("proxy_cache_thread");
+        HandlerThread handlerThread = new HandlerThread("proxy_cache_thread");
         handlerThread.start();
 
         mthreadHandler = new Handler(handlerThread.getLooper());
@@ -410,66 +410,7 @@ public class VideoProxyCacheManager {
                 headers(headers).
                 extraParams(extraParams).
                 videoInfoParsedListener(mListener).build();
-        PlayerProgressListenerManager.getInstance().log(TAG+" startRequestVideoInfo  2");
-        // 添加日志检查线程池状态
-        ExecutorService executor = DefaultExecutor.getExecutorService();
-        if (executor.isShutdown() || executor.isTerminated()) {
-            PlayerProgressListenerManager.getInstance().log("线程池已关闭或终止！");
-            // 重新创建线程池或使用其他方式执行
-        }
-        DefaultExecutor.execute(() -> {
-            try {
-                PlayerProgressListenerManager.getInstance().log(TAG+" startRequestVideoInfo  runnable start"); // 关键日志
-                StorageManager.getInstance().initCacheInfo();
-                String md5 = ProxyCacheUtils.computeMD5(videoRequest.getVideoUrl());
-                File saveDir = new File(ProxyCacheUtils.getConfig().getFilePath(), md5);
-                if (!saveDir.exists()) {
-                    saveDir.mkdirs();
-                }
-                VideoCacheInfo videoCacheInfo = StorageUtils.readVideoCacheInfo(saveDir);
-                PlayerProgressListenerManager.getInstance().log("startRequestVideoInfo: " + videoCacheInfo);
-                // 处理videoinfo 还是判断缓存文件存不存在
-                if (videoCacheInfo == null) {
-                    //之前没有缓存信息
-                    videoCacheInfo = new VideoCacheInfo(videoUrl);
-                    videoCacheInfo.setMd5(md5);
-                    videoCacheInfo.setSavePath(saveDir.getAbsolutePath());
-                    PlayerProgressListenerManager.getInstance().log("缓存不存在开始解析网络m3u8 parseVideoInfoByOkHttp");
-                    VideoInfoParseManager.getInstance().parseVideoInfoByOkHttp(videoRequest, videoCacheInfo);
-                } else {
-                    if (videoCacheInfo.getVideoType() == VideoType.M3U8_TYPE) {
-                        //说明视频类型是M3U8类型
-                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析本地m3u8 parseProxyM3U8Info");
-                        VideoInfoParseManager.getInstance().parseProxyM3U8Info(videoRequest, videoCacheInfo);
-                    } else if (videoCacheInfo.getVideoType() == VideoType.M3U8_LIVE_TYPE) {
-                        //说明是直播
-                        mM3U8LiveMd5Set.add(md5);
-                        mMainHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_FORBIDDEN, new VideoResult(videoCacheInfo)).sendToTarget();
-                        PlayerProgressListenerManager.getInstance().log("这是直播类型");
-                    } else {
-                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析 mp4");
-                        startNonM3U8Task(videoCacheInfo, headers);
-                    }
-                }
-            } catch (Exception e) {
-                Log.e("asdf", "异常", e);
-                PlayerProgressListenerManager.getInstance().log("startRequestVideoInfo异常"+ e.getMessage());
-            }
-        });
-        PlayerProgressListenerManager.getInstance().log(TAG+" startRequestVideoInfo  3");
-
-    }
-    public void startRequestVideoInfoByHandle(final String videoUrl, Map<String, String> headers, Map<String, Object> extraParams) {
-        mCurl = videoUrl;
-        VideoRequest videoRequest = new VideoRequest.Builder(videoUrl).
-                headers(headers).
-                extraParams(extraParams).
-                videoInfoParsedListener(mListener).build();
         PlayerProgressListenerManager.getInstance().log(TAG+" startRequestVideoInfoByHandle  2");
-        if (handlerThread == null || !handlerThread.isAlive()) {
-            // 重新初始化
-            recreateHandlerThread();
-        }
         mthreadHandler.post(() -> {
             try {
                 PlayerProgressListenerManager.getInstance().log(TAG+" startRequestVideoInfoByHandle  runnable start"); // 关键日志
@@ -509,17 +450,9 @@ public class VideoProxyCacheManager {
                 PlayerProgressListenerManager.getInstance().log("startRequestVideoInfoByHandle startRequestVideoInfo异常"+ e.getMessage());
             }
         });
-        PlayerProgressListenerManager.getInstance().log(TAG+"startRequestVideoInfoByHandle startRequestVideoInfo  3");
 
     }
-    private void recreateHandlerThread() {
-        PlayerProgressListenerManager.getInstance().log(TAG+" recreateHandlerThread");
-        HandlerThread newThread = new HandlerThread("proxy_cache_thread");
-        newThread.start();
-        mthreadHandler = new Handler(newThread.getLooper());
-        handlerThread = newThread;
 
-    }
     /**
      * 开始缓存M3U8任务
      * @param m3u8
@@ -934,13 +867,5 @@ public class VideoProxyCacheManager {
             mLocalProxyServer.shutdown();
         }
         mLocalProxyServer=null;
-
-        if (handlerThread != null) {
-            if (mthreadHandler != null) {
-                mthreadHandler.removeCallbacksAndMessages(null);
-            }
-            handlerThread.quitSafely();
-            handlerThread = null;
-        }
     }
 }

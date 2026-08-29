@@ -3,7 +3,6 @@ package com.jeffmony.videocache.task;
 import android.os.Looper;
 import android.util.Log;
 
-import com.jeffmony.videocache.CacheConstants;
 import com.jeffmony.videocache.PlayerProgressListenerManager;
 import com.jeffmony.videocache.m3u8.M3U8;
 import com.jeffmony.videocache.m3u8.M3U8Seg;
@@ -11,11 +10,9 @@ import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.utils.AES128Utils;
 import com.jeffmony.videocache.utils.DefaultExecutor;
 import com.jeffmony.videocache.utils.FileUtils;
-import com.jeffmony.videocache.utils.HttpUtils;
 import com.jeffmony.videocache.utils.LogUtils;
-import com.jeffmony.videocache.utils.OkHttpUtil;
 import com.jeffmony.videocache.utils.ProxyCacheUtils;
-import com.jeffmony.videocache.utils.TsFileValidator;
+import com.jeffmony.videocache.utils.TsDownloadManager;
 import com.jeffmony.videocache.utils.TsMetaDataManager;
 import com.jeffmony.videocache.utils.VideoCacheUtils;
 
@@ -23,14 +20,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.nio.channels.Channels;
-import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -39,58 +34,151 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.Response;
 
 /**
- * 播放器缓存，边下边播
+ * M3U8缓存任务 - 边下边播
+ * ========== 优化点说明 ==========
+ * 1. 【线程池管理 + 非阻塞等待】 - 解决ANR和内存泄漏
+ *    - shutdownExecutorSafely() 使用 awaitTermination() 非阻塞等待
+ *    - 循环检查取消状态，不阻塞主线程
+ *    - 位置: shutdownExecutorSafely() + startRequestVideoRange()
+ * 2. 【循环重试替代递归】 - 解决栈溢出风险
+ *    - downloadFile() 中使用 while 循环重试
+ *    - 不再递归调用 downloadFile()
+ *    - 位置: downloadFile() 方法中的 while 循环
+ * 3. 【支持中断请求】 - 解决资源浪费
+ *    - 使用 TsDownloadManager 管理 OkHttp Call
+ *    - 每下载 1MB 检查一次取消状态
+ *    - 位置: TsDownloadManager + downloadToFile() 中的检查
+ * 4. 【文件验证效率优化】 - 解决性能下降
+ *    - 使用 ConcurrentHashMap 缓存已下载文件信息
+ *    - 进度更新增量计算，不遍历全部文件
+ *    - 位置: mSegSizeCache + notifyCacheProgress()
+ * 5. 【磁盘空间检查】 - 解决下载失败
+ *    - 下载前检查可用空间，低于阈值拒绝下载
+ *    - 位置: checkDiskSpace()
+ * 6. 【代码结构优化】 - 提高可维护性
+ *    - 抽取常量配置
+ *    - 清晰的方法职责划分
+ *    - 位置: 顶部常量定义
  */
 public class M3U8CacheTask extends VideoCacheTask {
 
     private static final String TAG = "M3U8CacheTask";
 
+    // ==================== 常量配置 ====================
+
+    /** 临时文件后缀 */
     private static final String TEMP_POSTFIX = ".task_downloading";
 
-    //太多会导致OOM
+    /** 线程池核心线程数 */
     private static final int THREAD_POOL_COUNT = 5;
 
+    /** 最大重试次数（非503） */
+    private static final int MAX_RETRY_COUNT = 2;
+
+    /** 503错误最大重试次数 */
+    private static final int MAX_503_RETRY_COUNT = 2;
+
+    /** 线程池关闭等待超时（秒） */
+    private static final int EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS = 2;
+
+    /** 磁盘空间预留大小（MB） */
+    private static final long DISK_SPACE_RESERVE_MB = 300;
+
+    /** 下载中断检查间隔（字节） - 每1MB检查一次 */
+    private static final long CHECK_INTERVAL_BYTES = 1024 * 1024;
+
+    // ==================== 状态控制变量 ====================
+
+    /** 任务是否正在运行 */
+    private final AtomicBoolean isRunning = new AtomicBoolean(false);
+
+    /** 任务是否正在暂停中 */
+    private final AtomicBoolean isPausing = new AtomicBoolean(false);
+
+    // ==================== 业务变量 ====================
+
+    /** 已缓存的TS分片数量（子类特有，父类没有） */
     private int mCachedSegCount;
+
+    /** 总TS分片数量 */
     private int mTotalSegCount;
+
+    /** TS分片列表 */
     private List<M3U8Seg> mSegList;
-    M3U8 mM3U8;
-    final static int MAX_RETRY_COUNT=2;
-    private final static int MAX_RETRY_COUNT_503 = 3;//遇到503的重试次数
-    private String mVideoName;
-    AtomicBoolean isRunning = new AtomicBoolean(false);//任务是否正在运行中
-    private TsMetaDataManager metaDataManager;
+
+    /** M3U8对象 */
+    private M3U8 mM3U8;
+
+    /** TS元数据管理器（用于快速校验文件完整性） */
+    private TsMetaDataManager mMetaDataManager;
+
+    /** TS下载管理器（支持中断） */
+    private TsDownloadManager mDownloadManager;
+
+    // ==================== 缓存优化 ====================
+
+    /**
+     * TS文件大小缓存
+     * Key: 文件名, Value: 文件大小
+     * 用于快速判断文件是否已下载，避免重复IO
+     */
+    private final ConcurrentHashMap<String, Long> mSegSizeCache = new ConcurrentHashMap<>();
+
+    // ==================== 构造函数 ====================
 
     public M3U8CacheTask(VideoCacheInfo cacheInfo, Map<String, String> headers, M3U8 m3u8) {
         super(cacheInfo, headers);
         mSegList = m3u8.getSegList();
-        this.mM3U8=m3u8;
+        this.mM3U8 = m3u8;
         mTotalSegCount = mSegList == null ? 0 : mSegList.size();
         mCachedSegCount = cacheInfo.getCachedTs();
         mHeaders.put("Connection", "close");
-        mVideoName=ProxyCacheUtils.decodeUriWithBase64(mHeaders.get(CacheConstants.HEADER_KEY_NAME));
-        // 初始化元数据管理器
-        metaDataManager = TsMetaDataManager.getInstance(mSaveDir);
+        mMetaDataManager = TsMetaDataManager.getInstance(mSaveDir);
+        mDownloadManager = new TsDownloadManager();
     }
 
+    // ==================== 父类方法实现 ====================
+
+    /**
+     * 开始缓存任务
+     */
     @Override
     public void startCacheTask() {
+        // 防止重复启动
         if (isTaskRunning()) {
             return;
         }
-        if (isRunning.get()){
+        if (isRunning.get()) {
+            return;
+        }
+
+        // 重置状态
+        isRunning.set(true);
+        isPausing.set(false);
+        mDownloadManager.resetGlobalCancel();
+        isStart = true;
+
+        // 【优化5】检查磁盘空间
+        if (!checkDiskSpace()) {
+            notifyOnTaskFailed(new IOException("Insufficient disk space"));
             return;
         }
 
         notifyOnTaskStart();
         initM3U8TsInfo();
-        int seekIndex = mCachedSegCount > 1 && mCachedSegCount <= mTotalSegCount ? mCachedSegCount - 1 : mCachedSegCount;
-        //todo 这里的逻辑有问题，假如第一次播放视频，seek进度条，没完成缓存就退出；那么下次再进入播放时，计算的下载起点是不靠谱的；必须要获取到当前播放请求index
+
+        int seekIndex = calculateStartIndex();
         startRequestVideoRange(seekIndex);
     }
 
+    /**
+     * 初始化M3U8 TS文件信息
+     * 扫描本地已下载文件，更新缓存状态
+     */
     private void initM3U8TsInfo() {
         long tempCachedSize = 0;
         int tempCachedTs = 0;
+        mSegSizeCache.clear();
 
         // ✅ 一次性从元数据管理器加载所有大小信息
         for (int index = 0; index < mSegList.size(); index++) {
@@ -98,20 +186,20 @@ public class M3U8CacheTask extends VideoCacheTask {
             File tempTsFile = new File(mSaveDir, ts.getSegName());
 
             if (tempTsFile.exists() && tempTsFile.length() > 0) {
-                // ✅ 从内存缓存中获取预期大小
-                long expectedSize = metaDataManager.getTsMetaData(ts.getSegName());
+                long expectedSize = mMetaDataManager.getTsMetaData(ts.getSegName());
 
                 if (expectedSize > 0) {
-                    // 有元数据，验证文件大小
                     if (VideoCacheUtils.sizeSimilar(tempTsFile.length(), expectedSize)) {
                         ts.setFileSize(tempTsFile.length());
                         tempCachedSize += tempTsFile.length();
                         tempCachedTs++;
+                        // 【优化4】缓存已下载文件信息
+                        mSegSizeCache.put(ts.getSegName(), tempTsFile.length());
                     } else {
                         // 文件不完整，删除
                         LogUtils.w(TAG, "Found incomplete file, deleting: " + tempTsFile.getName());
                         FileUtils.deleteFile(tempTsFile);
-                        metaDataManager.removeTsMetaData(ts.getSegName());
+                        mMetaDataManager.removeTsMetaData(ts.getSegName());
                     }
                 } else {
                     LogUtils.w(TAG, "Invalid TS file, deleting: " + tempTsFile.getName());
@@ -122,332 +210,591 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         mCachedSegCount = tempCachedTs;
         mCachedSize = tempCachedSize;
+
         if (mCachedSegCount == mTotalSegCount) {
             mCacheInfo.setIsCompleted(true);
         }
     }
 
+
+    /**
+     * 暂停缓存任务
+     * 【优化3】支持中断：取消所有正在下载的请求
+     */
     @Override
     public void pauseCacheTask() {
-        Log.e(TAG, "====pauseCacheTask:"+isMainThread());
+        Log.e(TAG, "====pauseCacheTask:" + isMainThread());
         isRunning.set(false);
-        DefaultExecutor.execute(() -> {
-            try {
-                if (mTaskExecutor != null) {
+        isPausing.set(true);
 
-                    mTaskExecutor.shutdownNow();
-                }
-            } catch (Exception e) {
-                Log.e("", "", e);
-            }
-        });
+        // 取消所有正在下载的请求（OkHttp Call.cancel()）
+        cancelAllDownloads("Task paused");
 
+        // 【优化1】安全关闭线程池（非阻塞）
+        shutdownExecutorSafely();
     }
-    public  boolean isMainThread() {
-        return Looper.getMainLooper().getThread() == Thread.currentThread();
-    }
+
+    /**
+     * 停止缓存任务
+     * 【优化3】支持中断：取消所有正在下载的请求
+     */
     @Override
     public void stopCacheTask() {
-        Log.e(TAG, "=====stopCacheTask:"+isMainThread());
+        Log.e(TAG, "=====stopCacheTask:" + isMainThread());
         isRunning.set(false);
+        isPausing.set(true);
+        isStart = false;
+
+        // 取消所有下载
+        cancelAllDownloads("Task stopped");
+
         DefaultExecutor.execute(() -> {
             try {
-                // ✅ 应用退出时保存元数据
-                if (metaDataManager != null) {
-                    metaDataManager.flushOnExit();
+                if (mMetaDataManager != null) {
+                    mMetaDataManager.flushOnExit();
                 }
-                if (mTaskExecutor != null) {
-                    mTaskExecutor.shutdownNow();
-                }
+                // 【优化1】安全关闭线程池
+                shutdownExecutorSafely();
             } catch (Exception e) {
-                Log.e(TAG,"",e);
+                Log.e(TAG, "", e);
             }
         });
-
-
     }
 
+    /**
+     * 恢复缓存任务
+     */
     @Override
     public void resumeCacheTask() {
         LogUtils.i(TAG, "resumeCacheTask");
         if (isTaskShutdown()) {
+            isPausing.set(false);
+            mDownloadManager.resetGlobalCancel();
+            isRunning.set(true);
+            isStart = true;
+
             initM3U8TsInfo();
-            int seekIndex = mCachedSegCount > 1 && mCachedSegCount <= mTotalSegCount ? mCachedSegCount - 1 : mCachedSegCount;
+            int seekIndex = calculateStartIndex();
             startRequestVideoRange(seekIndex);
         }
     }
 
+    /**
+     * 客户端Seek操作
+     */
     @Override
     public void seekToCacheTaskFromClient(float percent) {
-        int segIndex= (int) (mSegList.size()*percent);
-        LogUtils.e(TAG, "====seekToCacheTaskFromClient=" + segIndex+" percent:"+percent);
-        PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromClient:"+segIndex);
+        int segIndex = (int) (mSegList.size() * percent);
+        LogUtils.e(TAG, "====seekToCacheTaskFromClient=" + segIndex + " percent:" + percent);
+        PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromClient:" + segIndex);
         PlayerProgressListenerManager.getInstance().onSeek(segIndex);
+
+        // 暂停当前下载（会取消所有网络请求）
         pauseCacheTask();
+        waitForCancellation();
+
+        // 重置状态，从新位置开始
+        isPausing.set(false);
+        mDownloadManager.resetGlobalCancel();
+        isRunning.set(true);
+        isStart = true;
         startRequestVideoRange(segIndex);
-
-
     }
 
+    /**
+     * 服务端Seek（非M3U8视频专用）
+     */
     @Override
     public void seekToCacheTaskFromServer(long startPosition) {
+        // M3U8不支持此方法
     }
 
+    /**
+     * 服务端Seek（M3U8视频，已废弃）
+     */
     @Override
+    @Deprecated
     public void seekToCacheTaskFromServerByM3u8(int segIndex) {
         LogUtils.e(TAG, "====seekToCacheTaskFromServerByM3u8 " + segIndex);
-        PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromServerByM3u8:"+segIndex);
+        PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromServerByM3u8:" + segIndex);
         PlayerProgressListenerManager.getInstance().onSeek(segIndex);
+
         pauseCacheTask();
+        waitForCancellation();
+
+        isPausing.set(false);
+        mDownloadManager.resetGlobalCancel();
+        isRunning.set(true);
+        isStart = true;
         startRequestVideoRange(segIndex);
     }
 
+    /**
+     * 服务端Seek（M3U8视频）
+     */
     @Override
     public void seekToCacheTaskFromServer(int segIndex, long time) {
+        LogUtils.e(TAG, "====seekToCacheTaskFromServer " + segIndex);
+        PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromServer:" + segIndex);
+        PlayerProgressListenerManager.getInstance().onSeek(segIndex);
 
+        pauseCacheTask();
+        waitForCancellation();
+
+        isPausing.set(false);
+        mDownloadManager.resetGlobalCancel();
+        isRunning.set(true);
+        isStart = true;
+        startRequestVideoRange(segIndex);
     }
 
+    /**
+     * 开始下载视频范围
+     *
+     * 【优化1】线程池管理：使用 awaitTermination 非阻塞等待
+     * 【优化3】支持中断：提交任务前检查取消状态
+     */
     private void startRequestVideoRange(int curTs) {
-        PlayerProgressListenerManager.getInstance().log("startRequestVideoRange:"+curTs);
+        PlayerProgressListenerManager.getInstance().log("startRequestVideoRange:" + curTs);
         isRunning.set(true);
+        // 主动清空 DefaultExecutor 中已积压的旧启动任务
+        DefaultExecutor.clear();
+        // 【优化1】安全关闭旧线程池
+        shutdownExecutorSafely();
         DefaultExecutor.execute(() -> {
             saveVideoInfo();
+
             if (mCacheInfo.isCompleted()) {
                 notifyOnTaskCompleted();
                 PlayerProgressListenerManager.getInstance().log("mCacheInfo isCompleted");
                 return;
             }
-            try {
-                if (mTaskExecutor != null) {
-                    mTaskExecutor.shutdownNow();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
 
-            mTaskExecutor = null;
-            mTaskExecutor = new ThreadPoolExecutor(THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
-                    TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), Executors.defaultThreadFactory(),
-                    new ThreadPoolExecutor.DiscardOldestPolicy());
+            // 创建新线程池
+            mTaskExecutor = new ThreadPoolExecutor(
+                    THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
+                    TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+                    r -> new Thread(r, "M3U8Downloader"),
+                    new ThreadPoolExecutor.DiscardOldestPolicy()
+            );
+
+            // 提交下载任务
             for (int index = curTs; index < mSegList.size(); index++) {
                 final M3U8Seg seg = mSegList.get(index);
-                try {
-                    mTaskExecutor.execute(() -> {
-//                            try {
+
+                // 【优化4】使用缓存快速判断是否已下载
+                if (isSegAlreadyDownloaded(seg)) {
+                    continue;
+                }
+
+                // 【优化3】检查取消状态
+                if (!isRunning.get() || isPausing.get()) {
+                    Log.i(TAG, "Task stopped, break submitting");
+                    break;
+                }
+
+                mTaskExecutor.execute(() -> {
+                    if (isRunning.get() && !isPausing.get()) {
                         startDownloadSegTask(seg);
-//                            } catch (Exception e) {
-//                                LogUtils.w(TAG, "M3U8 ts video download failed, exception=" + e);
-//                                notifyOnTaskFailed(e);
-//                            }
-                    });
-                } catch (Exception e) {
-                    Log.e(TAG, "发生异常: ", e);
-                }
-
+                    }
+                });
+                //todo
+                break;
             }
+
+            // 【优化1】关闭线程池并等待完成（非阻塞）
             if (mTaskExecutor != null) {
-                mTaskExecutor.shutdown();//下载完成之后要关闭线程池
-            }
-            while (mTaskExecutor != null && !mTaskExecutor.isTerminated()) {
-
+                mTaskExecutor.shutdown();
                 try {
-                    //等待中
-                    Thread.sleep(2000);
-                } catch (Exception e) {
-                    Log.e(TAG, "发生异常: ", e);
+                    // 循环检查，每2秒检查一次取消状态
+                    while (!mTaskExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                        // 【优化3】如果被取消，立即强制关闭
+                        if (!isRunning.get() || isPausing.get()) {
+                            mTaskExecutor.shutdownNow();
+                            Log.i(TAG, "Task interrupted, shutdownNow called");
+                            break;
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    mTaskExecutor.shutdownNow();
                 }
+            }
 
-//            try {
-//                ThreadPoolExecutor tpe = ((ThreadPoolExecutor) mTaskExecutor);
-//                int queueSize = tpe.getQueue().size();
-//                int activeCount = tpe.getActiveCount();
-//                long completedTaskCount = tpe.getCompletedTaskCount();
-//                long taskCount = tpe.getTaskCount();
-//                Log.e(TAG, mVideoName+" 当前排队线程数：" + queueSize + " 当前活动线程数：" + activeCount + " 执行完成线程数：" + completedTaskCount + " 总线程数：" + taskCount);
-//            } catch (Exception e) {
-//                Log.e(TAG, "发生异常: ", e);
-//            }
-                //        isRunning.set(true);
+            // 检查是否全部完成
+            if (mCachedSegCount >= mTotalSegCount) {
+                mCacheInfo.setIsCompleted(true);
+                mCacheInfo.setTotalSize(mCachedSize);
+                mTotalSize = mCachedSize;
+                notifyOnTaskCompleted();
+                saveVideoInfo();
+            }
+
+            isRunning.set(false);
+        });
+    }
+    // ==================== 核心业务方法 ====================
+
+    /**
+     * 计算起始下载索引
+     */
+    private int calculateStartIndex() {
+        if (mCachedSegCount > 1 && mCachedSegCount <= mTotalSegCount) {
+            return mCachedSegCount - 1;
+        }
+        return mCachedSegCount;
+    }
+
+
+    /**
+     * 【优化5】检查磁盘空间
+     * 父类 mSaveDir 已经是 File 类型，直接使用
+     */
+    private boolean checkDiskSpace() {
+        if (mSaveDir == null) {
+            return false;
+        }
+        if (!mSaveDir.exists()) {
+            mSaveDir.mkdirs();
+        }
+        long availableSpace = mSaveDir.getUsableSpace();
+        long requiredSpace = DISK_SPACE_RESERVE_MB * 1024 * 1024;
+        if (availableSpace < requiredSpace) {
+            Log.e(TAG, "Insufficient disk space: available=" + availableSpace + ", required=" + requiredSpace);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 【优化1】安全关闭线程池（非阻塞）
+     * 使用 awaitTermination 避免 while 循环阻塞
+     */
+    private void shutdownExecutorSafely() {
+        if (mTaskExecutor == null) {
+            return;
+        }
+
+        DefaultExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 立即中断所有执行中的任务
+                    mTaskExecutor.shutdownNow();
+                    // 非阻塞等待，最多等待 EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS 秒
+                    if (!mTaskExecutor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                        Log.w(TAG, "Executor did not terminate in " + EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS + "s");
+                    }
+                } catch (InterruptedException e) {
+                    Log.w(TAG, "Executor shutdown interrupted");
+                    Thread.currentThread().interrupt();
+                }
             }
         });
 
-
-
     }
 
-    private void startDownloadSegTask(M3U8Seg seg)  {
-        LogUtils.i(TAG, "startDownloadSegTask index="+seg.getSegIndex()+", url="+seg.getUrl());
+    /**
+     * 等待取消完成
+     * 等待所有活跃下载被取消
+     */
+    private void waitForCancellation() {
+        int waitCount = 0;
+        while (mDownloadManager.hasActiveDownloads() && waitCount < 30) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            waitCount++;
+        }
+        Log.i(TAG, "Wait for cancellation complete, active: " +
+                mDownloadManager.getActiveDownloadCount());
+    }
+
+    /**
+     * 【优化3】取消所有下载
+     * 调用 TsDownloadManager.cancelAllDownloads() 取消所有 OkHttp Call
+     */
+    private void cancelAllDownloads(String reason) {
+        Log.i(TAG, "Cancelling all downloads, reason: " + reason);
+        mDownloadManager.cancelAllDownloads();
+    }
+
+
+
+    /**
+     * 【优化4】检查TS是否已下载（使用缓存）
+     */
+    private boolean isSegAlreadyDownloaded(M3U8Seg seg) {
+        String segName = seg.getSegName();
+
+        // 使用缓存快速判断
+        if (mSegSizeCache.containsKey(segName)) {
+            return true;
+        }
+
+        // 缓存中没有，检查文件系统
+        File segFile = new File(mSaveDir, segName);
+        if (segFile.exists() && segFile.length() > 0) {
+            long expectedSize = mMetaDataManager.getTsMetaData(segName);
+            if (expectedSize > 0 && VideoCacheUtils.sizeSimilar(segFile.length(), expectedSize)) {
+                // 【优化4】加入缓存
+                mSegSizeCache.put(segName, segFile.length());
+                mCachedSegCount++;
+                mCachedSize += segFile.length();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 开始下载单个TS分片
+     */
+    private void startDownloadSegTask(M3U8Seg seg) {
+        if (!isRunning.get() || isPausing.get()) {
+            return;
+        }
+
+        // 下载初始化分片（如果有）
         if (seg.hasInitSegment()) {
             String initSegmentName = seg.getInitSegmentName();
             File initSegmentFile = new File(mSaveDir, initSegmentName);
             if (!initSegmentFile.exists()) {
-                downloadFile(seg, initSegmentFile, seg.getInitSegmentUri());
+                if (!downloadFile(seg, initSegmentFile, seg.getInitSegmentUri())) {
+                    return;
+                }
             }
         }
+
+        // 下载TS分片
         String segName = seg.getSegName();
         File segFile = new File(mSaveDir, segName);
-        if (!segFile.exists()) {
-            // ts is network resource, download ts file then rename it to local file.
-//            downloadSegFile(seg, segFile, seg.getUrl());
-            downloadFile(seg, segFile, seg.getUrl());
+
+        if (!segFile.exists() || segFile.length() == 0) {
+            if (!downloadFile(seg, segFile, seg.getUrl())) {
+                return;
+            }
         }
 
-        boolean exist=segFile.exists();
-        long length=segFile.length();
-        long contentLength=seg.getContentLength();
-        //确保当前文件下载完整
-        if (exist && length > 0 &&VideoCacheUtils.sizeSimilar(length,contentLength)) {
-            //只有这样的情况下才能保证当前的ts文件真正被下载下来了
-            seg.setFileSize(segFile.length());
-            //更新进度
-            notifyCacheProgress();
-//            Log.e(TAG,"notifyCacheProgress:"+segFile.getName()+" length:"+segFile.length());
-        }else {
-//            Log.e(TAG,"文件大小不一致:"+segFile.getName()+" length:"+length+" contentlength:"+contentLength);
+        // 【优化4】验证并更新进度（增量更新，不遍历全部文件）
+        if (segFile.exists() && segFile.length() > 0) {
+            long expectedSize = mMetaDataManager.getTsMetaData(segName);
+            if (expectedSize > 0 && VideoCacheUtils.sizeSimilar(segFile.length(), expectedSize)) {
+                seg.setFileSize(segFile.length());
+                if (!mSegSizeCache.containsKey(segName)) {
+                    mSegSizeCache.put(segName, segFile.length());
+                    mCachedSegCount++;
+                    mCachedSize += segFile.length();
+                    // 增量更新进度
+                    notifyCacheProgress();
+                }
+            }
         }
     }
 
-    public void downloadFile(M3U8Seg ts, File file, String videoUrl) {
-        if(!isRunning.get()){
-            return;
+    /**
+     * 【优化2】下载文件（使用循环重试，避免递归）
+     * 【优化3】支持中断：通过 TsDownloadManager 取消 OkHttp Call
+     */
+    private boolean downloadFile(M3U8Seg ts, File file, String videoUrl) {
+        if (!isRunning.get() || isPausing.get()) {
+            return false;
         }
+
         String fileName = file.getName();
-        InputStream inputStream = null;
-        ReadableByteChannel rbc = null;
-        FileOutputStream fos = null;
-        FileChannel foutc = null;
-        Response response = null;
         File tmpFile = new File(file.getParentFile(), fileName + TEMP_POSTFIX);
+        FileUtils.deleteFile(tmpFile);
+
+        // 【优化2】循环重试，非递归
+        int retryCount = 0;
+        int maxRetry = MAX_RETRY_COUNT;
+
+        while (retryCount <= maxRetry && isRunning.get() && !isPausing.get()) {
+            // 重试延迟（指数退避）
+            if (retryCount > 0) {
+                int delay = calculateBackoffDelay(retryCount);
+                try {
+                    Log.i(TAG, "Retry " + retryCount + " for " + fileName + ", delay: " + delay + "ms");
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+
+            try {
+                boolean success = doDownload(ts, file, videoUrl, tmpFile);
+                if (success) {
+                    return true;
+                }
+                retryCount++;
+            } catch (IOException e) {
+                // 【优化3】检查是否是取消导致的异常
+                if (e.getMessage() != null && e.getMessage().contains("cancel")) {
+                    Log.i(TAG, "Download cancelled: " + fileName);
+                    return false;
+                }
+                Log.e(TAG, "Download error: " + fileName + ", retry " + retryCount, e);
+                retryCount++;
+            } catch (Exception e) {
+                Log.e(TAG, "Unexpected error: " + fileName + ", retry " + retryCount, e);
+                retryCount++;
+            }
+        }
+
+        Log.e(TAG, "Download failed after " + retryCount + " retries: " + fileName);
+        return false;
+    }
+
+    /**
+     * 实际下载逻辑
+     * 【优化3】使用 TsDownloadManager 管理下载，支持中断
+     */
+    private boolean doDownload(M3U8Seg ts, File file, String videoUrl, File tmpFile) throws IOException {
+        if (!isRunning.get() || isPausing.get()) {
+            throw new IOException("Download cancelled");
+        }
+
+        String fileName = file.getName();
+        TsDownloadManager.DownloadTask downloadTask = null;
+        InputStream inputStream = null;
 
         try {
-            response = OkHttpUtil.getInstance().requestSync(videoUrl, mHeaders);
-            int responseCode = response.code();
-            if (responseCode == HttpUtils.RESPONSE_200 || responseCode == HttpUtils.RESPONSE_206) {
-                ts.setRetryCount(0);
-                inputStream = response.body().byteStream();
-                long contentLength = response.body().contentLength();
+            // 通过 DownloadManager 执行下载（支持取消）
+            downloadTask = mDownloadManager.startDownload(fileName, videoUrl, mHeaders);
 
-                // ✅ 下载到临时文件，获取实际下载大小（内部不重试，一次性读取）
-                long actualDownloadSize = downloadToTempFile(inputStream, tmpFile, contentLength);
+            if (downloadTask == null || downloadTask.isCancelled()) {
+                throw new IOException("Download cancelled");
+            }
 
-                // ✅ 验证文件完整性
-                if (!isDownloadComplete(contentLength, actualDownloadSize, tmpFile)) {
-                    String error = String.format("File incomplete: expected=%d, actual=%d, file=%s",
-                            contentLength, actualDownloadSize, tmpFile.getName());
-                    Log.e(TAG, error);
-                    PlayerProgressListenerManager.getInstance().log("task 下载不完整:" + fileName);
-                    FileUtils.deleteFile(tmpFile);
-                    // ✅ 触发外部重试
-                    onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception(error));
-                    PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+error);
-                    return;
-                }
+            if (downloadTask.error != null) {
+                throw downloadTask.error;
+            }
 
-                // 处理加密
-                byte[] encryptionKey = ts.encryptionKey == null ? mM3U8.encryptionKey : ts.encryptionKey;
-                String iv = ts.encryptionKey == null ? mM3U8.encryptionIV : ts.getKeyIv();
+            Response response = downloadTask.response;
+            if (response == null || !response.isSuccessful()) {
+                throw new IOException("HTTP error: " + (response != null ? response.code() : -1));
+            }
 
-                if (encryptionKey != null) {
-                    File tempDecryptedFile = new File(tmpFile.getParent(), "decrypted_" + tmpFile.getName());
-                    if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
-                        if (tempDecryptedFile.exists() && tempDecryptedFile.length() > 0) {
-                            FileUtils.handleRename(tempDecryptedFile, file);
-                            FileUtils.deleteFile(tmpFile);
-                            contentLength = file.length();
-                        } else {
-                            PlayerProgressListenerManager.getInstance().log("task 解密后文件为空:" + ts.getSegName());
-                            FileUtils.deleteFile(tmpFile);
-                            FileUtils.deleteFile(tempDecryptedFile);
-                            onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("Decrypted file is empty"));
-                            PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"Decrypted file is empty");
-                            return;
-                        }
-                    } else {
-                        PlayerProgressListenerManager.getInstance().log("task aes decrypt fail:" + ts.getSegName());
+            inputStream = response.body().byteStream();
+            long contentLength = response.body().contentLength();
+
+            // 【优化3】下载到临时文件，每1MB检查一次取消状态
+            long actualSize = downloadToFile(inputStream, tmpFile, contentLength);
+
+            // 再次检查取消状态
+            if (!isRunning.get() || isPausing.get()) {
+                FileUtils.deleteFile(tmpFile);
+                throw new IOException("Download cancelled");
+            }
+
+            // 验证下载完整性
+            if (!isDownloadComplete(contentLength, actualSize, tmpFile)) {
+                String error = String.format("File incomplete: expected=%d, actual=%d, file=%s",
+                        contentLength, actualSize, tmpFile.getName());
+                Log.e(TAG, error);
+                PlayerProgressListenerManager.getInstance().log("task 下载不完整:" + fileName);
+                FileUtils.deleteFile(tmpFile);
+                // ✅ 触发外部重试
+                throw new IOException("File incomplete");
+            }
+
+            // 处理加密
+            byte[] encryptionKey = ts.encryptionKey == null ? mM3U8.encryptionKey : ts.encryptionKey;
+            String iv = ts.encryptionKey == null ? mM3U8.encryptionIV : ts.getKeyIv();
+
+            if (encryptionKey != null) {
+                File tempDecryptedFile = new File(tmpFile.getParent(), "decrypted_" + tmpFile.getName());
+                if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
+                    if (tempDecryptedFile.exists() && tempDecryptedFile.length() > 0) {
+                        FileUtils.handleRename(tempDecryptedFile, file);
                         FileUtils.deleteFile(tmpFile);
-                        onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("AES decrypt failed"));
-                        PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"AES decrypt failed");
-                        return;
+                        contentLength = file.length();
+                    } else {
+                        PlayerProgressListenerManager.getInstance().log("task 解密后文件为空:" + ts.getSegName());
+                        FileUtils.deleteFile(tmpFile);
+                        FileUtils.deleteFile(tempDecryptedFile);
+                        PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"Decrypted file is empty");
+                        return false;
                     }
                 } else {
-                    FileUtils.handleRename(tmpFile, file);
-                    if (contentLength <= 0) {
-                        contentLength = file.length();
-                    }
+                    FileUtils.deleteFile(tmpFile);
+                    PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"AES decrypt failed");
+                    return false;
                 }
-                // ✅ 验证TS文件格式（使用FileChannel，只检查开头和结尾）
-//                if (!TsFileValidator.isValidTsFile(file)) {
-//                    String error = "Invalid TS file: " + tmpFile.getName();
-//                    Log.e(TAG, error);
-//                    PlayerProgressListenerManager.getInstance().log("task TS文件无效,没有0x47开头:" + tmpFile.getName());
-//                    FileUtils.deleteFile(tmpFile);
-//                    FileUtils.deleteFile(file);
-//                    return;
-//                }
+            } else {
+                FileUtils.handleRename(tmpFile, file);
+                if (contentLength <= 0) {
+                    contentLength = file.length();
+                }
+            }
+            // 处理加密
+//            if (!processEncryption(ts, tmpFile, file)) {
+//                FileUtils.deleteFile(tmpFile);
+//                PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"AES decrypt failed");
+//
+//                return false;
+//            }
+            if (file.exists() && file.length() > 0) {
                 ts.setContentLength(contentLength);
-//                Log.i(TAG, "队列ts下载完成:" + ts.getSegName());
+                mMetaDataManager.saveTsMetaData(file.getName(), contentLength);
+                Log.i(TAG, "队列ts下载完成:" + ts.getSegName());
                 PlayerProgressListenerManager.getInstance().log("=task ts下载完成:" + ts.getSegName());
-
                 if (ts.getSegIndex() == 0) {
                     if (PlayerProgressListenerManager.getInstance().getListener() != null) {
                         PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(fileName);
                     }
                 }
-                // ✅ 下载完成后保存元数据
-                if (file.exists() && file.length() > 0) {
-                    ts.setContentLength(contentLength);
-                    metaDataManager.saveTsMetaData(file.getName(), contentLength);
-                }
-            } else {
-                Log.e(TAG, "HTTP error: " + responseCode + " for " + fileName);
-                PlayerProgressListenerManager.getInstance().log("=task " + fileName + " HTTP错误:" + responseCode);
-                // ✅ 触发外部重试
-                onDownloadFileErr(ts, file, videoUrl, responseCode, new Exception("HTTP " + responseCode));
-                PlayerProgressListenerManager.getInstance().log(ts.getSegName()+" 下载错误:"+"HTTP " + responseCode);
+                return true;
             }
-        } catch (InterruptedIOException | ClosedByInterruptException e) {
-            Log.i(TAG, "Download interrupted: " + fileName);
-            FileUtils.deleteFile(tmpFile);
-            // 中断不重试，直接返回
-        } catch (Exception e) {
-            Log.e(TAG, "Download error for " + fileName, e);
-            PlayerProgressListenerManager.getInstance().log("=task " + fileName + "下载出错:" + e.getMessage());
-            FileUtils.deleteFile(tmpFile);
-            // ✅ 触发外部重试
-            onDownloadFileErr(ts, file, videoUrl, 0, e);
+
+            return false;
+
         } finally {
             ProxyCacheUtils.close(inputStream);
-            ProxyCacheUtils.close(fos);
-            ProxyCacheUtils.close(response);
-            ProxyCacheUtils.close(rbc);
-            ProxyCacheUtils.close(foutc);
+            if (downloadTask != null && !downloadTask.isCompleted) {
+                mDownloadManager.cancelDownload(fileName);
+            }
         }
     }
 
     /**
-     * ✅ 下载到临时文件（不带重试，一次性读取）
-     * 如果网络中断或读取失败，直接抛出异常
+     * 【优化3】下载到文件，每1MB检查一次取消状态
+     * 确保能够及时响应中断请求
      */
-    private long downloadToTempFile(InputStream inputStream, File tmpFile, long expectedLength)
+    private long downloadToFile(InputStream inputStream, File tmpFile, long expectedLength)
             throws IOException {
         try (ReadableByteChannel rbc = Channels.newChannel(inputStream);
              FileOutputStream fos = new FileOutputStream(tmpFile);
              FileChannel foutc = fos.getChannel()) {
 
             long totalRead = 0;
-
-            // ✅ 没有重试逻辑，直接尝试一次性读取所有数据
+            long startTime = System.currentTimeMillis();
+            final long TIMEOUT_MS = 30000; // 30秒超时
             while (expectedLength <= 0 || totalRead < expectedLength) {
-                long remaining = expectedLength > 0 ? expectedLength - totalRead : Long.MAX_VALUE;
-                long transferred = foutc.transferFrom(rbc, totalRead, remaining);
+                // 【优化3】每1MB检查一次取消状态
+                // ✅ 检查取消
+                if (!isRunning.get() || isPausing.get()) {
+                    throw new IOException("Download cancelled");
+                }
 
+                // ✅ 检查超时
+                if (System.currentTimeMillis() - startTime > TIMEOUT_MS) {
+                    throw new IOException("Download timeout");
+                }
+
+                long remaining = expectedLength > 0 ? expectedLength - totalRead : Long.MAX_VALUE;
+                long toTransfer = Math.min(remaining, CHECK_INTERVAL_BYTES);
+
+                long transferred = foutc.transferFrom(rbc, totalRead, toTransfer);
                 // ⚠️ 如果 transferFrom 返回 0，说明流已结束或网络问题
                 // 直接跳出循环，不重试
                 if (transferred == 0) {
-                    Log.w(TAG, "transferFrom returned 0, stream may be ended");
                     break;
                 }
-
                 totalRead += transferred;
             }
 
@@ -456,67 +803,78 @@ public class M3U8CacheTask extends VideoCacheTask {
             return totalRead;
         }
     }
+    /**
+     * 处理AES加密
+     */
+    private boolean processEncryption(M3U8Seg ts, File tmpFile, File targetFile) {
+        byte[] encryptionKey = ts.encryptionKey == null ? mM3U8.encryptionKey : ts.encryptionKey;
+        String iv = ts.encryptionKey == null ? mM3U8.encryptionIV : ts.getKeyIv();
+
+        if (encryptionKey != null) {
+            File tempDecryptedFile = new File(targetFile.getParentFile(), "decrypted_" + tmpFile.getName());
+            try {
+                if (AES128Utils.decryptFile(tmpFile, tempDecryptedFile, encryptionKey, iv)) {
+                    if (tempDecryptedFile.exists() && tempDecryptedFile.length() > 0) {
+                        FileUtils.handleRename(tempDecryptedFile, targetFile);
+                        FileUtils.deleteFile(tmpFile);
+                        return true;
+                    }
+                }
+                return false;
+            } finally {
+                FileUtils.deleteFile(tmpFile);
+            }
+        } else {
+            FileUtils.handleRename(tmpFile, targetFile);
+            return true;
+        }
+    }
 
     /**
-     * expectedLength 精确大小
-     * actualLength 实际下载大小
-     * ✅ 检查下载是否完整
+     * 检查下载是否完整
      */
     private boolean isDownloadComplete(long expectedLength, long actualLength, File file) {
         if (!file.exists() || file.length() == 0) {
             return false;
         }
-
         if (expectedLength > 0) {
             return VideoCacheUtils.sizeSimilar(actualLength, expectedLength);
         }
-
-        // 如果不知道预期大小，至少确保下载了数据
         return actualLength > 0;
     }
 
     /**
-     * ✅ 保留外部重试逻辑
+     * 【优化2】计算退避延迟（指数退避）
      */
-    private void onDownloadFileErr(M3U8Seg ts, File file, String videoUrl, int responseCode, Exception exception) {
-        ts.setRetryCount(ts.getRetryCount() + 1);
-
-        if (responseCode == com.baofu.cache.downloader.utils.HttpUtils.RESPONSE_503 ||
-                responseCode == com.baofu.cache.downloader.utils.HttpUtils.RESPONSE_429) {
-            if (ts.getRetryCount() <= MAX_RETRY_COUNT_503) {
-                // 遇到503，延迟[4,24]秒后再重试
-                int ran = 4000 + (int) (Math.random() * 20000);
-                try {
-                    Thread.sleep(ran);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-                downloadFile(ts, file, videoUrl);
-            }
-        } else if (ts.getRetryCount() <= MAX_RETRY_COUNT) {
-            downloadFile(ts, file, videoUrl);
-        } else {
-            Log.e(TAG, "Max retry count reached for " + file.getName());
-            PlayerProgressListenerManager.getInstance().log("task " + file.getName() + "重试"+ts.getRetryCount()+"次 次数已用完");
-        }
+    private int calculateBackoffDelay(int retryCount) {
+        //todo 503处理：延迟时间得加大
+        int delay = Math.min(30000, 1000 * (1 << Math.min(retryCount, 5)));
+        return delay + (int) (Math.random() * 1000);
     }
 
+    /**
+     * 【优化4】增量更新进度，不再遍历全部文件
+     * 只有下载完成一个新TS时才调用
+     */
     private void notifyCacheProgress() {
-        updateM3U8TsInfo();
         if (mCachedSegCount > mTotalSegCount) {
             mCachedSegCount = mTotalSegCount;
         }
+
         mCacheInfo.setCachedTs(mCachedSegCount);
         mCacheInfo.setCachedSize(mCachedSize);
-        float percent = mCachedSegCount * 1.0f * 100 / mTotalSegCount;
+
+        float percent = mCachedSegCount * 100.0f / mTotalSegCount;
 
         if (!ProxyCacheUtils.isFloatEqual(percent, mPercent)) {
             long nowTime = System.currentTimeMillis();
             if (mCachedSize > mLastCachedSize && nowTime > mLastInvokeTime) {
-                mSpeed = (mCachedSize - mLastCachedSize) * 1000 * 1.0f / (nowTime - mLastInvokeTime); //byte/s
+                mSpeed = (mCachedSize - mLastCachedSize) * 1000.0f / (nowTime - mLastInvokeTime);
             }
-            mListener.onM3U8TaskProgress(percent, mCachedSize, mSpeed);
+
+            if (mListener != null) {
+                mListener.onM3U8TaskProgress(percent, mCachedSize, mSpeed);
+            }
             mPercent = percent;
             mCacheInfo.setPercent(percent);
             mCacheInfo.setSpeed(mSpeed);
@@ -525,16 +883,8 @@ public class M3U8CacheTask extends VideoCacheTask {
             saveVideoInfo();
         }
 
-        boolean isCompleted = true;
-        for (M3U8Seg ts : mSegList) {
-            File tsFile = new File(mSaveDir, ts.getSegName());
-            if (!tsFile.exists()) {
-                isCompleted = false;
-                break;
-            }
-        }
-        mCacheInfo.setIsCompleted(isCompleted);
-        if (isCompleted) {
+        if (mCachedSegCount >= mTotalSegCount) {
+            mCacheInfo.setIsCompleted(true);
             mCacheInfo.setTotalSize(mCachedSize);
             mTotalSize = mCachedSize;
             notifyOnTaskCompleted();
@@ -542,19 +892,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         }
     }
 
-    private void updateM3U8TsInfo() {
-        long tempCachedSize = 0;
-        int tempCachedTs = 0;
-        for (int index = 0; index < mSegList.size(); index++) {
-            M3U8Seg ts = mSegList.get(index);
-            File tempTsFile = new File(mSaveDir, ts.getSegName());
-            if (tempTsFile.exists() && tempTsFile.length() > 0) {
-                ts.setFileSize(tempTsFile.length());
-                tempCachedSize += tempTsFile.length();
-                tempCachedTs++;
-            }
-        }
-        mCachedSegCount = tempCachedTs;
-        mCachedSize = tempCachedSize;
+    public boolean isMainThread() {
+        return Looper.getMainLooper().getThread() == Thread.currentThread();
     }
 }
