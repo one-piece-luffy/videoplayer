@@ -398,8 +398,6 @@ public class M3U8CacheTask extends VideoCacheTask {
                         startDownloadSegTask(seg);
                     }
                 });
-                //todo
-                break;
             }
 
             // 【优化1】关闭线程池并等待完成（非阻塞）
