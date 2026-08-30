@@ -229,7 +229,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         // 取消所有正在下载的请求（OkHttp Call.cancel()）
         cancelAllDownloads("Task paused");
-
+        PlayerProgressListenerManager.getInstance().log("pauseCacheTask");
         // 【优化1】安全关闭线程池（非阻塞）
         shutdownExecutorSafely();
     }
@@ -313,7 +313,6 @@ public class M3U8CacheTask extends VideoCacheTask {
      * 服务端Seek（M3U8视频，已废弃）
      */
     @Override
-    @Deprecated
     public void seekToCacheTaskFromServerByM3u8(int segIndex) {
         LogUtils.e(TAG, "====seekToCacheTaskFromServerByM3u8 " + segIndex);
         PlayerProgressListenerManager.getInstance().log("seekToCacheTaskFromServerByM3u8:" + segIndex);
@@ -362,73 +361,82 @@ public class M3U8CacheTask extends VideoCacheTask {
         // 【优化1】安全关闭旧线程池
         shutdownExecutorSafely();
         DefaultExecutor.execute(() -> {
-            saveVideoInfo();
-
-            if (mCacheInfo.isCompleted()) {
-                notifyOnTaskCompleted();
-                PlayerProgressListenerManager.getInstance().log("mCacheInfo isCompleted");
-                return;
-            }
-
-            // 创建新线程池
-            mTaskExecutor = new ThreadPoolExecutor(
-                    THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
-                    TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
-                    r -> new Thread(r, "M3U8Downloader"),
-                    new ThreadPoolExecutor.DiscardOldestPolicy()
-            );
-
-            // 提交下载任务
-            for (int index = curTs; index < mSegList.size(); index++) {
-                final M3U8Seg seg = mSegList.get(index);
-
-                // 【优化4】使用缓存快速判断是否已下载
-                if (isSegAlreadyDownloaded(seg)) {
-                    continue;
-                }
-
-                // 【优化3】检查取消状态
-                if (!isRunning.get() || isPausing.get()) {
-                    Log.i(TAG, "Task stopped, break submitting");
-                    break;
-                }
-
-                mTaskExecutor.execute(() -> {
-                    if (isRunning.get() && !isPausing.get()) {
-                        startDownloadSegTask(seg);
-                    }
-                });
-            }
-
-            // 【优化1】关闭线程池并等待完成（非阻塞）
-            if (mTaskExecutor != null) {
-                mTaskExecutor.shutdown();
-                try {
-                    // 循环检查，每2秒检查一次取消状态
-                    while (!mTaskExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
-                        // 【优化3】如果被取消，立即强制关闭
-                        if (!isRunning.get() || isPausing.get()) {
-                            mTaskExecutor.shutdownNow();
-                            Log.i(TAG, "Task interrupted, shutdownNow called");
-                            break;
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    mTaskExecutor.shutdownNow();
-                }
-            }
-
-            // 检查是否全部完成
-            if (mCachedSegCount >= mTotalSegCount) {
-                mCacheInfo.setIsCompleted(true);
-                mCacheInfo.setTotalSize(mCachedSize);
-                mTotalSize = mCachedSize;
-                notifyOnTaskCompleted();
+            try {
+                PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
                 saveVideoInfo();
+
+                if (mCacheInfo.isCompleted()) {
+                    notifyOnTaskCompleted();
+                    PlayerProgressListenerManager.getInstance().log("mCacheInfo isCompleted");
+                    return;
+                }
+
+                // 创建新线程池
+                mTaskExecutor = new ThreadPoolExecutor(
+                        THREAD_POOL_COUNT, THREAD_POOL_COUNT, 0L,
+                        TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(),
+                        r -> new Thread(r, "M3U8Downloader"),
+                        new ThreadPoolExecutor.DiscardOldestPolicy()
+                );
+
+                // 提交下载任务
+                for (int index = curTs; index < mSegList.size(); index++) {
+                    final M3U8Seg seg = mSegList.get(index);
+
+                    // 【优化4】使用缓存快速判断是否已下载
+                    if (isSegAlreadyDownloaded(seg)) {
+                        continue;
+                    }
+
+                    // 【优化3】检查取消状态
+                    if (!isRunning.get() || isPausing.get()) {
+                        Log.i(TAG, "Task stopped, break submitting");
+                        PlayerProgressListenerManager.getInstance().log("=Task stopped, break submitting");
+                        break;
+                    }
+
+                    mTaskExecutor.execute(() -> {
+                        if (isRunning.get() && !isPausing.get()) {
+                            startDownloadSegTask(seg);
+                        }
+                    });
+                }
+
+                // 【优化1】关闭线程池并等待完成（非阻塞）
+                if (mTaskExecutor != null) {
+                    mTaskExecutor.shutdown();
+                    try {
+                        // 循环检查，每2秒检查一次取消状态
+                        while (!mTaskExecutor.awaitTermination(2, TimeUnit.SECONDS)) {
+                            // 【优化3】如果被取消，立即强制关闭
+                            if (!isRunning.get() || isPausing.get()) {
+                                mTaskExecutor.shutdownNow();
+                                Log.i(TAG, "Task interrupted, shutdownNow called");
+                                PlayerProgressListenerManager.getInstance().log("=Task interrupted, shutdownNow called");
+                                break;
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        mTaskExecutor.shutdownNow();
+                    }
+                }
+
+                // 检查是否全部完成
+                if (mCachedSegCount >= mTotalSegCount) {
+                    mCacheInfo.setIsCompleted(true);
+                    mCacheInfo.setTotalSize(mCachedSize);
+                    mTotalSize = mCachedSize;
+                    notifyOnTaskCompleted();
+                    saveVideoInfo();
+                }
+                PlayerProgressListenerManager.getInstance().log("=task开始下载");
+                isRunning.set(false);
+            }catch (Exception e){
+                e.printStackTrace();
+                PlayerProgressListenerManager.getInstance().log("startRequestVideoRange exception:"+e.getMessage());
             }
 
-            isRunning.set(false);
         });
     }
     // ==================== 核心业务方法 ====================
@@ -470,6 +478,7 @@ public class M3U8CacheTask extends VideoCacheTask {
      */
     private void shutdownExecutorSafely() {
         if (mTaskExecutor == null) {
+            PlayerProgressListenerManager.getInstance().log("shutdownExecutorSafely mTaskExecutor is null");
             return;
         }
 
@@ -477,14 +486,17 @@ public class M3U8CacheTask extends VideoCacheTask {
             @Override
             public void run() {
                 try {
+                    PlayerProgressListenerManager.getInstance().log("shutdownExecutorSafely");
                     // 立即中断所有执行中的任务
                     mTaskExecutor.shutdownNow();
                     // 非阻塞等待，最多等待 EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS 秒
                     if (!mTaskExecutor.awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
                         Log.w(TAG, "Executor did not terminate in " + EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS + "s");
+                        PlayerProgressListenerManager.getInstance().log("Executor did not terminate in " + EXECUTOR_SHUTDOWN_TIMEOUT_SECONDS + "s");
                     }
                 } catch (InterruptedException e) {
                     Log.w(TAG, "Executor shutdown interrupted");
+                    PlayerProgressListenerManager.getInstance().log("Executor shutdown interrupted");
                     Thread.currentThread().interrupt();
                 }
             }
@@ -508,6 +520,8 @@ public class M3U8CacheTask extends VideoCacheTask {
             waitCount++;
         }
         Log.i(TAG, "Wait for cancellation complete, active: " +
+                mDownloadManager.getActiveDownloadCount());
+        PlayerProgressListenerManager.getInstance().log("Wait for cancellation complete, active: " +
                 mDownloadManager.getActiveDownloadCount());
     }
 
@@ -632,13 +646,15 @@ public class M3U8CacheTask extends VideoCacheTask {
             } catch (IOException e) {
                 // 【优化3】检查是否是取消导致的异常
                 if (e.getMessage() != null && e.getMessage().contains("cancel")) {
-                    Log.i(TAG, "Download cancelled: " + fileName);
+                    Log.i(TAG, "Download cancelled: " + fileName+" " + e.getMessage());
+                    PlayerProgressListenerManager.getInstance().log("Download cancelled: " + fileName+" " + e.getMessage());
                     return false;
                 }
                 Log.e(TAG, "Download error: " + fileName + ", retry " + retryCount, e);
                 retryCount++;
             } catch (Exception e) {
                 Log.e(TAG, "Unexpected error: " + fileName + ", retry " + retryCount, e);
+                PlayerProgressListenerManager.getInstance().log("Unexpected error: " + fileName + ", retry " + retryCount+" " + e.getMessage());
                 retryCount++;
             }
         }

@@ -368,7 +368,7 @@ public class M3U8SegResponse extends BaseResponse {
                 metaDataManager.saveTsMetaData(mSegFile.getName(), fileLength);
             }
 
-            PlayerProgressListenerManager.getInstance().log("播放器ts下载完成:" + mFileName);
+//            PlayerProgressListenerManager.getInstance().log("播放器ts下载完成:" + mFileName);
             LogUtils.i(TAG, "TS下载完成: " + mFileName);
 
         } catch (Exception e) {

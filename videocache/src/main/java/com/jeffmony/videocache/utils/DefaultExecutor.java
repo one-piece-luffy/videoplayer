@@ -65,7 +65,7 @@ public class DefaultExecutor {
                 // 捕获所有异常并记录
                 t.printStackTrace();
                 Log.e("DefaultExecutor", "Task execution failed", t);
-                PlayerProgressListenerManager.getInstance().log("DefaultExecutor Task execution failed"); // 关键日志
+                PlayerProgressListenerManager.getInstance().log("DefaultExecutor Task execution failed:"+t.getMessage()); // 关键日志
             }
         });
     }
