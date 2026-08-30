@@ -6,6 +6,7 @@ import com.jeffmony.videocache.PlayerProgressListenerManager;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
@@ -65,7 +66,18 @@ public class DefaultExecutor {
                 // 捕获所有异常并记录
                 t.printStackTrace();
                 Log.e("DefaultExecutor", "Task execution failed", t);
-                PlayerProgressListenerManager.getInstance().log("DefaultExecutor Task execution failed:"+t.getMessage()); // 关键日志
+                PlayerProgressListenerManager.getInstance().log("DefaultExecutor Task execution failed:"+Log.getStackTraceString(t)); // 关键日志
+            }
+        });
+    }
+
+    public static Future<?> submit(Runnable task) {
+        return mExecutorService.submit(() -> {
+            try {
+                task.run();
+            } catch (Throwable t) {
+                Log.e(TAG, "Task failed", t);
+                PlayerProgressListenerManager.getInstance().log("DefaultExecutor Task submit failed:"+Log.getStackTraceString(t)); // 关键日志
             }
         });
     }
