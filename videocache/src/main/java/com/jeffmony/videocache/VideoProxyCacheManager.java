@@ -26,6 +26,7 @@ import com.jeffmony.videocache.okhttp.IHttpPipelineListener;
 import com.jeffmony.videocache.okhttp.NetworkConfig;
 import com.jeffmony.videocache.okhttp.OkHttpManager;
 import com.jeffmony.videocache.proxy.LocalProxyVideoServer;
+import com.jeffmony.videocache.task.M3U8CacheTask;
 import com.jeffmony.videocache.task.VideoCacheTask;
 import com.jeffmony.videocache.utils.DefaultExecutor;
 import com.jeffmony.videocache.utils.LogUtils;
@@ -75,6 +76,9 @@ public class VideoProxyCacheManager {
     public LocalProxyVideoServer mLocalProxyServer;
 
     private String mCurl;
+
+    private final Map<String, Long> mForceSeekCooldownMap = new ConcurrentHashMap<>();
+    private static final long FORCE_SEEK_COOLDOWN_MS = 3000L; // 2秒限频
 
     public static VideoProxyCacheManager getInstance() {
         if (sInstance == null) {
@@ -376,6 +380,7 @@ public class VideoProxyCacheManager {
         String md5 = ProxyCacheUtils.computeMD5(videoUrl);
         releaseProxyCacheSet(md5);
         removeVideoSeekInfo(md5);
+        mForceSeekCooldownMap.remove(md5);
     }
 
     public void releaseAll() {
@@ -679,13 +684,52 @@ public class VideoProxyCacheManager {
                 shouldSeek = true;
             }
         }
-        final boolean seekByServer = shouldSeek;
-        VideoProxyThreadUtils.runOnUiThread(() -> {
-            VideoCacheTask cacheTask = mCacheTaskMap.get(url);
-            if (cacheTask != null && seekByServer) {
-                cacheTask.seekToCacheTaskFromServerByM3u8(segIndex);
+        // ========== 降级策略：shouldSeek=false 时的智能兜底 ==========
+        if (!shouldSeek) {
+            VideoCacheTask task = mCacheTaskMap.get(url);
+            if (!(task instanceof M3U8CacheTask)) {
+                return;
             }
-        });
+            M3U8CacheTask m3u8Task = (M3U8CacheTask) task;
+
+            // ① 限频检查
+            Long last = mForceSeekCooldownMap.get(md5);
+            long now = System.currentTimeMillis();
+            if (last != null && (now - last) < FORCE_SEEK_COOLDOWN_MS) {
+                LogUtils.i(TAG, "Force seek cooldown, skip. md5=" + md5);
+                return;
+            }
+
+            // ② 目标分片已下载则跳过
+            if (m3u8Task.isSegDownloaded(segIndex)) {
+                LogUtils.i(TAG, "Target seg " + segIndex + " already downloaded, skip.");
+                return;
+            }
+
+            // ③ 判断任务是否空闲（无活跃线程/队列）
+            boolean idle = m3u8Task.isIdle();
+
+            // ④ 更新冷却时间
+            mForceSeekCooldownMap.put(md5, now);
+
+            if (idle) {
+                // 空闲 → 快速路径（不暂停/等待）
+                LogUtils.i(TAG, "Force seek: idle, quick start.");
+                PlayerProgressListenerManager.getInstance().log("线程池空闲强制下载");
+                m3u8Task.seekToCacheTaskFromServerByM3u8(segIndex);
+            } else {
+                // 繁忙 → 走完整暂停-重启流程
+                LogUtils.i(TAG, "Force seek: busy, pause and restart.");
+
+            }
+            return;
+        }
+        Log.e("aassdd", "shouldSeek:" + shouldSeek);
+        final boolean seekByServer = shouldSeek;
+        VideoCacheTask cacheTask = mCacheTaskMap.get(url);
+        if (cacheTask != null && seekByServer) {
+            cacheTask.seekToCacheTaskFromServerByM3u8(segIndex);
+        }
     }
 
     /**

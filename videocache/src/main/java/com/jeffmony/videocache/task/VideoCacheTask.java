@@ -132,6 +132,48 @@ public abstract class VideoCacheTask {
         }
     }
 
+    /**
+     * 获取当前 mTaskExecutor 的任务执行状态
+     * @return 状态描述字符串
+     */
+    public String getExecutorStatus() {
+        if (mTaskExecutor == null) {
+            return "Executor is NULL (未初始化或已回收)";
+        }
+
+        // 正在运行的线程数（近似值）
+        int activeCount = mTaskExecutor.getActiveCount();
+        // 队列中等待执行的任务数
+        int queueSize = mTaskExecutor.getQueue().size();
+        // 已完成的任务总数
+        long completedCount = mTaskExecutor.getCompletedTaskCount();
+        // 总任务数（近似）
+        long taskCount = mTaskExecutor.getTaskCount();
+        // 是否已关闭
+        boolean isShutdown = mTaskExecutor.isShutdown();
+        // 是否已完全终止
+        boolean isTerminated = mTaskExecutor.isTerminated();
+
+        return String.format(
+                "Status [shutdown=%b, terminated=%b, 正在运行的线程数=%d, 队列中等待执行的任务数=%d, 已完成的任务总数=%d,  总任务数≈%d]",
+                isShutdown, isTerminated, activeCount, queueSize, completedCount, taskCount
+        );
+    }
+
+    /**
+     * 判断当前缓存任务是否处于空闲状态（无正在执行/排队的下载任务）
+     */
+    public boolean isIdle() {
+        // 线程池未创建或已完全终止
+        if (mTaskExecutor == null || mTaskExecutor.isTerminated()) {
+            return true;
+        }
+        // 检查活跃线程和队列
+        int active = mTaskExecutor.getActiveCount();
+        int queueSize = mTaskExecutor.getQueue().size();
+        return (active == 0 && queueSize == 0);
+    }
+
     protected void saveVideoInfo() {
         StorageUtils.saveVideoCacheInfo(mCacheInfo, mSaveDir);
     }

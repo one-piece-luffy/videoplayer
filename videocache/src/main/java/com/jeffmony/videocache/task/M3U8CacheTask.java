@@ -242,6 +242,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             }
         } catch (Exception e) {
             Log.e(TAG, "Wait for shutdown failed", e);
+            PlayerProgressListenerManager.getInstance().log("Wait for shutdown failed:"+Log.getStackTraceString(e));
         }
     }
 
@@ -264,12 +265,20 @@ public class M3U8CacheTask extends VideoCacheTask {
                 if (mMetaDataManager != null) {
                     mMetaDataManager.flushOnExit();
                 }
-                // 【优化1】安全关闭线程池
-                shutdownExecutorSafely();
             } catch (Exception e) {
                 Log.e(TAG, "", e);
             }
         });
+        try {
+            Future<?> shutdownFuture = shutdownExecutorSafely();
+            if (shutdownFuture != null) {
+                // 阻塞等待最多 3 秒，确保旧线程池被完全销毁
+                shutdownFuture.get(3, TimeUnit.SECONDS);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Wait for shutdown failed", e);
+            PlayerProgressListenerManager.getInstance().log("Wait for shutdown failed:"+Log.getStackTraceString(e));
+        }
     }
 
     /**
@@ -321,7 +330,7 @@ public class M3U8CacheTask extends VideoCacheTask {
     }
 
     /**
-     * 服务端Seek（M3U8视频，已废弃）
+     * 服务端Seek
      */
     @Override
     public void seekToCacheTaskFromServerByM3u8(int segIndex) {
@@ -385,7 +394,7 @@ public class M3U8CacheTask extends VideoCacheTask {
 
                 if (mCacheInfo.isCompleted()) {
                     notifyOnTaskCompleted();
-                    PlayerProgressListenerManager.getInstance().log("mCacheInfo isCompleted");
+                    PlayerProgressListenerManager.getInstance().log("缓存已下载完成");
                     return;
                 }
 
@@ -666,7 +675,6 @@ public class M3U8CacheTask extends VideoCacheTask {
                 // 【优化3】检查是否是取消导致的异常
                 if (e.getMessage() != null && e.getMessage().contains("cancel")) {
                     Log.i(TAG, "Download cancelled: " + fileName+" " + e.getMessage());
-                    PlayerProgressListenerManager.getInstance().log("Download cancelled: " + fileName+" " + e.getMessage());
                     return false;
                 }
                 Log.e(TAG, "Download error: " + fileName + ", retry " + retryCount, e);
@@ -729,7 +737,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                 String error = String.format("File incomplete: expected=%d, actual=%d, file=%s",
                         contentLength, actualSize, tmpFile.getName());
                 Log.e(TAG, error);
-                PlayerProgressListenerManager.getInstance().log("task 下载不完整:" + fileName);
+                PlayerProgressListenerManager.getInstance().log("=task 下载不完整:" + fileName);
                 FileUtils.deleteFile(tmpFile);
                 // ✅ 触发外部重试
                 throw new IOException("File incomplete");
@@ -928,4 +936,13 @@ public class M3U8CacheTask extends VideoCacheTask {
     public boolean isMainThread() {
         return Looper.getMainLooper().getThread() == Thread.currentThread();
     }
+
+
+    // 公开方法：检查某个分片是否已下载（基于缓存 Map）
+    public boolean isSegDownloaded(int segIndex) {
+        if (segIndex < 0 || segIndex >= mSegList.size()) return false;
+        String segName = mSegList.get(segIndex).getSegName();
+        return mSegSizeCache.containsKey(segName);
+    }
+
 }

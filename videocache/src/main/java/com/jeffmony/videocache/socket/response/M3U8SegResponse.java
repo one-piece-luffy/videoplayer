@@ -87,7 +87,6 @@ public class M3U8SegResponse extends BaseResponse {
         mHeaders.put("Connection", "close");
 
         mResponseState = ResponseState.OK;
-
         // 通知后台任务开始下载当前片段
         VideoProxyCacheManager.getInstance().seekToCacheTaskFromServerByM3u8(mParentUrl, mSegIndex);
         // ✅ 初始化元数据管理器（单例模式，共享实例）
@@ -312,7 +311,7 @@ public class M3U8SegResponse extends BaseResponse {
         } catch (Exception e) {
             e.printStackTrace();
             PlayerProgressListenerManager.getInstance().log(
-                    "播放器下载失败:" + mVideoName + " " + mFileName+" "+e.getMessage());
+                    "播放器下载失败:" + " " + mFileName+" "+Log.getStackTraceString(e));
         } finally {
             // 清理临时文件
             cleanupTempFile(tempFile);
@@ -373,7 +372,6 @@ public class M3U8SegResponse extends BaseResponse {
 
         } catch (Exception e) {
             LogUtils.e(TAG, "Failed to process response for " + mFileName, e);
-            PlayerProgressListenerManager.getInstance().log("播放器ts下载失败:" + mFileName+" "+e.getMessage());
             throw new IOException("Failed to process TS file", e);
         }
     }

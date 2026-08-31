@@ -392,6 +392,7 @@ public class MainActivity extends AppCompatActivity {
         binding.link2.setText(LocalLink.link2.NAME);
         binding.link3.setText(LocalLink.link3.NAME);
         binding.link4.setText(LocalLink.link4.NAME);
+
         binding.link1.setOnClickListener(v -> {
             Log.e("asdf","========"+LocalLink.link1.NAME+"=========");
             mUrl = LocalLink.link1.LINK;
@@ -415,18 +416,6 @@ public class MainActivity extends AppCompatActivity {
             mUrl = LocalLink.link4.LINK;
             name = LocalLink.link4.NAME;
             play(name);
-        });
-        binding.shut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                VideoProxyCacheManager.getInstance().shutdown();
-            }
-        });
-        binding.create.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                VideoProxyCacheManager.getInstance().initProxyConfig(ProxyCacheUtils.getConfig());
-            }
         });
     }
 
