@@ -120,7 +120,7 @@ public class TsDownloadManager {
             // 如果是取消导致的异常，不算错误
             if (task.isCancelled() || (e.getMessage() != null && e.getMessage().contains("cancel"))) {
                 Log.i(TAG, "Download cancelled via exception: " + fileName);
-                PlayerProgressListenerManager.getInstance().log("Download cancelled via exception: " + fileName);
+//                PlayerProgressListenerManager.getInstance().log("Download cancelled via exception: " + fileName);
             } else {
                 task.error = e;
                 Log.e(TAG, "Download error: " + fileName, e);
