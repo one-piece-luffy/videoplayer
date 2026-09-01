@@ -242,7 +242,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             }
         } catch (Exception e) {
             Log.e(TAG, "Wait for shutdown failed", e);
-            PlayerProgressListenerManager.getInstance().log("Wait for shutdown failed:"+Log.getStackTraceString(e));
+            PlayerProgressListenerManager.getInstance().log("Wait for shutdown failed:"+e.getMessage());
         }
     }
 
@@ -277,7 +277,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             }
         } catch (Exception e) {
             Log.e(TAG, "Wait for shutdown failed", e);
-            PlayerProgressListenerManager.getInstance().log("Wait for shutdown failed:"+Log.getStackTraceString(e));
+            PlayerProgressListenerManager.getInstance().log("Wait for shutdown failed:"+e.getMessage());
         }
     }
 

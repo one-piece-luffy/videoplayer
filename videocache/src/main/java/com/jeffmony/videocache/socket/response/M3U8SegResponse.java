@@ -311,7 +311,7 @@ public class M3U8SegResponse extends BaseResponse {
         } catch (Exception e) {
             e.printStackTrace();
             PlayerProgressListenerManager.getInstance().log(
-                    "播放器下载失败:" + " " + mFileName+" "+Log.getStackTraceString(e));
+                    "播放器下载失败:" + " " + mFileName+" "+e.getMessage());
         } finally {
             // 清理临时文件
             cleanupTempFile(tempFile);
