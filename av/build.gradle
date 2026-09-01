@@ -54,17 +54,15 @@ dependencies {
 
 
 
-//    api project(':YCPlayerLib:VideoBarrage')
-//    api project(':YCPlayerLib:VideoCache')
-    api project(':YCPlayerLib:VideoKernel')
+    api project(':av:YCPlayerLib:VideoKernel')
 //    api project(':YCPlayerLib:VideoM3u8')
-    api project(':YCPlayerLib:VideoPlayer')
+    api project(':av:YCPlayerLib:VideoPlayer')
 //    api project(':YCPlayerLib:VideoRecorder')
-    api project(':YCPlayerLib:VideoSqlLite')
+    api project(':av:YCPlayerLib:VideoSqlLite')
 //    api project(':YCPlayerLib:VideoTool')
-    api project(':YCPlayerLib:VideoView')
-    //视频缓存
-    api project(':videocache')
+    api project(':av:YCPlayerLib:VideoView')
+//    //视频缓存
+    api project(':av:videocache')
 }
 
 apply from: "$rootDir/gradle/publish.gradle"

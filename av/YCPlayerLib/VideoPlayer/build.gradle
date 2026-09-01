@@ -17,9 +17,9 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.annotation:annotation:1.9.1'
+    implementation 'androidx.annotation:annotation:1.10.0'
     implementation 'androidx.cardview:cardview:1.0.0'
-    implementation project(':YCPlayerLib:VideoKernel')
+    implementation project(':av:YCPlayerLib:VideoKernel')
 
     /*//这两个是必须要加的，其它的可供选择
     //ijk播放器

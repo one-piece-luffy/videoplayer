@@ -1,8 +1,13 @@
 rootProject.name = "videoplayer"
 include ':app'
-include ':videocache'
+//include ':videocache'
 
-include ':av'
+include ':av:videocache'
+
+include ':av:YCPlayerLib:VideoKernel'
+include ':av:YCPlayerLib:VideoPlayer'
+include ':av:YCPlayerLib:VideoSqlLite'
+include ':av:YCPlayerLib:VideoView'
 
 //include ':exolib:core'
 //include ':exolib:dash'
@@ -32,10 +37,3 @@ include ':av'
 
 //include ':YCPlayerLib:VideoBarrage'
 //include ':YCPlayerLib:VideoCache'
-include ':YCPlayerLib:VideoKernel'
-//include ':YCPlayerLib:VideoM3u8'
-include ':YCPlayerLib:VideoPlayer'
-//include ':YCPlayerLib:VideoRecorder'
-include ':YCPlayerLib:VideoSqlLite'
-//include ':YCPlayerLib:VideoTool'
-include ':YCPlayerLib:VideoView'
