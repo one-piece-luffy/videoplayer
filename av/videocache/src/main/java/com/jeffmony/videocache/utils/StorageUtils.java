@@ -112,7 +112,7 @@ public class StorageUtils {
                 count++;
             }
         }
-        PlayerProgressListenerManager.getInstance().log("清理过期缓存:" + count);
+//        PlayerProgressListenerManager.getInstance().log("清理过期缓存:" + count);
     }
 
     private static boolean isExpiredCacheData(long lastModifiedTime, long expiredTime) {

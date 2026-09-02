@@ -77,7 +77,7 @@ public class DefaultExecutor {
                 task.run();
             } catch (Throwable t) {
                 Log.e(TAG, "Task failed", t);
-                PlayerProgressListenerManager.getInstance().log("DefaultExecutor Task submit failed:"+Log.getStackTraceString(t)); // 关键日志
+                PlayerProgressListenerManager.getInstance().log("DefaultExecutor Task submit failed:"+t.getMessage()); // 关键日志
             }
         });
     }

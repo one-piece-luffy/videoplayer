@@ -21,6 +21,7 @@ import com.jeffmony.videocache.listener.IVideoCacheListener;
 import com.jeffmony.videocache.listener.IVideoCacheTaskListener;
 import com.jeffmony.videocache.listener.IVideoInfoParsedListener;
 import com.jeffmony.videocache.m3u8.M3U8;
+import com.jeffmony.videocache.m3u8.M3U8Seg;
 import com.jeffmony.videocache.model.VideoCacheInfo;
 import com.jeffmony.videocache.okhttp.IHttpPipelineListener;
 import com.jeffmony.videocache.okhttp.NetworkConfig;
@@ -79,6 +80,11 @@ public class VideoProxyCacheManager {
 
     private final Map<String, Long> mForceSeekCooldownMap = new ConcurrentHashMap<>();
     private static final long FORCE_SEEK_COOLDOWN_MS = 3000L; // 2秒限频
+
+    // 记录最近一次客户端 Seek 的时间戳（毫秒）
+    private volatile long mLastClientSeekTime = 0;
+    // 客户端 Seek 冷却时间（建议 1500ms，可根据实际情况调整）
+    private static final long CLIENT_SEEK_COOLDOWN_MS = 1500L;
 
     public static VideoProxyCacheManager getInstance() {
         if (sInstance == null) {
@@ -444,9 +450,7 @@ public class VideoProxyCacheManager {
                         //说明是直播
                         mM3U8LiveMd5Set.add(md5);
                         mMainHandler.obtainMessage(ProxyMessage.MSG_VIDEO_PROXY_FORBIDDEN, new VideoResult(videoCacheInfo)).sendToTarget();
-                        PlayerProgressListenerManager.getInstance().log("这是直播类型");
                     } else {
-                        PlayerProgressListenerManager.getInstance().log("缓存存在开始解析 mp4");
                         startNonM3U8Task(videoCacheInfo, headers);
                     }
                 }
@@ -589,6 +593,7 @@ public class VideoProxyCacheManager {
         if (cacheTask != null) {
             //当前seek到什么position在客户端不知道
             addVideoSeekInfo(url);
+            mLastClientSeekTime = System.currentTimeMillis();
             cacheTask.seekToCacheTaskFromClient(percent);
         }
     }
@@ -692,11 +697,20 @@ public class VideoProxyCacheManager {
             }
             M3U8CacheTask m3u8Task = (M3U8CacheTask) task;
 
+
+
+            long now = System.currentTimeMillis();
+            // ========== 新增：时间窗口检查 ==========
+//            if (now - mLastClientSeekTime < CLIENT_SEEK_COOLDOWN_MS) {
+//                LogUtils.i(TAG, "Client seek recently, skip force seek. md5=" + md5);
+//                PlayerProgressListenerManager.getInstance().log("Client seek recently, skip force seek");
+//                return;
+//            }
             // ① 限频检查
             Long last = mForceSeekCooldownMap.get(md5);
-            long now = System.currentTimeMillis();
             if (last != null && (now - last) < FORCE_SEEK_COOLDOWN_MS) {
                 LogUtils.i(TAG, "Force seek cooldown, skip. md5=" + md5);
+                PlayerProgressListenerManager.getInstance().log("限制请求频率.");
                 return;
             }
 
@@ -705,7 +719,12 @@ public class VideoProxyCacheManager {
                 LogUtils.i(TAG, "Target seg " + segIndex + " already downloaded, skip.");
                 return;
             }
-
+            // ③ 【加强】再次检查文件是否存在（更可靠）
+            M3U8Seg seg = m3u8Task.geM3U8tSeg(segIndex);
+            if (seg != null&&m3u8Task.isSegAlreadyDownloaded(seg)) {
+                LogUtils.i(TAG,  seg.getSegName() + " already downloaded, skip.");
+                return;
+            }
             // ③ 判断任务是否空闲（无活跃线程/队列）
             boolean idle = m3u8Task.isIdle();
 
@@ -713,18 +732,17 @@ public class VideoProxyCacheManager {
             mForceSeekCooldownMap.put(md5, now);
 
             if (idle) {
-                // 空闲 → 快速路径（不暂停/等待）
+                // 未下载 & 空闲 → 快速路径（不暂停/等待）
                 LogUtils.i(TAG, "Force seek: idle, quick start.");
-                PlayerProgressListenerManager.getInstance().log("线程池空闲强制下载");
-                m3u8Task.seekToCacheTaskFromServerByM3u8(segIndex);
+                PlayerProgressListenerManager.getInstance().log("toast:线程池空闲强制下载 "+segIndex);
             } else {
-                // 繁忙 → 走完整暂停-重启流程
+                //未下载 & 繁忙 → 走完整暂停-重启流程
                 LogUtils.i(TAG, "Force seek: busy, pause and restart.");
-
+                PlayerProgressListenerManager.getInstance().log("toast:未下载重新开始缓存 "+segIndex);
             }
+            m3u8Task.seekToCacheTaskFromServerByM3u8(segIndex);
             return;
         }
-        Log.e("aassdd", "shouldSeek:" + shouldSeek);
         final boolean seekByServer = shouldSeek;
         VideoCacheTask cacheTask = mCacheTaskMap.get(url);
         if (cacheTask != null && seekByServer) {
@@ -906,10 +924,13 @@ public class VideoProxyCacheManager {
         }
     }
 
-    public void shutdown(){
-        if(mLocalProxyServer!=null){
-            mLocalProxyServer.shutdown();
+    public String getM3u8TaskExcutorInfo(String url){
+        VideoCacheTask cacheTask = mCacheTaskMap.get(url);
+        if (cacheTask != null ) {
+            return "is idle:"+cacheTask.isIdle()+" | "+ cacheTask.getExecutorStatus();
         }
-        mLocalProxyServer=null;
+        return null;
     }
+
+
 }

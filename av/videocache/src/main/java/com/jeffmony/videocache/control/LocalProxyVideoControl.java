@@ -54,14 +54,14 @@ public class LocalProxyVideoControl {
 
     public void startRequestVideoInfo(String videoUrl, String videoName,Map<String, String> headers, Map<String, Object> extraParams) {
         if(videoUrl==null){
-            PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo url null");
+//            PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo url null");
             return;
         }
         mVideoUrl = videoUrl;
         VideoProxyCacheManager.getInstance().addCacheListener(videoUrl, mListener);
         VideoProxyCacheManager.getInstance().setPlayingUrlMd5(ProxyCacheUtils.computeMD5(videoUrl));
         VideoProxyCacheManager.getInstance().startRequestVideoInfo(videoUrl, headers, extraParams);
-        PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo2");
+//        PlayerProgressListenerManager.getInstance().log("LocalProxyVideoControl startRequestVideoInfo2");
     }
 
     public void pauseLocalProxyTask() {

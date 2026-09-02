@@ -32,6 +32,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import okhttp3.Response;
 
@@ -118,7 +119,9 @@ public class M3U8CacheTask extends VideoCacheTask {
     private TsDownloadManager mDownloadManager;
 
     // ==================== 缓存优化 ====================
-    boolean printLog=true;
+    //序列号
+    private final AtomicInteger mTaskSeqGenerator = new AtomicInteger(0);
+    private volatile int mCurrentTaskSeq = 0;   // 当前最新任务的序列号
     /**
      * TS文件大小缓存
      * Key: 文件名, Value: 文件大小
@@ -215,6 +218,8 @@ public class M3U8CacheTask extends VideoCacheTask {
 
         if (mCachedSegCount == mTotalSegCount) {
             mCacheInfo.setIsCompleted(true);
+        }else {
+            mCacheInfo.setIsCompleted(false);
         }
     }
 
@@ -235,7 +240,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         // 【优化1】安全关闭线程池（非阻塞）
         // 2. 【关键优化】等待线程池完全关闭，再继续
         try {
-            Future<?> shutdownFuture = shutdownExecutorSafely();
+            Future<?> shutdownFuture = shutdownExecutorSafely("pause");
             if (shutdownFuture != null) {
                 // 阻塞等待最多 3 秒，确保旧线程池被完全销毁
                 shutdownFuture.get(3, TimeUnit.SECONDS);
@@ -270,7 +275,7 @@ public class M3U8CacheTask extends VideoCacheTask {
             }
         });
         try {
-            Future<?> shutdownFuture = shutdownExecutorSafely();
+            Future<?> shutdownFuture = shutdownExecutorSafely("stop");
             if (shutdownFuture != null) {
                 // 阻塞等待最多 3 秒，确保旧线程池被完全销毁
                 shutdownFuture.get(3, TimeUnit.SECONDS);
@@ -301,6 +306,8 @@ public class M3U8CacheTask extends VideoCacheTask {
 
     /**
      * 客户端Seek操作
+     * 客户端 Seek 的职责，使其只负责暂停旧任务和设置标记，但不立即启动新下载，而是将启动推迟到服务端请求到来时
+     * 移除startRequestVideoRange
      */
     @Override
     public void seekToCacheTaskFromClient(float percent) {
@@ -318,7 +325,8 @@ public class M3U8CacheTask extends VideoCacheTask {
         mDownloadManager.resetGlobalCancel();
         isRunning.set(true);
         isStart = true;
-        startRequestVideoRange(segIndex);
+//        移除以下这行，不再主动启动
+//        startRequestVideoRange(segIndex);
     }
 
     /**
@@ -374,12 +382,16 @@ public class M3U8CacheTask extends VideoCacheTask {
      * 【优化3】支持中断：提交任务前检查取消状态
      */
     private void startRequestVideoRange(int curTs) {
-        PlayerProgressListenerManager.getInstance().log("startRequestVideoRange:" + curTs);
+        // 生成新序列号，并更新为当前最新
+        int taskSeq = mTaskSeqGenerator.incrementAndGet();
+        mCurrentTaskSeq = taskSeq;
+        PlayerProgressListenerManager.getInstance().log("startRequestVideoRange:" + curTs + ", seq=" + taskSeq);
         isRunning.set(true);
+
         // 主动清空 DefaultExecutor 中已积压的旧启动任务
         DefaultExecutor.clear();
         try {
-            Future<?> shutdownFuture = shutdownExecutorSafely();
+            Future<?> shutdownFuture = shutdownExecutorSafely("startRequestVideoRange");
             if (shutdownFuture != null) {
                 // 阻塞等待最多 3 秒，确保旧线程池被完全销毁
                 shutdownFuture.get(3, TimeUnit.SECONDS);
@@ -388,14 +400,33 @@ public class M3U8CacheTask extends VideoCacheTask {
             Log.e(TAG, "Wait for shutdown failed", e);
         }
         DefaultExecutor.execute(() -> {
+            final int mySeq = taskSeq;
             try {
+                // 如果当前任务不是最新的，直接退出（不执行任何下载，不打印结束日志）
+                if (mySeq != mCurrentTaskSeq) {
+                    Log.i(TAG, "Task seq " + mySeq + " is outdated, skip.");
+                    PlayerProgressListenerManager.getInstance().log("Task seq " + mySeq + " is outdated, skip.");
+
+                    return;
+                }
                 PlayerProgressListenerManager.getInstance().log("saveVideoInfo");
                 saveVideoInfo();
+                // 【新增】每次启动前重新扫描，确保缓存状态与磁盘一致
+                initM3U8TsInfo();
+                // 再次检查是否最新（可能在 init 过程中又生成了新任务）
+                if (mySeq != mCurrentTaskSeq) {
+                    Log.i(TAG, "Task seq " + mySeq + " became outdated after init, skip.");
+                    PlayerProgressListenerManager.getInstance().log("Task seq " + mySeq + " became outdated after init, skip.");
 
+                    return;
+                }
                 if (mCacheInfo.isCompleted()) {
                     notifyOnTaskCompleted();
-                    PlayerProgressListenerManager.getInstance().log("缓存已下载完成");
+                    PlayerProgressListenerManager.getInstance().log("toast:缓存已下载完成");
                     return;
+                } else {
+                    mCacheInfo.setIsCompleted(false);
+                    saveVideoInfo();
                 }
 
                 // 创建新线程池
@@ -406,7 +437,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                         new ThreadPoolExecutor.DiscardOldestPolicy()
                 );
 
-                printLog=true;
+                AtomicBoolean printedStart = new AtomicBoolean(false);
                 // 提交下载任务
                 for (int index = curTs; index < mSegList.size(); index++) {
                     final M3U8Seg seg = mSegList.get(index);
@@ -422,13 +453,17 @@ public class M3U8CacheTask extends VideoCacheTask {
                         PlayerProgressListenerManager.getInstance().log("=Task stopped, break submitting");
                         break;
                     }
-
+                    // 在提交前再次检查是否为最新任务
+                    if (mySeq != mCurrentTaskSeq) {
+                        Log.i(TAG, "Task seq " + mySeq + " outdated during submit, break.");
+                        PlayerProgressListenerManager.getInstance().log("Task seq " + mySeq + " outdated during submit, break.");
+                        break;
+                    }
                     mTaskExecutor.execute(() -> {
                         if (isRunning.get() && !isPausing.get()) {
-                            if(printLog){
-                                //只打印一次log
-                                PlayerProgressListenerManager.getInstance().log("Task 开始下载");
-                                printLog=false;
+                            // 只有最新任务才打印开始日志，且只打印一次
+                            if (mySeq == mCurrentTaskSeq && printedStart.compareAndSet(false, true)) {
+                                PlayerProgressListenerManager.getInstance().log("Task 开始下载 seq=" + mySeq);
                             }
                             startDownloadSegTask(seg);
                         }
@@ -464,11 +499,17 @@ public class M3U8CacheTask extends VideoCacheTask {
                     notifyOnTaskCompleted();
                     saveVideoInfo();
                 }
-                PlayerProgressListenerManager.getInstance().log("task结束");
-                isRunning.set(false);
             }catch (Exception e){
                 e.printStackTrace();
                 PlayerProgressListenerManager.getInstance().log("startRequestVideoRange exception:"+e.getMessage());
+            }finally {
+                // ⭐ 只有最新任务才打印结束日志
+                if (mySeq == mCurrentTaskSeq) {
+                    PlayerProgressListenerManager.getInstance().log("task结束 seq=" + mySeq);
+                } else {
+                    Log.i(TAG, "Task seq " + mySeq + " finished but outdated, skip log.");
+                }
+                isRunning.set(false);
             }
 
         });
@@ -511,7 +552,7 @@ public class M3U8CacheTask extends VideoCacheTask {
      * 使用 awaitTermination 避免 while 循环阻塞
      */
     // M3U8CacheTask.java
-    private Future<?> shutdownExecutorSafely() {
+    private Future<?> shutdownExecutorSafely(String from) {
         if (mTaskExecutor == null) {
             return CompletableFuture.completedFuture(null);
         }
@@ -519,7 +560,7 @@ public class M3U8CacheTask extends VideoCacheTask {
         // 提交关闭任务到 DefaultExecutor
         return DefaultExecutor.submit(() -> {
             try {
-                PlayerProgressListenerManager.getInstance().log("shutdownExecutorSafely executing");
+                PlayerProgressListenerManager.getInstance().log("shutdownExecutorSafely from "+from);
                 // 立即中断所有执行中的任务
                 mTaskExecutor.shutdownNow();
                 // 非阻塞等待，最多等待 2 秒
@@ -549,8 +590,6 @@ public class M3U8CacheTask extends VideoCacheTask {
         }
         Log.i(TAG, "Wait for cancellation complete, active: " +
                 mDownloadManager.getActiveDownloadCount());
-        PlayerProgressListenerManager.getInstance().log("Wait for cancellation complete, active: " +
-                mDownloadManager.getActiveDownloadCount());
     }
 
     /**
@@ -562,12 +601,20 @@ public class M3U8CacheTask extends VideoCacheTask {
         mDownloadManager.cancelAllDownloads();
     }
 
-
+    public M3U8Seg geM3U8tSeg(int segIndex) {
+        if (segIndex < 0 || segIndex >= mSegList.size()) {
+            return null;
+        }
+        return mSegList.get(segIndex);
+    }
 
     /**
      * 【优化4】检查TS是否已下载（使用缓存）
      */
-    private boolean isSegAlreadyDownloaded(M3U8Seg seg) {
+    public boolean isSegAlreadyDownloaded(M3U8Seg seg) {
+        if(seg==null){
+            return false;
+        }
         String segName = seg.getSegName();
 
         // 使用缓存快速判断

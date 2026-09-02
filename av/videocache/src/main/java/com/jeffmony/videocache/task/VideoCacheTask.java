@@ -90,7 +90,7 @@ public abstract class VideoCacheTask {
         hasFinish = true;
         StorageManager.getInstance().checkCache(mSaveDir.getAbsolutePath());
         mListener.onTaskCompleted(mTotalSize);
-        PlayerProgressListenerManager.getInstance().log("缓存下载完成");
+//        PlayerProgressListenerManager.getInstance().log("缓存下载完成");
     }
 
     protected boolean isTaskRunning() {
