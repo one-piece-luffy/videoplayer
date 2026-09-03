@@ -25,6 +25,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -122,6 +123,8 @@ public class M3U8CacheTask extends VideoCacheTask {
     //序列号
     private final AtomicInteger mTaskSeqGenerator = new AtomicInteger(0);
     private volatile int mCurrentTaskSeq = 0;   // 当前最新任务的序列号
+    // 用于记录当前正在下载的分片索引（线程安全）
+    private final Set<Integer> mDownloadingSegIndices = ConcurrentHashMap.newKeySet();
     /**
      * TS文件大小缓存
      * Key: 文件名, Value: 文件大小
@@ -465,7 +468,7 @@ public class M3U8CacheTask extends VideoCacheTask {
                             if (mySeq == mCurrentTaskSeq && printedStart.compareAndSet(false, true)) {
                                 PlayerProgressListenerManager.getInstance().log("Task 开始下载 seq=" + mySeq);
                             }
-                            startDownloadSegTask(seg);
+                            startDownloadSegTask(seg,curTs);
                         }
                     });
                 }
@@ -640,45 +643,51 @@ public class M3U8CacheTask extends VideoCacheTask {
     /**
      * 开始下载单个TS分片
      */
-    private void startDownloadSegTask(M3U8Seg seg) {
-        if (!isRunning.get() || isPausing.get()) {
-            return;
-        }
+    private void startDownloadSegTask(M3U8Seg seg, int segIndex) {
+        // 将分片索引加入正在下载集合
+        mDownloadingSegIndices.add(segIndex);
+        try {
+            if (!isRunning.get() || isPausing.get()) {
+                return;
+            }
+            // 下载初始化分片（如果有）
+            if (seg.hasInitSegment()) {
+                String initSegmentName = seg.getInitSegmentName();
+                File initSegmentFile = new File(mSaveDir, initSegmentName);
+                if (!initSegmentFile.exists()) {
+                    if (!downloadFile(seg, initSegmentFile, seg.getInitSegmentUri())) {
+                        return;
+                    }
+                }
+            }
 
-        // 下载初始化分片（如果有）
-        if (seg.hasInitSegment()) {
-            String initSegmentName = seg.getInitSegmentName();
-            File initSegmentFile = new File(mSaveDir, initSegmentName);
-            if (!initSegmentFile.exists()) {
-                if (!downloadFile(seg, initSegmentFile, seg.getInitSegmentUri())) {
+            // 下载TS分片
+            String segName = seg.getSegName();
+            File segFile = new File(mSaveDir, segName);
+
+            if (!segFile.exists() || segFile.length() == 0) {
+                if (!downloadFile(seg, segFile, seg.getUrl())) {
                     return;
                 }
             }
-        }
 
-        // 下载TS分片
-        String segName = seg.getSegName();
-        File segFile = new File(mSaveDir, segName);
-
-        if (!segFile.exists() || segFile.length() == 0) {
-            if (!downloadFile(seg, segFile, seg.getUrl())) {
-                return;
-            }
-        }
-
-        // 【优化4】验证并更新进度（增量更新，不遍历全部文件）
-        if (segFile.exists() && segFile.length() > 0) {
-            long expectedSize = mMetaDataManager.getTsMetaData(segName);
-            if (expectedSize > 0 && VideoCacheUtils.sizeSimilar(segFile.length(), expectedSize)) {
-                seg.setFileSize(segFile.length());
-                if (!mSegSizeCache.containsKey(segName)) {
-                    mSegSizeCache.put(segName, segFile.length());
-                    mCachedSegCount++;
-                    mCachedSize += segFile.length();
-                    // 增量更新进度
-                    notifyCacheProgress();
+            // 【优化4】验证并更新进度（增量更新，不遍历全部文件）
+            if (segFile.exists() && segFile.length() > 0) {
+                long expectedSize = mMetaDataManager.getTsMetaData(segName);
+                if (expectedSize > 0 && VideoCacheUtils.sizeSimilar(segFile.length(), expectedSize)) {
+                    seg.setFileSize(segFile.length());
+                    if (!mSegSizeCache.containsKey(segName)) {
+                        mSegSizeCache.put(segName, segFile.length());
+                        mCachedSegCount++;
+                        mCachedSize += segFile.length();
+                        // 增量更新进度
+                        notifyCacheProgress();
+                    }
                 }
             }
+        } finally {
+            // 确保下载结束后移除索引
+            mDownloadingSegIndices.remove(segIndex);
         }
     }
 
@@ -990,6 +999,22 @@ public class M3U8CacheTask extends VideoCacheTask {
         if (segIndex < 0 || segIndex >= mSegList.size()) return false;
         String segName = mSegList.get(segIndex).getSegName();
         return mSegSizeCache.containsKey(segName);
+    }
+
+
+    /**
+     * 检查目标分片是否与正在下载的分片相差不超过阈值
+     * @param segIndex 目标分片索引
+     * @param threshold 允许的最大距离
+     * @return true 表示临近，跳过强制下载
+     */
+    public boolean isSegNearDownloading(int segIndex, int threshold) {
+        for (int idx : mDownloadingSegIndices) {
+            if (Math.abs(idx - segIndex) <= threshold) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

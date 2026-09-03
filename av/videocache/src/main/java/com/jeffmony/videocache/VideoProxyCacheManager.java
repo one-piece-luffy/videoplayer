@@ -79,7 +79,7 @@ public class VideoProxyCacheManager {
     private String mCurl;
 
     private final Map<String, Long> mForceSeekCooldownMap = new ConcurrentHashMap<>();
-    private static final long FORCE_SEEK_COOLDOWN_MS = 3000L; // 2秒限频
+    private static final long FORCE_SEEK_COOLDOWN_MS = 5000L; // 5秒限频
 
     // 记录最近一次客户端 Seek 的时间戳（毫秒）
     private volatile long mLastClientSeekTime = 0;
@@ -735,12 +735,22 @@ public class VideoProxyCacheManager {
                 // 未下载 & 空闲 → 快速路径（不暂停/等待）
                 LogUtils.i(TAG, "Force seek: idle, quick start.");
                 PlayerProgressListenerManager.getInstance().log("toast:线程池空闲强制下载 "+segIndex);
+                m3u8Task.seekToCacheTaskFromServerByM3u8(segIndex);
             } else {
                 //未下载 & 繁忙 → 走完整暂停-重启流程
                 LogUtils.i(TAG, "Force seek: busy, pause and restart.");
+                // 检查是否正在下载或与正在下载的分片临近
+                int threshold = 10; // 可根据实际情况调整阀值
+                if ( m3u8Task.isSegNearDownloading(segIndex, threshold)) {
+                    LogUtils.i(TAG, "Target seg " + segIndex + " is already downloading or near downloading range, skip force seek.");
+                    PlayerProgressListenerManager.getInstance().log("toast:目标分片正在下载或临近，跳过强制下载 " + segIndex);
+                    return; // 跳过本次强制下载
+                }
+
                 PlayerProgressListenerManager.getInstance().log("toast:未下载重新开始缓存 "+segIndex);
+                m3u8Task.seekToCacheTaskFromServerByM3u8(segIndex);
             }
-            m3u8Task.seekToCacheTaskFromServerByM3u8(segIndex);
+
             return;
         }
         final boolean seekByServer = shouldSeek;
