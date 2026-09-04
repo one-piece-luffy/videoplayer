@@ -264,7 +264,9 @@ public class M3U8CacheTask extends VideoCacheTask {
         isRunning.set(false);
         isPausing.set(true);
         isStart = false;
-
+        if(mDownloadingSegIndices!=null){
+            mDownloadingSegIndices.clear();
+        }
         // 取消所有下载
         cancelAllDownloads("Task stopped");
 
