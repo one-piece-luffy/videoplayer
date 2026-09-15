@@ -116,25 +116,14 @@ public class AvPrepareView extends FrameLayout implements InterControlView {
                 mControlWrapper.start();
             }
         });
-        mRoot.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mControlWrapper. toggleShowState();
-            }
-        });
+//        mRoot.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mControlWrapper. toggleShowState();
+//            }
+//        });
     }
 
-    /**
-     * 设置点击此界面开始播放
-     */
-    public void setClickStart() {
-        setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mControlWrapper.start();
-            }
-        });
-    }
 
     @Override
     public void attach(@NonNull ControlWrapper controlWrapper) {

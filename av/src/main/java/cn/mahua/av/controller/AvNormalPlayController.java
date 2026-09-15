@@ -130,7 +130,6 @@ public class AvNormalPlayController extends GestureVideoController implements Vi
         //添加与加载视图界面view，准备播放界面
         mPrepareView = new AvPrepareView(mContext);
         thumb = mPrepareView.getThumb();
-        mPrepareView.setClickStart();
         this.addControlComponent(mPrepareView);
 
         //添加标题栏
