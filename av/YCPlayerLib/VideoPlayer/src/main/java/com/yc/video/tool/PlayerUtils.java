@@ -145,10 +145,10 @@ public final class PlayerUtils {
             }
         }
         // 兜底：insets获取失败时，沿用原来的资源读取方案
-        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            return context.getResources().getDimensionPixelSize(resourceId);
-        }
+//        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+//        if (resourceId > 0) {
+//            return context.getResources().getDimensionPixelSize(resourceId);
+//        }
         return 0;
     }
 
@@ -173,14 +173,14 @@ public final class PlayerUtils {
             }
         }
         // 兜底旧方案
-        if (!hasNavigationBar(context)) {
-            return 0;
-        }
-        Resources resources = context.getResources();
-        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            return resources.getDimensionPixelSize(resourceId);
-        }
+//        if (!hasNavigationBar(context)) {
+//            return 0;
+//        }
+//        Resources resources = context.getResources();
+//        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+//        if (resourceId > 0) {
+//            return resources.getDimensionPixelSize(resourceId);
+//        }
         return 0;
     }
 
@@ -199,18 +199,19 @@ public final class PlayerUtils {
             }
         }
         // 兜底：拿不到insets时，保留你原来的屏幕比对逻辑
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            Display display = getWindowManager(context).getDefaultDisplay();
-            Point size = new Point();
-            Point realSize = new Point();
-            display.getSize(size);
-            display.getRealSize(realSize);
-            return realSize.x != size.x || realSize.y != size.y;
-        } else {
-            boolean menu = ViewConfiguration.get(context).hasPermanentMenuKey();
-            boolean back = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
-            return !(menu || back);
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//            Display display = getWindowManager(context).getDefaultDisplay();
+//            Point size = new Point();
+//            Point realSize = new Point();
+//            display.getSize(size);
+//            display.getRealSize(realSize);
+//            return realSize.x != size.x || realSize.y != size.y;
+//        } else {
+//            boolean menu = ViewConfiguration.get(context).hasPermanentMenuKey();
+//            boolean back = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
+//            return !(menu || back);
+//        }
+        return false;
     }
 
     /**
