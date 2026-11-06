@@ -20,14 +20,14 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.net.Uri;
-import android.os.Build;
 import android.text.TextUtils;
-import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 
-import com.yc.video.tool.PlayerUtils;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 import com.yc.video.controller.BaseVideoController;
+import com.yc.video.tool.PlayerUtils;
 
 /**
  * <pre>
@@ -97,7 +97,6 @@ public class VideoPlayerHelper {
      * 获取Activity，优先通过Controller去获取Activity
      * @param context                               上下文
      * @param videoController                       controller
-     * @return
      */
     protected Activity getActivity(Context context , BaseVideoController videoController) {
         Activity activity;
@@ -118,17 +117,17 @@ public class VideoPlayerHelper {
      * @param context                               上下文
      * @param videoController                       controller
      */
-    protected void showSysBar(ViewGroup decorView,Context context , BaseVideoController videoController) {
-        int uiOptions = decorView.getSystemUiVisibility();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            uiOptions &= ~View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            uiOptions &= ~View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        }
-        decorView.setSystemUiVisibility(uiOptions);
-        VideoPlayerHelper.instance().getActivity(context,videoController)
-                .getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    protected void showSysBar(ViewGroup decorView, Context context, BaseVideoController videoController) {
+        Activity activity = VideoPlayerHelper.instance().getActivity(context, videoController);
+        if (activity == null) return;
+
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(activity.getWindow(), decorView);
+        // 显示状态栏 + 导航栏
+        controller.show(WindowInsetsCompat.Type.systemBars());
+        // 取消沉浸式粘性模式
+        controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_DEFAULT);
+        // 清除全屏Flag
+//        activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
     /**
@@ -138,17 +137,16 @@ public class VideoPlayerHelper {
      * @param videoController                       controller
      */
     protected void hideSysBar(ViewGroup decorView,Context context , BaseVideoController videoController) {
-        int uiOptions = decorView.getSystemUiVisibility();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            uiOptions |= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            uiOptions |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        }
-        decorView.setSystemUiVisibility(uiOptions);
-        VideoPlayerHelper.instance().getActivity(context,videoController).getWindow().setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        Activity activity = VideoPlayerHelper.instance().getActivity(context, videoController);
+        if (activity == null) return;
+
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(activity.getWindow(), decorView);
+        // 隐藏状态栏+导航栏
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        // 粘性沉浸式：下滑短暂显示，之后自动隐藏（等价旧的 IMMERSIVE_STICKY）
+        controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        // 添加全屏flag
+//        activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
 
