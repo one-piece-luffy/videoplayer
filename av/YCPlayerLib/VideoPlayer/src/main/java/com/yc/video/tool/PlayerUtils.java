@@ -34,6 +34,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewParent;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
@@ -42,6 +43,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ContextThemeWrapper;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.yc.video.config.ConstantKeys;
 import com.yc.video.config.VideoPlayerConfig;
@@ -91,16 +94,7 @@ public final class PlayerUtils {
      * @return
      */
     public static boolean isActivityLiving(@Nullable Activity activity) {
-        if (activity == null) {
-            return false;
-        }
-        if (activity.isFinishing()) {
-            return false;
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && activity.isDestroyed()) {
-            return false;
-        }
-        return true;
+        return activity != null && !activity.isFinishing() && !activity.isDestroyed();
     }
 
 
@@ -121,26 +115,6 @@ public final class PlayerUtils {
         return null;
     }
 
-    @SuppressLint("RestrictedApi")
-    public static void showActionBar(Context context) {
-        ActionBar ab = getAppCompActivity(context).getSupportActionBar();
-        if (ab != null) {
-            ab.setShowHideAnimationEnabled(false);
-            ab.show();
-        }
-        scanForActivity(context).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    }
-
-    @SuppressLint("RestrictedApi")
-    public static void hideActionBar(Context context) {
-        ActionBar ab = getAppCompActivity(context).getSupportActionBar();
-        if (ab != null) {
-            ab.setShowHideAnimationEnabled(false);
-            ab.hide();
-        }
-        scanForActivity(context).getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
-    }
 
     /**
      * 获取屏幕宽度
@@ -157,51 +131,74 @@ public final class PlayerUtils {
     }
 
     /**
-     * 获取状态栏高度
+     * 获取状态栏安全内边距高度（推荐EdgeToEdge场景，替代旧status_bar_height）
+     * 优先从windowInsets拿，拿不到再兜底旧资源方式
      */
-    public static double getStatusBarHeight(Context context) {
-        int statusBarHeight = 0;
-        //获取status_bar_height资源的ID
+    public static int getStatusBarHeight(Context context) {
+        if (context instanceof Activity) {
+            Activity activity = (Activity) context;
+            Window window = activity.getWindow();
+            View decorView = window.getDecorView();
+            WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(decorView);
+            if (insets != null) {
+                return insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
+            }
+        }
+        // 兜底：insets获取失败时，沿用原来的资源读取方案
         int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
-            //根据资源ID获取响应的尺寸值
-            statusBarHeight = context.getResources().getDimensionPixelSize(resourceId);
+            return context.getResources().getDimensionPixelSize(resourceId);
         }
-        return statusBarHeight;
+        return 0;
     }
 
     /**
      * 获取竖屏下状态栏高度
+     * 新体系下，横竖屏切换时insets会自动变化，这个方法本质和上面一致，保留函数名兼容老代码
      */
-    public static double getStatusBarHeightPortrait(Context context) {
-        int statusBarHeight = 0;
-        //获取status_bar_height_portrait资源的ID
-        int resourceId = context.getResources().getIdentifier("status_bar_height_portrait", "dimen", "android");
-        if (resourceId > 0) {
-            //根据资源ID获取响应的尺寸值
-            statusBarHeight = context.getResources().getDimensionPixelSize(resourceId);
-        }
-        return statusBarHeight;
+    public static int getStatusBarHeightPortrait(Context context) {
+        return getStatusBarHeight(context);
     }
-
     /**
-     * 获取NavigationBar的高度
+     * 获取导航栏安全内边距高度（EdgeToEdge标准）
      */
     public static int getNavigationBarHeight(Context context) {
+        if (context instanceof Activity) {
+            Activity activity = (Activity) context;
+            Window window = activity.getWindow();
+            View decorView = window.getDecorView();
+            WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(decorView);
+            if (insets != null) {
+                return insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom;
+            }
+        }
+        // 兜底旧方案
         if (!hasNavigationBar(context)) {
             return 0;
         }
         Resources resources = context.getResources();
-        int resourceId = resources.getIdentifier("navigation_bar_height",
-                "dimen", "android");
-        //获取NavigationBar的高度
-        return resources.getDimensionPixelSize(resourceId);
+        int resourceId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            return resources.getDimensionPixelSize(resourceId);
+        }
+        return 0;
     }
 
     /**
-     * 是否存在NavigationBar
+     * 是否存在导航栏（手势导航/三键导航）
+     * 新版判断：导航栏insets.bottom > 0 代表有导航条（比屏幕尺寸差值更准）
      */
     public static boolean hasNavigationBar(Context context) {
+        if (context instanceof Activity) {
+            Activity activity = (Activity) context;
+            Window window = activity.getWindow();
+            View decorView = window.getDecorView();
+            WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(decorView);
+            if (insets != null) {
+                return insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom > 0;
+            }
+        }
+        // 兜底：拿不到insets时，保留你原来的屏幕比对逻辑
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             Display display = getWindowManager(context).getDefaultDisplay();
             Point size = new Point();
