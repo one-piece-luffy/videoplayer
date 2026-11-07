@@ -587,7 +587,9 @@ public class M3U8SegResponse extends BaseResponse {
 
         // 通知监听器
         if (mSegIndex == 0) {
-            PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(mFileName);
+            if(PlayerProgressListenerManager.getInstance().getListener()!=null){
+                PlayerProgressListenerManager.getInstance().getListener().onTaskFirstTsDownload(mFileName);
+            }
         }
     }
 
